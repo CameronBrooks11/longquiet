@@ -171,13 +171,10 @@ beforeEach(() => {
   page.hidden = false;
   page.listeners.clear();
   vi.stubGlobal("navigator", {});
-  // Like a browser, frames do not run while the page is hidden.
-  vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) =>
-    setTimeout(() => {
-      if (!page.hidden) cb(performance.now());
-    }, 16),
-  );
-  vi.stubGlobal("cancelAnimationFrame", (id: number) => clearTimeout(id));
+  // Frames never come: fades must not depend on them (they stall in an
+  // occluded or unfocused window).
+  vi.stubGlobal("requestAnimationFrame", () => 0);
+  vi.stubGlobal("cancelAnimationFrame", () => {});
 });
 
 afterEach(() => {
@@ -384,6 +381,20 @@ describe("Player fades", () => {
     expect(audio.volume).toBeLessThan(0.7);
 
     page.hide(); // e.g. the phone is locked
+    expect(audio.volume).toBeCloseTo(0.7);
+    await started;
+  });
+
+  it("run smoothly on timers, with no animation frames at all", async () => {
+    const { audio, player } = setup();
+    player.setVolume(0.7);
+    await player.select(rain);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(300);
+    expect(audio.volume).toBeGreaterThan(0.2); // part-way, not stuck
+    expect(audio.volume).toBeLessThan(0.6);
+    await vi.advanceTimersByTimeAsync(400);
     expect(audio.volume).toBeCloseTo(0.7);
     await started;
   });

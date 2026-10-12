@@ -1,6 +1,10 @@
 import type { Soundscape } from "./catalogue";
 
 const FADE_MS = 600;
+// Fades step on timers, not animation frames: frames stall in a visible but
+// occluded or unfocused window (measured: a fade-up stuck at 0 for 800 ms),
+// while timers keep running there.
+const FADE_STEP_MS = 30;
 
 // One looping <audio> element. A plain media element, rather than Web Audio,
 // is what phones keep playing with the screen locked.
@@ -16,7 +20,7 @@ export class Player {
   // The sound whose file the element holds; during a switch's fade-out
   // that is still the old one, while current is already the new one.
   private loaded: Soundscape | null = null;
-  private fade = 0;
+  private fade: ReturnType<typeof setTimeout> | undefined;
   private endFade: (() => void) | null = null;
   private fadeTarget = 0;
   private current: Soundscape | null = null;
@@ -50,8 +54,8 @@ export class Player {
         this.setWanted(true);
       }
     });
-    // Fades run on animation frames, which stop once the page is hidden: a
-    // phone locked as a sound starts would hold the fade wherever it was,
+    // Timers in a hidden page are throttled to about once a second or frozen:
+    // a phone locked as a sound starts would hold the fade wherever it was,
     // possibly near silence. Finish any fade at once instead.
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) this.finishFade();
@@ -107,7 +111,7 @@ export class Player {
 
   setVolume(v: number) {
     this.target = v;
-    if (!this.fade) this.audio.volume = v;
+    if (this.fade === undefined) this.audio.volume = v;
   }
 
   // The choice takes effect at once (UI, Media Session); the element follows
@@ -188,8 +192,8 @@ export class Player {
     this.onchange();
   }
 
-  // Animation frames stop while the page is hidden, so a lock-screen pause
-  // jumps straight to the end rather than waiting for a frame that never comes.
+  // A hidden page's timers barely run, so a lock-screen pause jumps straight
+  // to the end rather than waiting on a throttled fade.
   private fadeTo(to: number): Promise<void> {
     this.cancelFade();
     if (document.hidden) {
@@ -201,30 +205,30 @@ export class Player {
     this.fadeTarget = to;
     return new Promise((resolve) => {
       this.endFade = resolve;
-      const step = (now: number) => {
-        const t = Math.min(1, (now - start) / FADE_MS);
+      const step = () => {
+        const t = Math.min(1, (performance.now() - start) / FADE_MS);
         this.audio.volume = from + (to - from) * t;
         if (t < 1) {
-          this.fade = requestAnimationFrame(step);
+          this.fade = setTimeout(step, FADE_STEP_MS);
         } else {
-          this.fade = 0;
+          this.fade = undefined;
           this.endFade = null;
           resolve();
         }
       };
-      this.fade = requestAnimationFrame(step);
+      this.fade = setTimeout(step, FADE_STEP_MS);
     });
   }
 
   private finishFade() {
-    if (!this.fade) return;
+    if (this.fade === undefined) return;
     this.audio.volume = this.fadeTarget;
     this.cancelFade();
   }
 
   private cancelFade() {
-    cancelAnimationFrame(this.fade);
-    this.fade = 0;
+    clearTimeout(this.fade);
+    this.fade = undefined;
     this.endFade?.();
     this.endFade = null;
   }
