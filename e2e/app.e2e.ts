@@ -32,7 +32,11 @@ const test = base.extend({
             .map((a) =>
               a
                 .evaluate((v) =>
-                  v instanceof Error ? `${v.name}: ${v.message}` : String(v),
+                  v instanceof Error
+                    ? `${v.name}: ${v.message}`
+                    : v instanceof MediaError
+                      ? `MediaError ${v.code}: ${v.message} (audio/mpeg: "${new Audio().canPlayType("audio/mpeg")}")`
+                      : String(v),
                 )
                 .catch(() => m.text()),
             ),
