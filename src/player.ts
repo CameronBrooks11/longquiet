@@ -49,14 +49,15 @@ export class Player {
     // A load or network failure, at the start or mid-play. load() clears the
     // error and resets the element: until then play() would reject at once,
     // and a dropped connection is not refetched, so a retry would never work.
+    // An error while paused is not reported, but the reset still matters.
     this.audio.addEventListener("error", () => {
-      if (!this.wanted) return;
       const err = this.audio.error;
+      const wanted = this.wanted;
       this.cancelFade();
       this.audio.volume = this.target;
-      this.setWanted(false);
+      if (wanted) this.setWanted(false);
       this.audio.load();
-      this.onerror(err);
+      if (wanted) this.onerror(err);
     });
   }
 

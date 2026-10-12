@@ -6,8 +6,9 @@ import { Player } from "./player";
 // play() unpauses at once, fires "play", and its promise waits for the file;
 // pause() fires "pause" and rejects a pending play() with AbortError;
 // changing src pauses silently (only abort/emptied) and rejects a pending
-// play() too; while error is set, play() rejects at once with no event, and
-// load() resets the element and clears the error. Events are queued tasks,
+// play() too; while the error is an unsupported source (code 4), play()
+// rejects at once with no event, and after a network error (code 2) it waits
+// forever; load() resets the element and clears the error. Events are queued tasks,
 // and a src change or load() drops any not yet dispatched.
 class FakeAudio {
   paused = true;
@@ -49,7 +50,7 @@ class FakeAudio {
   }
   refuseNextPlay = false;
   play() {
-    if (this.error) {
+    if (this.error?.code === 4) {
       return Promise.reject(new DOMException("errored", "NotSupportedError"));
     }
     if (this.refuseNextPlay) {
@@ -77,9 +78,10 @@ class FakeAudio {
       );
     }
   }
-  error: Error | null = null;
+  error: { code: number } | null = null;
   // The file has arrived: sound starts and a pending play() resolves.
   arrive() {
+    if (this.error) return; // a failed fetch delivers nothing until load()
     const p = this.pending;
     this.pending = null;
     this.fire("playing");
@@ -105,7 +107,7 @@ class FakeAudio {
   // The file cannot be loaded at all: "error" fires, then the pending
   // play() rejects, in one task; the element stays unpaused.
   failStart() {
-    this.error = new Error("unsupported");
+    this.error = { code: 4 };
     this.listeners.get("error")?.forEach((fn) => fn());
     const p = this.pending;
     this.pending = null;
@@ -114,9 +116,9 @@ class FakeAudio {
   get pendingPlay() {
     return this.pending !== null;
   }
-  // The network drops after playback had started.
+  // The network drops (MEDIA_ERR_NETWORK), playing or not.
   fail() {
-    this.error = new Error("network");
+    this.error = { code: 2 };
     this.fire("error");
   }
   // Something outside the page pauses it: unplugged headphones, a call.
@@ -295,6 +297,27 @@ describe("Player.loading", () => {
     await vi.advanceTimersByTimeAsync(1000);
     await retry;
     expect(player.playing).toBe(true);
+  });
+
+  it("recovers quietly from an error that arrives while paused", async () => {
+    const { audio, player } = setup();
+    const errors = vi.fn();
+    player.onerror = errors;
+    await playing(audio, player);
+    const paused = player.pause();
+    await vi.advanceTimersByTimeAsync(1000);
+    await paused;
+    audio.fail();
+    await vi.advanceTimersByTimeAsync(10);
+    expect(errors).not.toHaveBeenCalled();
+
+    const again = player.play();
+    expect(audio.pendingPlay).toBe(true);
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await again;
+    expect(player.playing).toBe(true);
+    expect(player.loading).toBe(false);
   });
 
   it("follows an outside play after a refused start", async () => {
