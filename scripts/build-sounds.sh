@@ -5,7 +5,14 @@
 #          sounds/sounds.json, render public/audio/<id>.mp3, then check
 #   check  measure the committed public/audio/<id>.mp3 files and fail if any
 #          is off the loudness target by more than 1 LU, has a true peak
-#          above -1 dBTP, or steps more than 1.5 dB at its loop point
+#          above -1 dBTP, or has a loop point that stands out (below)
+#
+# The loop point is the level step from the last second to the first. A
+# crossfaded file is continuous there by construction, so the step is the
+# recording's own second-to-second variation, and a fixed limit only says
+# how busy the recording is: birdsong or waves step 2-3 dB between ordinary
+# seconds. So the step must not exceed the recording's own 95th-percentile
+# step between adjacent seconds, with 1.5 dB as the floor for steady sounds.
 #
 # Render per sound: optional excerpt, optional crossfaded loop, a static gain
 # to the loudness target measured on the lossless intermediate, then one
@@ -28,7 +35,7 @@ out="$root/public/audio"
 target=$(jq -r '.loudnessTarget' "$manifest")
 max_lu_off=1
 max_true_peak=-1
-max_seam_db=1.5
+min_seam_db=1.5
 
 die() { echo "error: $*" >&2; exit 1; }
 
@@ -45,23 +52,38 @@ rms_at() {
         awk '/RMS level dB:/ { r = $NF } END { print r }'
 }
 
+# 95th percentile of |level step| between adjacent whole seconds of a file.
+typical_step() {
+    local sr
+    sr=$(ffprobe -v error -select_streams a:0 -show_entries stream=sample_rate -of default=nw=1:nk=1 "$1")
+    ffmpeg -nostdin -hide_banner -nostats -i "$1" \
+        -af "asetnsamples=n=$sr:p=1,astats=metadata=1:reset=1,ametadata=mode=print:key=lavfi.astats.Overall.RMS_level:file=-" \
+        -f null - 2>/dev/null |
+        awk -F= '/RMS_level=/ { v[n++] = $2 }
+            END { for (i = 1; i < n - 1; i++) { d = v[i] - v[i - 1]; print (d < 0 ? -d : d) } }' |
+        sort -g |
+        awk '{ s[m++] = $1 } END { printf "%.1f", (m ? s[int(0.95 * (m - 1))] : 0) }'
+}
+
 duration() {
     ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$1"
 }
 
-# Prints "<id> <LUFS> <dBTP> <seam dB> ok|FAIL" and returns 1 on FAIL.
+# Prints one line of measurements and ok|FAIL; returns 1 on FAIL.
 measure() {
-    local id=$1 f=$2 lufs tp dur first last seam verdict
+    local id=$1 f=$2 lufs tp dur first last seam limit verdict
     read -r lufs tp < <(loudness "$f")
     dur=$(duration "$f")
     first=$(rms_at "$f" 0)
     last=$(rms_at "$f" "$(awk -v d="$dur" 'BEGIN { print d - 1 }')")
     seam=$(awk -v a="$first" -v b="$last" 'BEGIN { printf "%.1f", a - b }')
+    limit=$(awk -v t="$(typical_step "$f")" -v m="$min_seam_db" 'BEGIN { printf "%.1f", (t > m ? t : m) }')
     verdict=$(awk -v l="$lufs" -v t="$target" -v p="$tp" -v s="$seam" \
-        -v ml="$max_lu_off" -v mp="$max_true_peak" -v ms="$max_seam_db" '
+        -v ml="$max_lu_off" -v mp="$max_true_peak" -v ms="$limit" '
         function abs(x) { return x < 0 ? -x : x }
         BEGIN { print (abs(l - t) <= ml && p <= mp && abs(s) <= ms) ? "ok" : "FAIL" }')
-    printf '%-8s %7s LUFS %6s dBTP  seam %5s dB  %s\n' "$id" "$lufs" "$tp" "$seam" "$verdict"
+    printf '%-8s %7s LUFS %6s dBTP  seam %5s dB (limit %s)  %s\n' \
+        "$id" "$lufs" "$tp" "$seam" "$limit" "$verdict"
     [ "$verdict" = ok ]
 }
 

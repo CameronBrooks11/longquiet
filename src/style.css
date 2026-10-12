@@ -77,11 +77,13 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Two even rows of three for six sounds; two columns when space or
+   enlarged text leaves no room for three, so nothing overflows. */
 .scapes {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.5rem), 1fr));
   gap: 0.5rem;
+  width: min(100%, 22rem);
 }
 
 .scapes button {
