@@ -244,3 +244,28 @@ test("a timer set while paused survives a change of sound and starts on play", a
   await expect(page.getByLabel("Sleep timer")).toHaveValue("30");
   await expect(page.locator("#timer-left")).toHaveText("30 min left");
 });
+
+test("the next button skips through a playlist and is hidden for loops", async ({
+  page,
+}) => {
+  const [one, two] = playlist.tracks!;
+  await page.goto("./");
+  const next = page.getByRole("button", { name: "Next piece" });
+  await expect(next).toBeHidden();
+  await page
+    .getByRole("tab", { name: playlistSection.label, exact: true })
+    .click();
+  await page.getByRole("radio", { name: playlist.label, exact: true }).click();
+  await expect(next).toBeVisible();
+  await page.locator("#play").click();
+  await expectAdvancing(page);
+  expect((await audio(page))?.file).toBe(`${one.id}.mp3`);
+
+  await next.click();
+  await expect(page.locator("#now")).toContainText(two.title);
+  await expect
+    .poll(async () => (await audio(page))?.file)
+    .toBe(`${two.id}.mp3`);
+  await expectAdvancing(page);
+  await expect(page.locator("body")).toHaveClass(/is-playing/);
+});

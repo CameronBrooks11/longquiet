@@ -803,3 +803,83 @@ describe("Player lock screen and playlist edges", () => {
     expect(audio.src).toBe("/audio/other-1.mp3");
   });
 });
+
+describe("Player next button", () => {
+  it("fades the current piece out before moving on", async () => {
+    const { audio, player } = setup();
+    player.setVolume(0.7);
+    await player.select(playlist);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+
+    const skipped = player.next();
+    expect(player.track?.id).toBe("piece-2"); // shown at once
+    await vi.advanceTimersByTimeAsync(300);
+    expect(audio.src).toBe("/audio/piece-1.mp3"); // still fading out
+    expect(audio.volume).toBeLessThan(0.7);
+    expect(audio.volume).toBeGreaterThan(0);
+    await vi.advanceTimersByTimeAsync(400);
+    await skipped;
+    expect(audio.src).toBe("/audio/piece-2.mp3");
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(audio.paused).toBe(false);
+    expect(audio.volume).toBeCloseTo(0.7);
+  });
+
+  it("only moves on while paused", async () => {
+    const { audio, player } = setup();
+    await player.select(playlist);
+    await player.next();
+    expect(player.track?.id).toBe("piece-2");
+    expect(audio.src).toBe("/audio/piece-2.mp3");
+    expect(player.playing).toBe(false);
+    expect(audio.paused).toBe(true);
+  });
+
+  it("ends a burst of presses on the last one, playing", async () => {
+    const { audio, player } = setup();
+    await player.select(playlist);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+
+    void player.next();
+    await vi.advanceTimersByTimeAsync(100);
+    const last = player.next();
+    await vi.advanceTimersByTimeAsync(100);
+    // The overtaken press must not load its piece mid-fade.
+    expect(audio.src).toBe("/audio/piece-1.mp3");
+    await vi.advanceTimersByTimeAsync(600);
+    await last;
+    expect(audio.src).toBe("/audio/piece-3.mp3");
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(player.playing).toBe(true);
+    expect(audio.paused).toBe(false);
+  });
+
+  it("does nothing for a looped recording, not even a fade", async () => {
+    const { audio, player } = setup();
+    player.setVolume(0.7);
+    await player.select(rain);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+
+    const skipped = player.next();
+    let low = audio.volume;
+    for (let i = 0; i < 40; i++) {
+      await vi.advanceTimersByTimeAsync(20);
+      low = Math.min(low, audio.volume);
+    }
+    await skipped;
+    expect(low).toBeCloseTo(0.7);
+    expect(player.track?.id).toBe(rain.tracks[0].id);
+    expect(audio.src).toBe("/audio/rain.mp3");
+  });
+});

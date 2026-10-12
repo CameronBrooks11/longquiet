@@ -73,7 +73,7 @@ export class Player {
     this.audio.addEventListener("ended", () => {
       if (!this.wanted || !this.current || this.current.loops) return;
       if (this.loaded !== this.track) return;
-      this.next();
+      void this.next();
     });
     // A load or network failure, at the start or mid-play. load() clears the
     // error and resets the element: until then play() would reject at once,
@@ -149,17 +149,22 @@ export class Player {
     if (resume && this.wanted) await this.play();
   }
 
-  // The next track of a playlist, wrapping round; also the lock screen's
-  // "next track". It fades in like any start.
-  private next() {
+  // The next track of a playlist, wrapping round: the page's next button
+  // and the lock screen's "next track". It fades in like any start; while
+  // paused it only moves on.
+  async next() {
     if (!this.current || this.current.loops) return;
     // A new source aborts any play() still waiting on the old one; bumping
     // seq marks that one as overtaken rather than a failure to report.
-    this.seq++;
+    const seq = ++this.seq;
     this.trackIndex = (this.trackIndex + 1) % this.current.tracks.length;
-    this.loadTrack();
     this.updateMediaSession();
     this.onchange();
+    // Skipping mid-piece fades out first, as a change of sound does; at a
+    // track's natural end there is nothing left to fade.
+    if (this.wanted && !this.audio.ended) await this.fadeTo(0);
+    if (seq !== this.seq) return;
+    this.loadTrack();
     if (this.wanted) this.play().catch((err: unknown) => this.onerror(err));
   }
 
@@ -285,7 +290,7 @@ export class Player {
     navigator.mediaSession.setActionHandler("pause", () => void this.pause());
     navigator.mediaSession.setActionHandler(
       "nexttrack",
-      this.current.loops ? null : () => this.next(),
+      this.current.loops ? null : () => void this.next(),
     );
   }
 }

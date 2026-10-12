@@ -32,6 +32,7 @@ const scapes = byId<HTMLDivElement>("scapes");
 const sectionList = byId<HTMLDivElement>("sections");
 const panel = byId<HTMLDivElement>("section-panel");
 const playButton = byId<HTMLButtonElement>("play");
+const nextButton = byId<HTMLButtonElement>("next");
 const now = byId<HTMLParagraphElement>("now");
 const volume = byId<HTMLInputElement>("volume");
 const timerChoice = byId<HTMLSelectElement>("timer");
@@ -153,6 +154,7 @@ function render() {
     "aria-label",
     player.loading ? "Pause (loading)" : player.playing ? "Pause" : "Play",
   );
+  nextButton.hidden = !current || current.loops;
   const track = player.track;
   now.textContent = track ? `${track.title} — ${track.author}` : "";
   followPlayback();
@@ -219,6 +221,7 @@ player.onerror = reportPlaybackError;
 playButton.addEventListener("click", () => {
   player.toggle().catch(reportPlaybackError);
 });
+nextButton.addEventListener("click", () => void player.next());
 
 if (Player.volumeIsControllable()) {
   volume.value = String(prefs.volume);

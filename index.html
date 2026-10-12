@@ -54,12 +54,25 @@
         ></div>
       </div>
 
-      <button class="play" id="play" type="button" aria-label="Play">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path class="icon-play" d="M8 5.5v13l11-6.5z" />
-          <path class="icon-pause" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" />
-        </svg>
-      </button>
+      <div class="controls">
+        <button class="play" id="play" type="button" aria-label="Play">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path class="icon-play" d="M8 5.5v13l11-6.5z" />
+            <path class="icon-pause" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" />
+          </svg>
+        </button>
+        <button
+          class="next"
+          id="next"
+          type="button"
+          aria-label="Next piece"
+          hidden
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6.5v11l8-5.5zM15.5 6.5h2.5v11h-2.5z" />
+          </svg>
+        </button>
+      </div>
 
       <p class="now" id="now" aria-live="polite"></p>
 
