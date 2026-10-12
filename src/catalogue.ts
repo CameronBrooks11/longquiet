@@ -92,15 +92,16 @@ export function describeProcessing(
 }
 
 function toTrack(t: RawTrack): Track {
-  return {
-    ...t,
-    file: `${t.id}.mp3`,
-    modifications: describeProcessing(
-      t.source.format,
-      t.recipe,
-      data.loudnessTarget,
-    ),
-  };
+  const steps = describeProcessing(
+    t.source.format,
+    t.recipe,
+    data.loudnessTarget,
+  );
+  // Share-alike: the processed copy here carries the same licence.
+  const shared = t.licence.url.includes("/by-sa/")
+    ? `; this version is shared under ${t.licence.name}`
+    : "";
+  return { ...t, file: `${t.id}.mp3`, modifications: steps + shared };
 }
 
 export const soundscapes: readonly Soundscape[] = (

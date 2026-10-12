@@ -674,3 +674,92 @@ describe("Player playlists", () => {
     expect(audio.src).toBe("/audio/piece-1.mp3");
   });
 });
+
+// A lock screen: records the handlers the player registers.
+function lockScreen() {
+  const handlers = new Map<string, (() => void) | null>();
+  const session = {
+    metadata: null as unknown,
+    playbackState: "none",
+    setActionHandler(name: string, fn: (() => void) | null) {
+      handlers.set(name, fn);
+    },
+  };
+  vi.stubGlobal("navigator", { mediaSession: session });
+  vi.stubGlobal(
+    "MediaMetadata",
+    class {
+      constructor(readonly init: { title: string; artist: string }) {}
+    },
+  );
+  return { handlers, session };
+}
+
+const otherList: Soundscape = {
+  ...playlist,
+  id: "others",
+  tracks: ["other-1", "other-2"].map(trackOf),
+};
+
+describe("Player lock screen and playlist edges", () => {
+  it("offers next track for a playlist only, and shows the track", async () => {
+    const { handlers, session } = lockScreen();
+    const { player } = setup();
+    await player.select(rain);
+    expect(handlers.get("nexttrack")).toBeNull();
+    await player.select(playlist);
+    expect(handlers.get("nexttrack")).toBeTypeOf("function");
+    expect((session.metadata as { init: { title: string } }).init.title).toBe(
+      "piece-1",
+    );
+  });
+
+  it("moves on and redraws when next track is pressed", async () => {
+    const { handlers } = lockScreen();
+    const { player, changes } = setup();
+    await player.select(playlist);
+    changes.mockClear();
+    handlers.get("nexttrack")!();
+    expect(player.track?.id).toBe("piece-2");
+    expect(changes).toHaveBeenCalled();
+  });
+
+  it("reports nothing when next is pressed while a track still loads", async () => {
+    const { handlers } = lockScreen();
+    const { audio, player } = setup();
+    const errors = vi.fn();
+    player.onerror = errors;
+    await player.select(playlist);
+    const first = player.play(); // piece-1 still loading
+    handlers.get("nexttrack")!();
+    handlers.get("nexttrack")!();
+    await vi.advanceTimersByTimeAsync(10);
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    // The page reports a rejected play(); being overtaken is not a failure.
+    await expect(first).resolves.toBeUndefined();
+    expect(errors).not.toHaveBeenCalled();
+    expect(audio.src).toBe("/audio/piece-3.mp3");
+    expect(player.playing).toBe(true);
+  });
+
+  it("starts a new playlist at its first track even if the old one ends mid-switch", async () => {
+    const { audio, player } = setup();
+    await player.select(playlist);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+
+    const choice = player.select(otherList);
+    await vi.advanceTimersByTimeAsync(200);
+    audio.end(); // piece-1 runs out during the fade-out
+    await vi.advanceTimersByTimeAsync(1000);
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await choice;
+    expect(player.track?.id).toBe("other-1");
+    expect(audio.src).toBe("/audio/other-1.mp3");
+  });
+});

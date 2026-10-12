@@ -58,9 +58,11 @@ just audio-check  # measure public/audio/ against the loudness and seam limits
 - Never commit originals (`sounds/.cache/`) or built audio
   (`public/audio/`); built audio ships as a GitHub release named in
   `sounds.json`. Keep the live site under Pages' 1 GB.
-- Only recordings whose licence allows self-hosted redistribution: CC0, CC BY,
-  public domain. No NC/ND licences, no AI-generated audio, no BBC Sound Effects.
-  Check the licence on the recording's own page, not in a search result.
+- Only recordings whose licence allows self-hosted redistribution: CC0, public
+  domain, CC BY, CC BY-SA. No NC/ND licences, no AI-generated audio, no BBC
+  Sound Effects. For music the composition must be free too. Check the licence
+  on the recording's own page (on Commons, the file page's template, not the
+  API summary), not in a search result.
 - Playback stays on a plain `HTMLAudioElement`: it is what keeps playing on a
   locked phone. iOS ignores `audio.volume`, so nothing may depend on it.
 - Asset paths go through `import.meta.env.BASE_URL`; the site lives under

@@ -6,10 +6,18 @@ file is built (`scripts/build-sounds.sh` reads it).
 
 ## What qualifies
 
-- A real field recording. No synthesis, no AI-generated audio.
+- A real recording: a field recording, or a performance. No synthesis,
+  no AI-generated audio.
 - A licence that allows hosting and redistributing the file here: CC0,
-  CC BY 4.0, or public domain. No NC or ND licences, and nothing under a
-  site's own terms (BBC Sound Effects, for example).
+  public domain, CC BY or CC BY-SA (our processed copy of a BY-SA track
+  carries BY-SA, and the credits say so). No NC or ND licences, and
+  nothing under a site's own terms (BBC Sound Effects, for example).
+- For music, the composition must be free too: public domain, or under
+  one of the licences above. A free recording of a work still in
+  copyright does not qualify.
+- On Wikimedia Commons, read the licence template on the file page
+  itself. The API's licence summary can report a public-domain template
+  that covers the composition, not the recording.
 - Licence, title, author and URL copied from the recording's own page, not
   from a search result or a summary.
 - Long and steady: five minutes or more, no voices, little traffic or

@@ -67,9 +67,13 @@ export class Player {
     // Between asking to play and sound coming out: first load, or a stall.
     this.audio.addEventListener("waiting", () => this.setWaiting(this.wanted));
     this.audio.addEventListener("playing", () => this.setWaiting(false));
-    // A playlist moves on to its next track, and starts over after the last.
+    // A playlist moves on to its next track, and starts over after the last;
+    // but not when the element still holds the previous choice, ending
+    // during a switch's fade-out.
     this.audio.addEventListener("ended", () => {
-      if (this.wanted && this.current && !this.current.loops) this.next();
+      if (!this.wanted || !this.current || this.current.loops) return;
+      if (this.loaded !== this.track) return;
+      this.next();
     });
     // A load or network failure, at the start or mid-play. load() clears the
     // error and resets the element: until then play() would reject at once,
@@ -149,6 +153,9 @@ export class Player {
   // "next track". It fades in like any start.
   private next() {
     if (!this.current || this.current.loops) return;
+    // A new source aborts any play() still waiting on the old one; bumping
+    // seq marks that one as overtaken rather than a failure to report.
+    this.seq++;
     this.trackIndex = (this.trackIndex + 1) % this.current.tracks.length;
     this.loadTrack();
     this.updateMediaSession();

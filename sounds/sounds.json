@@ -632,8 +632,8 @@
           "authorUrl": "https://commons.wikimedia.org/wiki/User:Mlaucke",
           "sourceUrl": "https://commons.wikimedia.org/wiki/File:Satie_Gymnopedie_No_1_performed_by_Michael_Laucke.flac",
           "licence": {
-            "name": "Public domain",
-            "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+            "name": "CC BY-SA 4.0",
+            "url": "https://creativecommons.org/licenses/by-sa/4.0/"
           },
           "source": {
             "file": "commons__Satie_Gymnopedie_No_1_performed_by_Michael_Laucke.flac",
@@ -656,8 +656,8 @@
           "authorUrl": "https://commons.wikimedia.org/wiki/User:Mlaucke",
           "sourceUrl": "https://commons.wikimedia.org/wiki/File:Satie_Gymnopedie_No_2_performed_by_Michael_Laucke.flac",
           "licence": {
-            "name": "Public domain",
-            "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+            "name": "CC BY-SA 4.0",
+            "url": "https://creativecommons.org/licenses/by-sa/4.0/"
           },
           "source": {
             "file": "commons__Satie_Gymnopedie_No_2_performed_by_Michael_Laucke.flac",
@@ -680,8 +680,8 @@
           "authorUrl": "https://commons.wikimedia.org/wiki/User:Mlaucke",
           "sourceUrl": "https://commons.wikimedia.org/wiki/File:Satie_Gymnopedie_No_3_performed_by_Michael_Laucke.flac",
           "licence": {
-            "name": "Public domain",
-            "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+            "name": "CC BY-SA 4.0",
+            "url": "https://creativecommons.org/licenses/by-sa/4.0/"
           },
           "source": {
             "file": "commons__Satie_Gymnopedie_No_3_performed_by_Michael_Laucke.flac",
@@ -700,12 +700,12 @@
         {
           "id": "leyenda",
           "title": "Leyenda (Asturias)",
-          "author": "Isaac Albéniz, played by Michael Laucke on classical guitar",
+          "author": "Isaac Albéniz, played by Michael Laucke (guitar, with bass and castanets)",
           "authorUrl": "https://commons.wikimedia.org/wiki/User:Mlaucke",
           "sourceUrl": "https://commons.wikimedia.org/wiki/File:Legend_(Leyenda)_performed_by_Michael_Laucke.flac",
           "licence": {
-            "name": "Public domain",
-            "url": "https://creativecommons.org/publicdomain/mark/1.0/"
+            "name": "CC BY-SA 4.0",
+            "url": "https://creativecommons.org/licenses/by-sa/4.0/"
           },
           "source": {
             "file": "commons__Legend_(Leyenda)_performed_by_Michael_Laucke.flac",
