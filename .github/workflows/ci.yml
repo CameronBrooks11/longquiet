@@ -47,6 +47,13 @@ jobs:
           package-manager-cache: false
       - run: just setup
       - run: npm exec -- playwright install --with-deps chromium firefox webkit
+      # Firefox will not play without an audio output device, and the runner
+      # has none (MediaError "OnMediaSinkAudioError"): give it a silent one.
+      - name: Add a silent audio device
+        run: |
+          sudo apt-get install -y --no-install-recommends pulseaudio
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink
       - run: just fetch-audio
       - run: just build
       - run: just e2e
