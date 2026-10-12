@@ -77,6 +77,39 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+.sections {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 1.25rem;
+  margin-bottom: -1rem;
+}
+
+.sections[hidden],
+.scapes button[hidden] {
+  display: none;
+}
+
+.sections button {
+  border: none;
+  background: none;
+  padding: 0.35rem 0.1rem;
+  color: var(--muted);
+  border-bottom: 1px solid transparent;
+  transition:
+    color 0.3s,
+    border-color 0.3s;
+}
+
+.sections button:hover {
+  color: var(--fg);
+}
+
+.sections button[aria-selected="true"] {
+  color: var(--fg);
+  border-bottom-color: var(--accent);
+}
+
 /* Two even rows of three for six sounds; two columns when space or
    enlarged text leaves no room for three, so nothing overflows. */
 .scapes {

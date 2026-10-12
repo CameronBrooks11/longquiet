@@ -23,7 +23,9 @@ file is built (`scripts/build-sounds.sh` reads it).
 1. Log in on freesound.org (or the source site), download the original
    file, and save it in `sounds/.cache/` under its downloaded name. That
    directory is gitignored: originals are never committed.
-2. Add an entry to `sounds.json`. `source.sha256` is the output of
+2. Add an entry to `sounds.json`, with `section` set to one of the ids
+   in `sections` (a section appears in the app once it has a sound).
+   `source.sha256` is the output of
    `sha256sum sounds/.cache/<file>`; `source.format` reads like
    `24-bit WAV`. In `recipe`, `excerpt` is the number of seconds to keep
    from the start (or `null` for all of it) and `crossfade` the seconds of

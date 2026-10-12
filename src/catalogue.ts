@@ -14,9 +14,20 @@ export interface Recipe {
   crossfade: number;
 }
 
+// How a section plays: one looped recording, generated tones, or a run of
+// tracks one after another.
+export type SectionKind = "loop" | "tones" | "playlist";
+
+export interface Section {
+  id: string;
+  label: string;
+  kind: SectionKind;
+}
+
 export interface Soundscape {
   id: string;
   label: string;
+  section: string;
   title: string;
   author: string;
   authorUrl: string;
@@ -68,6 +79,17 @@ export const soundscapes: readonly Soundscape[] = data.sounds.map((s) => ({
     data.loudnessTarget,
   ),
 }));
+
+export const sections = data.sections as readonly Section[];
+
+export function soundsIn(section: string): Soundscape[] {
+  return soundscapes.filter((s) => s.section === section);
+}
+
+// Sections with something to play, in their listed order.
+export const populatedSections: readonly Section[] = sections.filter(
+  (s) => soundsIn(s.id).length > 0,
+);
 
 export function findSoundscape(id: string | null | undefined): Soundscape {
   return soundscapes.find((s) => s.id === id) ?? soundscapes[0];

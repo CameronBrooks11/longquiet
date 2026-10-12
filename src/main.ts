@@ -1,5 +1,10 @@
 import "./style.css";
-import { findSoundscape, soundscapes, type Soundscape } from "./catalogue";
+import {
+  findSoundscape,
+  populatedSections,
+  soundscapes,
+  type Soundscape,
+} from "./catalogue";
 import { moveIndex } from "./keys";
 import { Player } from "./player";
 import { loadPreferences, savePreferences } from "./preferences";
@@ -23,6 +28,7 @@ const player = new Player(import.meta.env.BASE_URL);
 player.setVolume(prefs.volume);
 
 const scapes = byId<HTMLDivElement>("scapes");
+const sectionList = byId<HTMLDivElement>("sections");
 const playButton = byId<HTMLButtonElement>("play");
 const now = byId<HTMLParagraphElement>("now");
 const volume = byId<HTMLInputElement>("volume");
@@ -37,16 +43,61 @@ const buttons = soundscapes.map((s) =>
 buttons.forEach((b) => b.setAttribute("role", "radio"));
 scapes.append(...buttons);
 
-// One tab stop for the group; arrows, Home and End move the selection.
-scapes.addEventListener("keydown", (e) => {
-  const i = buttons.indexOf(e.target as HTMLButtonElement);
-  if (i < 0 || e.altKey || e.ctrlKey || e.metaKey) return;
-  const j = moveIndex(i, e.key, buttons.length);
-  if (j === null) return;
-  e.preventDefault();
-  buttons[j].focus();
-  choose(soundscapes[j]);
+// The section on show; it follows the chosen sound, and browsing another
+// section does not change what is playing until a sound there is chosen.
+let shown = findSoundscape(prefs.soundscape).section;
+
+const tabs = populatedSections.map((section) => {
+  const tab = el("button", {
+    type: "button",
+    textContent: section.label,
+    onclick: () => showSection(section.id),
+  });
+  tab.setAttribute("role", "tab");
+  tab.setAttribute("aria-controls", "scapes");
+  return tab;
 });
+sectionList.append(...tabs);
+// One section needs no switcher.
+sectionList.hidden = tabs.length < 2;
+
+function showSection(id: string) {
+  shown = id;
+  render();
+}
+
+function visibleButtons(): HTMLButtonElement[] {
+  return buttons.filter((_, i) => soundscapes[i].section === shown);
+}
+
+// One tab stop per group; arrows, Home and End move the selection.
+function onArrows(
+  items: () => HTMLButtonElement[],
+  activate: (b: HTMLButtonElement) => void,
+) {
+  return (e: KeyboardEvent) => {
+    const list = items();
+    const i = list.indexOf(e.target as HTMLButtonElement);
+    if (i < 0 || e.altKey || e.ctrlKey || e.metaKey) return;
+    const j = moveIndex(i, e.key, list.length);
+    if (j === null) return;
+    e.preventDefault();
+    list[j].focus();
+    activate(list[j]);
+  };
+}
+
+scapes.addEventListener(
+  "keydown",
+  onArrows(visibleButtons, (b) => choose(soundscapes[buttons.indexOf(b)])),
+);
+sectionList.addEventListener(
+  "keydown",
+  onArrows(
+    () => tabs,
+    (t) => showSection(populatedSections[tabs.indexOf(t)].id),
+  ),
+);
 
 byId<HTMLUListElement>("credits").append(
   ...soundscapes.map((s) =>
@@ -68,11 +119,24 @@ byId<HTMLUListElement>("credits").append(
 
 function render() {
   const current = player.soundscape;
-  // The tab stop sits on the selected sound, or the first if none is.
-  const stop = current ? soundscapes.indexOf(current) : 0;
+  tabs.forEach((t, i) => {
+    const selected = populatedSections[i].id === shown;
+    t.setAttribute("aria-selected", String(selected));
+    t.tabIndex = selected ? 0 : -1;
+  });
+  scapes.setAttribute(
+    "aria-label",
+    populatedSections.find((s) => s.id === shown)?.label ?? "Soundscape",
+  );
+  // The tab stop sits on the selected sound if it is on show, else the
+  // section's first sound.
+  const visible = visibleButtons();
+  const selected = current ? buttons[soundscapes.indexOf(current)] : null;
+  const stop = selected && visible.includes(selected) ? selected : visible[0];
   buttons.forEach((b, i) => {
+    b.hidden = soundscapes[i].section !== shown;
     b.setAttribute("aria-checked", String(soundscapes[i] === current));
-    b.tabIndex = i === stop ? 0 : -1;
+    b.tabIndex = b === stop ? 0 : -1;
   });
   document.body.classList.toggle("is-playing", player.playing);
   document.body.classList.toggle("is-loading", player.loading);
@@ -89,6 +153,7 @@ function reportPlaybackError(err: unknown) {
 }
 
 function choose(s: Soundscape) {
+  shown = s.section;
   prefs.soundscape = s.id;
   savePreferences(localStorage, prefs);
   player.select(s).catch(reportPlaybackError);
