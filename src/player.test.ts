@@ -493,6 +493,46 @@ describe("Player fades", () => {
   });
 });
 
+describe("Player sleep fade", () => {
+  it("fades over the length given, then pauses", async () => {
+    const { audio, player } = setup();
+    player.setVolume(0.7);
+    await playing(audio, player);
+    const paused = player.pause(30_000);
+    expect(player.playing).toBe(false); // shows Play from the start
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(audio.paused).toBe(false);
+    expect(audio.volume).toBeGreaterThan(0.25);
+    expect(audio.volume).toBeLessThan(0.45);
+    await vi.advanceTimersByTimeAsync(15_100);
+    await paused;
+    expect(audio.paused).toBe(true);
+  });
+
+  it("stops at once if the phone is locked during it", async () => {
+    const { audio, player } = setup();
+    await playing(audio, player);
+    const paused = player.pause(30_000);
+    await vi.advanceTimersByTimeAsync(5_000);
+    page.hide();
+    await paused;
+    expect(audio.paused).toBe(true);
+  });
+
+  it("gives way to play pressed during it", async () => {
+    const { audio, player } = setup();
+    player.setVolume(0.7);
+    await playing(audio, player);
+    const paused = player.pause(30_000);
+    await vi.advanceTimersByTimeAsync(10_000);
+    const resumed = player.play();
+    await vi.advanceTimersByTimeAsync(30_000);
+    await Promise.all([paused, resumed]);
+    expect(audio.paused).toBe(false);
+    expect(audio.volume).toBeCloseTo(0.7);
+  });
+});
+
 describe("Player.select", () => {
   it("shows a new choice at once, before the fade-out ends", async () => {
     const { audio, player, changes } = setup();
