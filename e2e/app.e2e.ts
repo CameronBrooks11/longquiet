@@ -180,13 +180,16 @@ test("remembers the chosen sound across a reload", async ({ page }) => {
 test("fits a 320 px phone without sideways scrolling", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   await page.goto("./");
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth - window.innerWidth,
-  );
-  expect(overflow).toBeLessThanOrEqual(0);
-  for (const r of await page.getByRole("radio").all()) {
-    const box = (await r.boundingBox())!;
-    expect(box.x).toBeGreaterThanOrEqual(0);
-    expect(box.x + box.width).toBeLessThanOrEqual(320);
+  for (const s of sections) {
+    await page.getByRole("tab", { name: s.label, exact: true }).click();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    );
+    expect(overflow, s.label).toBeLessThanOrEqual(0);
+    for (const r of await page.getByRole("radio").all()) {
+      const box = (await r.boundingBox())!;
+      expect(box.x, s.label).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width, s.label).toBeLessThanOrEqual(320);
+    }
   }
 });
