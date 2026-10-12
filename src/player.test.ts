@@ -4,8 +4,9 @@ import { Player } from "./player";
 
 // The parts of <audio> the player relies on, as Chrome does them (measured):
 // play() unpauses at once, fires "play", and its promise waits for the file;
-// pause() fires "pause"; changing src pauses silently (only abort/emptied)
-// and rejects a pending play() with AbortError. Events are queued tasks.
+// pause() fires "pause" and rejects a pending play() with AbortError;
+// changing src pauses silently (only abort/emptied) and rejects a pending
+// play() too. Events are queued tasks.
 class FakeAudio {
   paused = true;
   volume = 1;
@@ -48,6 +49,13 @@ class FakeAudio {
       this.paused = true;
       this.fire("pause");
     }
+    if (this.pending) {
+      const p = this.pending;
+      this.pending = null;
+      p.reject(
+        new DOMException("interrupted by a call to pause()", "AbortError"),
+      );
+    }
   }
   error: Error | null = null;
   // The file has loaded: sound starts and a pending play() resolves.
@@ -63,6 +71,18 @@ class FakeAudio {
   }
   resume() {
     this.fire("playing");
+  }
+  // The file cannot be loaded at all: "error" fires, then the pending
+  // play() rejects, in one task; the element stays unpaused.
+  failStart() {
+    this.error = new Error("unsupported");
+    this.listeners.get("error")?.forEach((fn) => fn());
+    const p = this.pending;
+    this.pending = null;
+    p?.reject(new DOMException("no supported source", "NotSupportedError"));
+  }
+  get pendingPlay() {
+    return this.pending !== null;
   }
   // The network drops after playback had started.
   fail() {
@@ -143,6 +163,52 @@ describe("Player.loading", () => {
     await paused;
     expect(player.loading).toBe(false);
     expect(player.playing).toBe(false);
+  });
+
+  it("does not report a pause during loading as a failure", async () => {
+    const { player } = setup();
+    await player.select(rain);
+    const started = player.play();
+    const paused = player.pause();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    await expect(started).resolves.toBeUndefined();
+    await paused;
+    expect(player.playing).toBe(false);
+    expect(player.loading).toBe(false);
+  });
+
+  it("reports a failed start once and leaves nothing spinning", async () => {
+    const { audio, player } = setup();
+    const errors = vi.fn();
+    player.onerror = errors;
+    await player.select(rain);
+    const started = player.play();
+    audio.failStart();
+
+    await expect(started).rejects.toThrow("no supported source");
+    await vi.advanceTimersByTimeAsync(10);
+    expect(errors).not.toHaveBeenCalled();
+    expect(player.playing).toBe(false);
+    expect(player.loading).toBe(false);
+    expect(audio.paused).toBe(true);
+  });
+
+  it("loads afresh when play is pressed again after a failed start", async () => {
+    const { audio, player } = setup();
+    await player.select(rain);
+    const first = player.play();
+    audio.failStart();
+    await expect(first).rejects.toThrow();
+
+    const retry = player.play();
+    expect(audio.pendingPlay).toBe(true);
+    expect(player.loading).toBe(true);
+    audio.load();
+    await vi.advanceTimersByTimeAsync(1000);
+    await retry;
+    expect(player.playing).toBe(true);
+    expect(player.loading).toBe(false);
   });
 
   it("shows a mid-play stall until playback resumes", async () => {

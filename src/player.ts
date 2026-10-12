@@ -10,6 +10,9 @@ export class Player {
   private waiting = false;
   // Set when our own play() call will cause the element's next "play" event.
   private ownPlay = false;
+  // True while our play() waits for the element to start; a failure then
+  // is reported by play() itself, not by the "error" listener.
+  private starting = false;
   private fade = 0;
   private endFade: (() => void) | null = null;
   private current: Soundscape | null = null;
@@ -46,12 +49,13 @@ export class Player {
     // Between asking to play and sound coming out: first load, or a stall.
     this.audio.addEventListener("waiting", () => this.setWaiting(this.wanted));
     this.audio.addEventListener("playing", () => this.setWaiting(false));
-    // A network or decode failure after play() had already resolved.
+    // A network or decode failure once playback is under way.
     this.audio.addEventListener("error", () => {
-      if (!this.wanted) return;
+      if (!this.wanted || this.starting) return;
       this.cancelFade();
       this.audio.volume = this.target;
       this.setWanted(false);
+      if (!this.audio.paused) this.audio.pause();
       this.onerror(this.audio.error);
     });
   }
@@ -105,14 +109,21 @@ export class Player {
       this.audio.volume = 0;
       this.setWaiting(true);
       this.ownPlay = true;
+      this.starting = true;
       try {
         await this.audio.play();
       } catch (err) {
-        // A newer select changed the source, which aborts this play();
-        // that select starts its own, so this is not a failure to report.
-        if (seq !== this.seq) return;
+        this.ownPlay = false;
+        // Not failures: a newer select changed the source, or the listener
+        // paused before anything loaded. Both abort this play() on purpose.
+        if (seq !== this.seq || !this.wanted) return;
         this.setWanted(false);
+        // A failed load can leave the element unpaused; pause it so a retry
+        // starts a fresh load instead of fading up silence.
+        if (!this.audio.paused) this.audio.pause();
         throw err;
+      } finally {
+        this.starting = false;
       }
     }
     if (seq !== this.seq) return;

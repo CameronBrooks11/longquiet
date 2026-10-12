@@ -78,7 +78,7 @@ function render() {
   document.body.classList.toggle("is-loading", player.loading);
   playButton.setAttribute(
     "aria-label",
-    player.loading ? "Loading" : player.playing ? "Pause" : "Play",
+    player.loading ? "Pause (loading)" : player.playing ? "Pause" : "Play",
   );
   now.textContent = current ? `${current.title} — ${current.author}` : "";
 }
