@@ -19,11 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: extractions/setup-just@v2
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: extractions/setup-just@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
+          package-manager-cache: false
       - run: just setup
       - run: just check
       - run: just test
