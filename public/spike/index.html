@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>#8 spike</title>
+    <style>
+      body { font: 16px/1.4 system-ui, sans-serif; margin: 1rem; max-width: 36rem; }
+      button { font: inherit; padding: 0.6rem 1rem; margin: 0.25rem 0.25rem 0.25rem 0; }
+      pre { background: #eee; padding: 0.5rem; white-space: pre-wrap; font-size: 14px; }
+      h2 { font-size: 1.1rem; margin-top: 1.5rem; }
+    </style>
+  </head>
+  <body>
+    <h1>#8 spike</h1>
+    <p id="mode"></p>
+
+    <h2>A. Locked run (questions 1 and 3)</h2>
+    <p>
+      Headphones on. Press Start: rain plays from an audio element, and a 200 Hz
+      tone in the left ear and 210 Hz in the right come from Web Audio. Lock the
+      phone for 10 minutes and listen. Then unlock and screenshot this box.
+    </p>
+    <button id="a-start">Start</button>
+    <button id="a-stop">Stop</button>
+    <pre id="a-log">not started</pre>
+
+    <h2>B. Loop clicks (question 2)</h2>
+    <p>
+      Each file is a 2 s stereo tone looped by the audio element. Listen for a
+      click or gap every 2 s. The screen can stay on.
+    </p>
+    <button data-src="tones.wav">WAV</button>
+    <button data-src="tones.flac">FLAC</button>
+    <button data-src="tones.mp3">MP3</button>
+    <button data-src="tones.m4a">AAC</button>
+    <button id="b-stop">Stop</button>
+    <pre id="b-log">-</pre>
+
+    <script>
+      const standalone =
+        matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+      document.getElementById("mode").textContent =
+        (standalone ? "Installed (standalone)" : "Browser tab") + " · " + navigator.userAgent;
+
+      // A: oscillators beside an <audio> element; log both clocks and timeupdate
+      let ctx, rain, ticker, s;
+      const aLog = document.getElementById("a-log");
+      const fmt = (ms) => (ms / 1000).toFixed(1) + " s";
+
+      function render() {
+        if (!s) return;
+        const now = Date.now();
+        aLog.textContent = [
+          "wall time since start: " + fmt(now - s.t0),
+          "Web Audio clock advanced: " + fmt((ctx.currentTime - s.ctx0) * 1000),
+          "Web Audio state now: " + ctx.state,
+          "state changes: " + (s.states.join(", ") || "none"),
+          "rain clock advanced: " + fmt((rain.currentTime - s.rain0) * 1000) +
+            " (loops reset it; compare only if under " + fmt(rain.duration * 1000) + ")",
+          "rain paused: " + rain.paused,
+          "timeupdate events: " + s.tu + ", longest gap " + fmt(s.tuGap),
+          "1 s interval ticks: " + s.ticks + ", longest gap " + fmt(s.tickGap),
+          "page hidden for: " + fmt(s.hidden + (s.hiddenAt ? now - s.hiddenAt : 0)),
+          "audioSession: " + (navigator.audioSession ? navigator.audioSession.type : "unsupported"),
+        ].join("\n");
+      }
+
+      document.getElementById("a-start").onclick = async () => {
+        if (navigator.audioSession) navigator.audioSession.type = "playback";
+        ctx = new AudioContext();
+        const merge = ctx.createChannelMerger(2);
+        const gain = ctx.createGain();
+        gain.gain.value = 0.08;
+        [200, 210].forEach((hz, ch) => {
+          const o = ctx.createOscillator();
+          o.frequency.value = hz;
+          o.connect(merge, 0, ch);
+          o.start();
+        });
+        merge.connect(gain).connect(ctx.destination);
+
+        rain = new Audio("/longquiet/audio/rain.mp3");
+        rain.loop = true;
+        await Promise.all([rain.play(), ctx.resume()]);
+
+        s = {
+          t0: Date.now(), ctx0: ctx.currentTime, rain0: rain.currentTime,
+          states: [], tu: 0, tuGap: 0, lastTu: Date.now(),
+          ticks: 0, tickGap: 0, lastTick: Date.now(), hidden: 0, hiddenAt: 0,
+        };
+        ctx.onstatechange = () =>
+          s.states.push(ctx.state + " at " + fmt(Date.now() - s.t0));
+        rain.ontimeupdate = () => {
+          const n = Date.now();
+          s.tu++;
+          s.tuGap = Math.max(s.tuGap, n - s.lastTu);
+          s.lastTu = n;
+        };
+        ticker = setInterval(() => {
+          const n = Date.now();
+          s.ticks++;
+          s.tickGap = Math.max(s.tickGap, n - s.lastTick);
+          s.lastTick = n;
+          render();
+        }, 1000);
+        render();
+      };
+
+      document.addEventListener("visibilitychange", () => {
+        if (!s) return;
+        if (document.hidden) s.hiddenAt = Date.now();
+        else if (s.hiddenAt) {
+          s.hidden += Date.now() - s.hiddenAt;
+          s.hiddenAt = 0;
+        }
+        render();
+      });
+
+      document.getElementById("a-stop").onclick = () => {
+        render();
+        clearInterval(ticker);
+        if (rain) rain.pause();
+        if (ctx) ctx.close();
+        s = null;
+      };
+
+      // B: one looping element per format
+      const loop = new Audio();
+      loop.loop = true;
+      const bLog = document.getElementById("b-log");
+      document.querySelectorAll("[data-src]").forEach((b) => {
+        b.onclick = async () => {
+          loop.src = b.dataset.src;
+          try {
+            await loop.play();
+            bLog.textContent = "playing " + b.dataset.src;
+          } catch (e) {
+            bLog.textContent = b.dataset.src + ": " + e.name + " " + e.message;
+          }
+        };
+      });
+      document.getElementById("b-stop").onclick = () => {
+        loop.pause();
+        bLog.textContent = "-";
+      };
+    </script>
+  </body>
+</html>
