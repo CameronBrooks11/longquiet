@@ -829,6 +829,34 @@ describe("Player next button", () => {
     expect(audio.volume).toBeCloseTo(0.7);
   });
 
+  it("moves on at once while the piece is still loading", async () => {
+    const { audio, player } = setup();
+    await player.select(playlist);
+    void player.play(); // piece-1 still loading, silent
+    await player.next();
+    expect(audio.src).toBe("/audio/piece-2.mp3");
+  });
+
+  it("does not skip twice when the old piece ends during the fade", async () => {
+    const { audio, player } = setup();
+    await player.select(playlist);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+
+    const skipped = player.next();
+    await vi.advanceTimersByTimeAsync(200);
+    audio.end(); // piece-1 runs out mid-fade
+    await vi.advanceTimersByTimeAsync(600);
+    await skipped;
+    expect(player.track?.id).toBe("piece-2");
+    expect(audio.src).toBe("/audio/piece-2.mp3");
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(audio.paused).toBe(false);
+  });
+
   it("only moves on while paused", async () => {
     const { audio, player } = setup();
     await player.select(playlist);

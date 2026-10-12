@@ -161,8 +161,11 @@ export class Player {
     this.updateMediaSession();
     this.onchange();
     // Skipping mid-piece fades out first, as a change of sound does; at a
-    // track's natural end there is nothing left to fade.
-    if (this.wanted && !this.audio.ended) await this.fadeTo(0);
+    // track's natural end, or while nothing is audible yet, there is
+    // nothing to fade.
+    if (this.wanted && !this.audio.ended && this.audio.volume > 0) {
+      await this.fadeTo(0);
+    }
     if (seq !== this.seq) return;
     this.loadTrack();
     if (this.wanted) this.play().catch((err: unknown) => this.onerror(err));
