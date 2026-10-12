@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { soundscapes } from "./catalogue";
 import { Player } from "./player";
 
-// The parts of <audio> the player relies on: play() stays pending until the
-// file has loaded, and changing src aborts a pending play() and pauses.
+// The parts of <audio> the player relies on, as Chrome does them (measured):
+// play() unpauses at once, fires "play", and its promise waits for the file;
+// pause() fires "pause"; changing src pauses silently (only abort/emptied)
+// and rejects a pending play() with AbortError. Events are queued tasks.
 class FakeAudio {
   paused = true;
   volume = 1;
@@ -12,34 +14,50 @@ class FakeAudio {
   private source = "";
   private pending: { resolve: () => void; reject: (e: Error) => void } | null =
     null;
+  private listeners = new Map<string, (() => void)[]>();
 
   get src() {
     return this.source;
   }
-  keepsPlayingOnSrcChange = false;
   set src(v: string) {
     this.source = v;
-    if (!this.keepsPlayingOnSrcChange) this.paused = true;
+    this.paused = true;
     if (this.pending) {
       const p = this.pending;
       this.pending = null;
       p.reject(new DOMException("interrupted by a new load", "AbortError"));
     }
   }
-  addEventListener() {}
+  addEventListener(type: string, fn: () => void) {
+    this.listeners.set(type, [...(this.listeners.get(type) ?? []), fn]);
+  }
+  private fire(type: string) {
+    setTimeout(() => this.listeners.get(type)?.forEach((fn) => fn()), 0);
+  }
   play() {
+    if (this.paused) {
+      this.paused = false;
+      this.fire("play");
+    }
     return new Promise<void>((resolve, reject) => {
       this.pending = { resolve, reject };
     });
   }
   pause() {
-    this.paused = true;
+    if (!this.paused) {
+      this.paused = true;
+      this.fire("pause");
+    }
   }
+  // The file has loaded: a pending play() resolves.
   load() {
     const p = this.pending;
     this.pending = null;
-    this.paused = false;
     p?.resolve();
+  }
+  // Something outside the page pauses it: unplugged headphones, a call.
+  interrupt() {
+    this.pause();
   }
 }
 
@@ -76,6 +94,18 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+describe("Player", () => {
+  it("shows an outside pause, such as unplugged headphones", async () => {
+    const { audio, player } = setup();
+    await playing(audio, player);
+
+    audio.interrupt();
+    await vi.advanceTimersByTimeAsync(10);
+
+    expect(player.playing).toBe(false);
+  });
+});
+
 describe("Player.select", () => {
   it("shows a new choice at once, before the fade-out ends", async () => {
     const { audio, player, changes } = setup();
@@ -103,27 +133,6 @@ describe("Player.select", () => {
     expect(audio.src).toBe("/audio/night.mp3");
     expect(player.playing).toBe(true);
     expect(audio.paused).toBe(false);
-  });
-
-  it("fades the last of a burst back up while the element plays on", async () => {
-    // Chrome keeps a playing element playing across a src change.
-    const { audio, player } = setup();
-    await playing(audio, player);
-    audio.keepsPlayingOnSrcChange = true;
-    player.setVolume(0.7);
-
-    // Key repeat: each press is its own event, a couple of ms apart.
-    const all: Promise<void>[] = [];
-    for (const s of [forest, stream, night, rain, forest, stream, night]) {
-      all.push(player.select(s));
-      await vi.advanceTimersByTimeAsync(2);
-    }
-    await vi.advanceTimersByTimeAsync(2000);
-    await Promise.all(all);
-
-    expect(audio.src).toBe("/audio/night.mp3");
-    expect(player.playing).toBe(true);
-    expect(audio.volume).toBeCloseTo(0.7);
   });
 
   it("keeps playing when a newer choice aborts an older play()", async () => {
@@ -157,6 +166,44 @@ describe("Player.select", () => {
     expect(audio.src).toBe("/audio/forest.mp3");
     expect(player.playing).toBe(false);
     expect(audio.paused).toBe(true);
+  });
+
+  it("ends a key-repeat burst playing at full volume", async () => {
+    const { audio, player } = setup();
+    player.setVolume(0.7);
+    await playing(audio, player);
+
+    const all: Promise<void>[] = [];
+    for (const s of [forest, stream, night, rain, forest, stream, night]) {
+      all.push(player.select(s)); // each press its own task, ms apart
+      await vi.advanceTimersByTimeAsync(2);
+    }
+    await vi.advanceTimersByTimeAsync(1000);
+    audio.load();
+    await vi.advanceTimersByTimeAsync(1000);
+    await Promise.all(all);
+
+    expect(audio.src).toBe("/audio/night.mp3");
+    expect(player.playing).toBe(true);
+    expect(audio.paused).toBe(false);
+    expect(audio.volume).toBeCloseTo(0.7);
+  });
+
+  it("pauses cleanly when pause lands during a switch's fade", async () => {
+    const { audio, player } = setup();
+    player.setVolume(0.7);
+    await playing(audio, player);
+
+    const choice = player.select(forest);
+    await vi.advanceTimersByTimeAsync(300);
+    const paused = player.pause();
+    await vi.advanceTimersByTimeAsync(2000);
+    await Promise.all([choice, paused]);
+
+    expect(audio.src).toBe("/audio/forest.mp3");
+    expect(audio.paused).toBe(true);
+    expect(player.playing).toBe(false);
+    expect(audio.volume).toBeCloseTo(0.7);
   });
 
   it("still reports a real failure to start", async () => {
