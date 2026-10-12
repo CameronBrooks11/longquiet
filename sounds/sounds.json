@@ -1,4 +1,8 @@
 {
+  "audio": {
+    "release": "audio-2026.10.12",
+    "baseUrl": "https://github.com/CameronBrooks11/longquiet/releases/download"
+  },
   "loudnessTarget": -26,
   "sounds": [
     {
@@ -20,6 +24,10 @@
       "recipe": {
         "excerpt": null,
         "crossfade": 8
+      },
+      "build": {
+        "sha256": "385c79183b5b3cd005fe6a9cae7c568c69af4933df096ba96c9caefcc84ec775",
+        "bytes": 8697356
       }
     },
     {
@@ -42,6 +50,10 @@
       "recipe": {
         "excerpt": null,
         "crossfade": 0
+      },
+      "build": {
+        "sha256": "9309168d0e704a5dd72dcf05e81bdc90a31f1caa0ece8f6e0fd41d84015d683f",
+        "bytes": 13562414
       }
     },
     {
@@ -64,6 +76,10 @@
       "recipe": {
         "excerpt": null,
         "crossfade": 8
+      },
+      "build": {
+        "sha256": "7fac43e4a72139269b1096cca6fcfc62480db0dc8fe3e965a9a0285e806028a9",
+        "bytes": 14276136
       }
     },
     {
@@ -86,6 +102,10 @@
       "recipe": {
         "excerpt": 620,
         "crossfade": 8
+      },
+      "build": {
+        "sha256": "85935f894bf6f17099c8d7cda2471d54f60c0c3d17c0ebcb973ecd8ecb392747",
+        "bytes": 14007212
       }
     },
     {
@@ -108,6 +128,10 @@
       "recipe": {
         "excerpt": 600,
         "crossfade": 8
+      },
+      "build": {
+        "sha256": "efb8a3ecade374edf975b3d53887b50cf75cc01b084234050af7c2b5ff27d1a7",
+        "bytes": 13283756
       }
     },
     {
@@ -130,6 +154,10 @@
       "recipe": {
         "excerpt": null,
         "crossfade": 8
+      },
+      "build": {
+        "sha256": "b35ad378ad7418e02c5cb0540a0d08a843b69a46a1762a93e178231a866b78e0",
+        "bytes": 12777356
       }
     }
   ]

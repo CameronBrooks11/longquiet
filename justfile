@@ -33,9 +33,22 @@ check: fmt-check lint typecheck
 test:
     npm exec -- vitest run
 
-# Render public/audio/ from the originals in sounds/.cache, then check it
+# Render public/audio/ from the originals in sounds/.cache, record, check
 sounds:
     scripts/build-sounds.sh build
+    npm exec -- prettier --write sounds/sounds.json
+
+# Download the audio release named in sounds/sounds.json into public/audio/
+fetch-audio:
+    scripts/fetch-audio.sh
+
+# Publish public/audio/ as a new audio release, then name it in sounds.json
+publish-audio tag:
+    scripts/build-sounds.sh verify
+    gh release create {{tag}} public/audio/*.mp3 --latest=false --title "Audio {{tag}}" --notes "Built audio for longquiet; see sounds/sounds.json for sources and licences."
+    jq --arg t {{tag}} '.audio.release = $t' sounds/sounds.json > sounds/sounds.json.next
+    mv sounds/sounds.json.next sounds/sounds.json
+    npm exec -- prettier --write sounds/sounds.json
 
 # Check loudness, true peak and loop seam of every file in public/audio/
 audio-check:

@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# build-sounds.sh build|check
+# build-sounds.sh build|record|verify|check
 #
 #   build  verify each original in sounds/.cache against its sha256 in
-#          sounds/sounds.json, render public/audio/<id>.mp3, then check
-#   check  measure the committed public/audio/<id>.mp3 files and fail if any
+#          sounds/sounds.json, render public/audio/<id>.mp3, record, check
+#   record write each built file's sha256 and size into sounds/sounds.json
+#   verify fail unless every built file matches its recorded sha256; run
+#          before publishing the files as an audio release
+#   check  measure the built public/audio/<id>.mp3 files and fail if any
 #          is off the loudness target by more than 1 LU, has a true peak
 #          above -1 dBTP, or has a loop point that stands out (below)
 #
@@ -121,6 +124,21 @@ sounds() {
     jq -r '.sounds[] | [.id, .source.file, .source.sha256, (.recipe.excerpt // "null"), .recipe.crossfade] | @tsv' "$manifest"
 }
 
+record() {
+    local id sha bytes next
+    while IFS=$'\t' read -r id _; do
+        [ -f "$out/$id.mp3" ] || die "$id: missing $out/$id.mp3"
+        sha=$(sha256sum "$out/$id.mp3" | cut -d' ' -f1)
+        bytes=$(wc -c <"$out/$id.mp3")
+        next=$(mktemp)
+        jq --arg id "$id" --arg sha "$sha" --argjson bytes "$bytes" \
+            '(.sounds[] | select(.id == $id)).build = {sha256: $sha, bytes: $bytes}' \
+            "$manifest" >"$next"
+        mv -- "$next" "$manifest"
+    done < <(sounds)
+    echo "recorded build hashes in $manifest"
+}
+
 case "${1:-}" in
 build)
     mkdir -p "$out"
@@ -131,7 +149,21 @@ build)
     done < <(sounds)
     rm -rf -- "$tmp"
     trap - EXIT
+    record
     exec "$0" check
+    ;;
+record)
+    record
+    ;;
+verify)
+    status=0
+    while IFS=$'\t' read -r id sha; do
+        if ! echo "$sha  $out/$id.mp3" | sha256sum --check --quiet - 2>/dev/null; then
+            echo "$id: $out/$id.mp3 is missing or differs from its recorded build" >&2
+            status=1
+        fi
+    done < <(jq -r '.sounds[] | [.id, .build.sha256] | @tsv' "$manifest")
+    exit "$status"
     ;;
 check)
     status=0
@@ -142,7 +174,7 @@ check)
     exit "$status"
     ;;
 *)
-    echo "usage: $0 build|check" >&2
+    echo "usage: $0 build|record|verify|check" >&2
     exit 64
     ;;
 esac
