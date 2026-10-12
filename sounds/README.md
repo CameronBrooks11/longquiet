@@ -37,8 +37,17 @@ file is built (`scripts/build-sounds.sh` reads it).
 
 `just audio-check` measures every file in `public/audio/` and fails if one
 is more than 1 LU off the loudness target, has a true peak above −1 dBTP,
-or steps more than 1.5 dB at its loop point. The tests fail if an entry is
-missing its file, its attribution, or an allowed licence.
+or has a loop point that stands out: the level step from its last second
+to its first must be no larger than the recording's own 95th-percentile
+step between adjacent seconds (at least 1.5 dB). A busy recording such as
+birdsong varies by several dB from second to second, so for those only
+listening can judge the loop. The tests fail if an entry is missing its
+file, its attribution, or an allowed licence.
+
+A recording whose loudest moments sit far above its average (crackling
+fire, close thunder) cannot reach the loudness target without its peaks
+clipping, and its sudden peaks would startle a listener anyway. The check
+rejects it on true peak; choose a steadier recording.
 
 Built audio is committed while the total stays under 150 MB. Past that it
 moves to versioned release assets.
