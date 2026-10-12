@@ -35,7 +35,9 @@ file is built (`scripts/build-sounds.sh` reads it).
    in `sections` (a section appears in the app once it has a sound).
    `source.sha256` is the output of
    `sha256sum sounds/.cache/<file>`; `source.format` reads like
-   `24-bit WAV`. In `recipe`, `excerpt` is the number of seconds to keep
+   `24-bit WAV`. A loop needs a lossless original (WAV, FLAC, AIFF); a
+   playlist piece may use a lossy one (`Ogg Vorbis`, `MP3`) when no
+   lossless copy exists, since it is only levelled and re-encoded. In `recipe`, `excerpt` is the number of seconds to keep
    from the start (or `null` for all of it) and `crossfade` the seconds of
    end blended into the start (8 is a good default; 0 for a recording
    already made to loop). `limit`, optional, is a sample-peak ceiling in

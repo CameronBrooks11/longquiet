@@ -66,12 +66,24 @@ describe("catalogue", () => {
 
   it.each(tracks)("$id pins its original and a sane recipe", (s) => {
     expect(s.source.sha256).toMatch(/^[0-9a-f]{64}$/);
-    expect(s.source.file).toMatch(/\.(wav|flac|aiff?)$/);
+    expect(s.source.file).toMatch(/\.(wav|flac|aiff?|ogg|mp3)$/);
     expect(s.recipe.crossfade).toBeGreaterThanOrEqual(0);
     if (s.recipe.excerpt !== null) {
       expect(s.recipe.excerpt).toBeGreaterThan(2 * s.recipe.crossfade);
     }
   });
+
+  // A loop is cut and crossfaded, so it starts from a lossless original. A
+  // playlist piece may come from a lossy one when no lossless copy exists;
+  // the credits name the format either way.
+  it.each(soundscapes.filter((s) => s.loops))(
+    "$id loops from a lossless original",
+    (s) => {
+      for (const t of s.tracks) {
+        expect(t.source.file).toMatch(/\.(wav|flac|aiff?)$/);
+      }
+    },
+  );
 
   it("is listed in the README by source URL", () => {
     const readme = readFileSync(

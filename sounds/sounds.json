@@ -1,6 +1,6 @@
 {
   "audio": {
-    "release": "audio-2026.10.12.3",
+    "release": "audio-2026.10.12.4",
     "baseUrl": "https://github.com/CameronBrooks11/longquiet/releases/download"
   },
   "loudnessTarget": -26,
@@ -650,6 +650,31 @@
           }
         },
         {
+          "id": "flow-my-tears",
+          "title": "Flow My Tears",
+          "author": "John Dowland, arranged and played by Bert Alink",
+          "authorUrl": "https://imslp.org/wiki/User%3ABert_alink",
+          "sourceUrl": "https://imslp.org/wiki/Flow_My_Tears_(Dowland,_John)",
+          "licence": {
+            "name": "CC BY 4.0",
+            "url": "https://creativecommons.org/licenses/by/4.0/"
+          },
+          "recorded": "2022",
+          "source": {
+            "file": "imslp__Dowland_Flow_My_Tears_Alink.mp3",
+            "format": "MP3",
+            "sha256": "68c7f8a5f015eedb909c28670ac0dc4e4ab6305684d1ddbb6c5a1bcc1bdcd43c"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "3af7271b88075b660192c0f3b52b62d40f6e73efa9b12d94d30cb0591de3827c",
+            "bytes": 5203820
+          }
+        },
+        {
           "id": "gymnopedie-2",
           "title": "Gymnopédie No. 2",
           "author": "Erik Satie, played by Michael Laucke on classical guitar",
@@ -674,6 +699,54 @@
           }
         },
         {
+          "id": "el-noi-de-la-mare",
+          "title": "El Noi de la Mare",
+          "author": "Catalan traditional, played by Jujutacular",
+          "authorUrl": "https://commons.wikimedia.org/wiki/User:Jujutacular",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:El_Noi_de_la_Mare_(guitar).ogg",
+          "licence": {
+            "name": "CC BY-SA 3.0",
+            "url": "https://creativecommons.org/licenses/by-sa/3.0/"
+          },
+          "source": {
+            "file": "commons__El_Noi_de_la_Mare_guitar.ogg",
+            "format": "Ogg Vorbis",
+            "sha256": "71d69f132846a8470db88554b7a6e6665b8f53675911d0c5264e56cfc6a73b07"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "b167da69c48ec692bce726c17cd401bbaf9b176d18af713ac015b3d735ba06db",
+            "bytes": 1497615
+          }
+        },
+        {
+          "id": "coste-serenata",
+          "title": "Les Soirées d'Auteuil, Op. 23: No. 1, Serenata",
+          "author": "Napoléon Coste, played by Edson Lopes",
+          "authorUrl": "https://imslp.org/wiki/User%3AElopes",
+          "sourceUrl": "https://imslp.org/wiki/Les_soir%C3%A9es_d'Auteuil,_Op.23_(Coste,_Napol%C3%A9on)",
+          "licence": {
+            "name": "CC BY 3.0",
+            "url": "https://creativecommons.org/licenses/by/3.0/"
+          },
+          "source": {
+            "file": "imslp__Coste_Serenata_Op23_1_Lopes.mp3",
+            "format": "MP3",
+            "sha256": "17d34957254426ba71d4876d155f01c219b0581fa3165b78f12df765edf43542"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "ad162668edb4ed82c364b5237e28694e8965b783beb19da888960c0f6d84df8f",
+            "bytes": 3650382
+          }
+        },
+        {
           "id": "gymnopedie-3",
           "title": "Gymnopédie No. 3",
           "author": "Erik Satie, played by Michael Laucke on classical guitar",
@@ -695,6 +768,204 @@
           "build": {
             "sha256": "e0c7124c706a463b5198d6385b4de6d1c29f80e738cad01159a0c24fbc93bf66",
             "bytes": 2232077
+          }
+        },
+        {
+          "id": "sor-minuet-op11-2",
+          "title": "Minuet, Op. 11 No. 2",
+          "author": "Fernando Sor, played by Jujutacular",
+          "authorUrl": "https://commons.wikimedia.org/wiki/User:Jujutacular",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sor_Op_11_No_2.ogg",
+          "licence": {
+            "name": "CC BY-SA 3.0",
+            "url": "https://creativecommons.org/licenses/by-sa/3.0/"
+          },
+          "recorded": "2009",
+          "source": {
+            "file": "commons__Sor_Op_11_No_2.ogg",
+            "format": "Ogg Vorbis",
+            "sha256": "f503e3d18edd9431cfc9e5899ee35512638387797e0ce4c68be64a23f3f629c6"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0,
+            "limit": -2.5
+          },
+          "build": {
+            "sha256": "fa0b5712c3218a6e207ee0b33d8befec81c12b431031c50c0fe958e8ae4109d5",
+            "bytes": 2169332
+          }
+        },
+        {
+          "id": "lagrima",
+          "title": "Lágrima",
+          "author": "Francisco Tárrega, arranged and played by Ramón León Egea on 10-string guitar",
+          "authorUrl": "https://imslp.org/wiki/User%3ARam%C3%B3n_Le%C3%B3n_Egea",
+          "sourceUrl": "https://imslp.org/wiki/L%C3%A1grima_(T%C3%A1rrega,_Francisco)",
+          "licence": {
+            "name": "CC BY-SA 4.0",
+            "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+          },
+          "recorded": "2024",
+          "source": {
+            "file": "imslp__Tarrega_Lagrima_Leon_Egea.mp3",
+            "format": "MP3",
+            "sha256": "1bc286da0abfb281f6b81f46a5bdc0ab00d13f5b8055b7cb78ef158f0093d8f4"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "f4196d65d04d9d72ea487c8055b521c0c1224b60d6b5b72db420c794c9cb9e05",
+            "bytes": 1446932
+          }
+        },
+        {
+          "id": "diabelli-trauermarsch",
+          "title": "Funeral March on the Death of Michael Haydn",
+          "author": "Anton Diabelli, played by Marcos Pablo Dalmacio",
+          "authorUrl": "https://imslp.org/wiki/User%3AMarcos_Pablo_Dalmacio",
+          "sourceUrl": "https://imslp.org/wiki/Trauer_Marsch_auf_den_Todt_des_Herrn_Michael_Haydn_(Diabelli,_Anton)",
+          "licence": {
+            "name": "CC BY-SA 4.0",
+            "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+          },
+          "recorded": "2021",
+          "source": {
+            "file": "imslp__Diabelli_Trauermarsch_Dalmacio.mp3",
+            "format": "MP3",
+            "sha256": "acff0fd0e962393fe31458e4062afde7870ec517811ccd9258e937ea75a12b11"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "8581b497c212e2e57a762197bdd01798eb3a531936e6ba0ec61e3fb24267c6de",
+            "bytes": 4973348
+          }
+        },
+        {
+          "id": "recuerdos",
+          "title": "Recuerdos de la Alhambra",
+          "author": "Francisco Tárrega, played by Carlo Alberto Boni",
+          "authorUrl": "https://commons.wikimedia.org/wiki/User:Outonomia",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Recuerdos_de_la_Alhambra.ogg",
+          "licence": {
+            "name": "CC BY-SA 3.0",
+            "url": "https://creativecommons.org/licenses/by-sa/3.0/"
+          },
+          "source": {
+            "file": "commons__Recuerdos_de_la_Alhambra.ogg",
+            "format": "Ogg Vorbis",
+            "sha256": "aac6344dd8db0796589dede5cc2df72b766153942d436f5be300c81e3bfce675"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "952e5183b2bf84f63666d4cdc8388779a8eab9cde38a50ac7b41a4840520e33e",
+            "bytes": 4548697
+          }
+        },
+        {
+          "id": "giuliani-sonatina-op71-2",
+          "title": "Sonatina in G major, Op. 71 No. 2",
+          "author": "Mauro Giuliani, played by Marcos Pablo Dalmacio",
+          "authorUrl": "https://imslp.org/wiki/User%3AMarcos_Pablo_Dalmacio",
+          "sourceUrl": "https://imslp.org/wiki/3_Guitar_Sonatinas,_Op.71_(Giuliani,_Mauro)",
+          "licence": {
+            "name": "CC BY-SA 4.0",
+            "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+          },
+          "recorded": "2021",
+          "source": {
+            "file": "imslp__Giuliani_Sonatina_Op71_2_Dalmacio.mp3",
+            "format": "MP3",
+            "sha256": "19b235d2e0c7d2913d0b3a8f36f02617c671f12c3b5dd211a987724b6084a197"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "817f1449f23cd39ef4f541d86727bd7b541dd196cea3d1f4ff04fd3fbd890b94",
+            "bytes": 9232196
+          }
+        },
+        {
+          "id": "mudarra-conde-claros",
+          "title": "Conde Claros",
+          "author": "Alonso Mudarra, arranged and played by Stefan Nesyba",
+          "authorUrl": "https://imslp.org/wiki/User%3AStefan55",
+          "sourceUrl": "https://imslp.org/wiki/Conde_claros_(Mudarra,_Alonso)",
+          "licence": {
+            "name": "CC0 1.0",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+          },
+          "source": {
+            "file": "imslp__Mudarra_Conde_Claros_Nesyba.mp3",
+            "format": "MP3",
+            "sha256": "3d93aefe650b911d2af19d9ab4d39bde8c991af518872ff7ce87848fa43fe715"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "5e74b6ff39318a855245921218252c76814c9ad977e6839453ef752b92727b6c",
+            "bytes": 2012023
+          }
+        },
+        {
+          "id": "nylon-duet",
+          "title": "Relaxing music on nylon guitars",
+          "author": "ROCKSTARMONO ALIENBABA (composed and played)",
+          "authorUrl": "https://www.reverbnation.com/rockstarmono/song/32714449-relaxing-guitar-music-166e",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Relaxing_music_on_Nylon_Guitars_in_Stereo_44khz_16bit_wavefile.wav",
+          "licence": {
+            "name": "CC BY-SA 4.0",
+            "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+          },
+          "source": {
+            "file": "commons__Relaxing_music_on_Nylon_Guitars.wav",
+            "format": "16-bit WAV",
+            "sha256": "d9819fab5baf7a1641be749b2659a59834e352f32ba166b680a8878a11eb0a16"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "45c05932425470ab1de8690188fc4055e85a591c6302947e739fedcd5e05efdc",
+            "bytes": 5411283
+          }
+        },
+        {
+          "id": "sor-fantaisie-elegiaque",
+          "title": "Fantaisie élégiaque, Op. 59",
+          "author": "Fernando Sor, played by Marcos Pablo Dalmacio on a romantic guitar",
+          "authorUrl": "https://imslp.org/wiki/User%3AMarcos_Pablo_Dalmacio",
+          "sourceUrl": "https://imslp.org/wiki/Fantaisie_%C3%A9l%C3%A9giaque,_Op.59_(Sor,_Fernando)",
+          "licence": {
+            "name": "CC BY-SA 4.0",
+            "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+          },
+          "recorded": "2020",
+          "source": {
+            "file": "imslp__Sor_Fantaisie_Elegiaque_Op59_Dalmacio.mp3",
+            "format": "MP3",
+            "sha256": "6594095b407c264b4f6f9859b1f8c4f4d3092bee58c938d1a07602c9c130a29a"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "4a6b1ecef6f3c5612757724d95b34e9927a419eedd859ac2a3f5326200ae403f",
+            "bytes": 21016292
           }
         },
         {
