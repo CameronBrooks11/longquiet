@@ -171,13 +171,10 @@ beforeEach(() => {
   page.hidden = false;
   page.listeners.clear();
   vi.stubGlobal("navigator", {});
-  // Like a browser, frames do not run while the page is hidden.
-  vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) =>
-    setTimeout(() => {
-      if (!page.hidden) cb(performance.now());
-    }, 16),
-  );
-  vi.stubGlobal("cancelAnimationFrame", (id: number) => clearTimeout(id));
+  // Frames never come: fades must not depend on them (they stall in an
+  // occluded or unfocused window).
+  vi.stubGlobal("requestAnimationFrame", () => 0);
+  vi.stubGlobal("cancelAnimationFrame", () => {});
 });
 
 afterEach(() => {
@@ -386,6 +383,80 @@ describe("Player fades", () => {
     page.hide(); // e.g. the phone is locked
     expect(audio.volume).toBeCloseTo(0.7);
     await started;
+  });
+
+  it("run smoothly on timers, with no animation frames at all", async () => {
+    const { audio, player } = setup();
+    player.setVolume(0.7);
+    await player.select(rain);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(300);
+    expect(audio.volume).toBeGreaterThan(0.2); // part-way, not stuck
+    expect(audio.volume).toBeLessThan(0.6);
+    await vi.advanceTimersByTimeAsync(400);
+    expect(audio.volume).toBeCloseTo(0.7);
+    await started;
+  });
+
+  it("are instant when the page is already hidden", async () => {
+    const { audio, player } = setup();
+    player.setVolume(0.7);
+    await player.select(rain);
+    page.hide();
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(0);
+    await started;
+    expect(audio.volume).toBeCloseTo(0.7);
+  });
+
+  it("never touch the volume again once cancelled", async () => {
+    const { audio, player } = setup();
+    player.setVolume(0.7);
+    await player.select(rain);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(100); // fading in
+    const paused = player.pause(); // cancels the fade-in, fades out
+    let peak = audio.volume;
+    for (let i = 0; i < 40; i++) {
+      await vi.advanceTimersByTimeAsync(20);
+      if (!audio.paused) peak = Math.max(peak, audio.volume);
+    }
+    await Promise.all([started, paused]);
+    expect(peak).toBeLessThan(0.7 * 0.3); // never rose past where it was
+    expect(audio.paused).toBe(true);
+  });
+
+  it("still finish on hide after an earlier fade was cancelled", async () => {
+    // A cancelled fade's timer must stop: if it ran on, its end would mark no
+    // fade as running while the newer one still is, and hiding would no
+    // longer finish it.
+    const { audio, player } = setup();
+    player.setVolume(0.7);
+    await player.select(rain);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(300); // fading in
+    const paused = player.pause(); // new fade-out, 600 ms from here
+    await vi.advanceTimersByTimeAsync(350); // past the old fade's end
+    page.hide();
+    expect(audio.volume).toBe(0);
+    await Promise.all([started, paused]);
+  });
+
+  it("head for a new volume set during a fade-in", async () => {
+    const { audio, player } = setup();
+    player.setVolume(0.7);
+    await player.select(rain);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(200);
+    player.setVolume(0.3);
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+    expect(audio.volume).toBeCloseTo(0.3);
   });
 
   it("let a pause complete when the page is hidden mid-fade", async () => {
