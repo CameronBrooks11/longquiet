@@ -5,6 +5,9 @@ const publicDir = new URL("../public/", import.meta.url);
 const manifest = JSON.parse(
   readFileSync(new URL("manifest.webmanifest", publicDir), "utf8"),
 ) as {
+  id: string;
+  name: string;
+  short_name: string;
   start_url: string;
   scope: string;
   display: string;
@@ -18,6 +21,23 @@ function pngSize(path: URL): string {
 }
 
 describe("web app manifest", () => {
+  it("is linked from the page, with the touch icon", () => {
+    const html = readFileSync(
+      new URL("../index.html", import.meta.url),
+      "utf8",
+    );
+    expect(html).toMatch(/<link rel="manifest" href="\/manifest\.webmanifest"/);
+    expect(html).toMatch(
+      /<link rel="apple-touch-icon" href="\/icons\/apple-touch-icon\.png"/,
+    );
+  });
+
+  it("names the app and pins its identity", () => {
+    expect(manifest.name).toBe("longquiet");
+    expect(manifest.short_name).toBe("longquiet");
+    expect(manifest.id).toBe("./");
+  });
+
   it("stays inside the site's subpath and opens standalone", () => {
     // Relative, so they resolve under /longquiet/ wherever it is hosted.
     expect(manifest.start_url).toBe("./");
