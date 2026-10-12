@@ -1,0 +1,42 @@
+# Branch protection requires only the `ok` job; it collects the others.
+# Pull requests only: a squash merge of an up-to-date branch lands the tree the
+# PR run already tested. No dependency cache, since without a run on main it
+# would go cold within a week.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: extractions/setup-just@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: just setup
+      - run: just check
+      - run: just test
+      - run: just build
+
+  ok:
+    name: ok
+    if: always()
+    needs: [check]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fail if any upstream job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
+      - run: echo 'All checks passed or were skipped'
