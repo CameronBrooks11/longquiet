@@ -168,7 +168,7 @@ let wasPlaying = false;
 // system, cancels it.
 function followPlayback() {
   if (player.playing && !wasPlaying) sleep.started();
-  if (!player.playing && wasPlaying && sleep.on) {
+  if (!player.playing && sleep.on) {
     sleep.cancel();
     timerChoice.value = "0";
   }
