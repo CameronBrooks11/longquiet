@@ -152,3 +152,6 @@ vite.config.ts.timestamp-*
 working/
 planning/
 sounds/.cache/
+
+# Built audio lives in GitHub release assets (just fetch-audio)
+public/audio/

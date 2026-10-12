@@ -29,6 +29,7 @@ jobs:
           node-version-file: .nvmrc
           package-manager-cache: false
       - run: just setup
+      - run: just fetch-audio
       - run: just build
       - uses: actions/upload-pages-artifact@v5
         with:

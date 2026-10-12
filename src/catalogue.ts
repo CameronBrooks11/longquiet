@@ -24,6 +24,7 @@ export interface Soundscape {
   licence: Licence;
   recorded?: string;
   source: { file: string; format: string; sha256: string };
+  build: { sha256: string; bytes: number };
   recipe: Recipe;
   file: string;
   modifications: string;

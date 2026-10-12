@@ -20,25 +20,28 @@ soundscape, press play, and leave it running.
 | Ocean      | [Baltic Sea II - Zingst/Germany](https://freesound.org/people/pulswelle/sounds/667010/)                                   | pulswelle        | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | Night      | [Serrinha do Alambari night frogs chorus with close crickets](https://freesound.org/people/MeliaRoger/sounds/645706/)     | MeliaRoger       | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 
-The files in `public/audio/` are built from the uploaded originals by
-[`scripts/build-sounds.sh`](scripts/build-sounds.sh): an excerpt where a
+The audio is built from the uploaded originals by
+[`scripts/build-sounds.sh`](scripts/build-sounds.sh) and published as
+versioned GitHub release assets, not kept in git: an excerpt where a
 recording is long, a crossfaded loop point, and a static gain to −26 LUFS
 so switching sounds doesn't jump in volume.
 [`sounds/sounds.json`](sounds/sounds.json) is the authoritative list; it
 pins each original by checksum, holds the processing recipe, and drives the
-in-app credits. [`sounds/README.md`](sounds/README.md) explains how sounds
-are chosen and added.
+in-app credits, and records the sha256 of every built file.
+[`sounds/README.md`](sounds/README.md) explains how sounds are chosen,
+built and published.
 
 ## Development
 
 Needs Node (version in `.nvmrc`) and [just](https://github.com/casey/just).
 
 ```sh
-just setup   # install dependencies
-just run     # dev server at http://localhost:5173/longquiet/
-just check   # format check, lint, typecheck
-just test    # unit tests
-just build   # static site in dist/
+just setup        # install dependencies
+just fetch-audio  # download the audio release into public/audio/ (once)
+just run          # dev server at http://localhost:5173/longquiet/
+just check        # format check, lint, typecheck
+just test         # unit tests
+just build        # static site in dist/
 ```
 
 Pushing to `main` deploys to GitHub Pages via `.github/workflows/deploy.yml`.

@@ -28,7 +28,8 @@ sounds/sounds.json    # every recording: attribution, pinned original, recipe
 sounds/README.md      # what qualifies and how to add a sound
 sounds/.cache/        # originals, downloaded by hand; gitignored
 scripts/build-sounds.sh  # build: originals -> public/audio/; check: measure it
-public/audio/         # built recordings, named <id>.mp3, committed
+scripts/fetch-audio.sh   # download the audio release into public/audio/
+public/audio/         # built recordings, gitignored; from the audio release
 .github/workflows/    # ci.yml (PR gate, `ok` job), deploy.yml (Pages on push to main)
 ```
 
@@ -43,7 +44,9 @@ just test         # vitest run
 just run          # dev server
 just build        # production build into dist/
 just preview      # build, then serve dist/ locally
+just fetch-audio  # download the audio release into public/audio/
 just sounds       # render public/audio/ from sounds/.cache (needs ffmpeg, jq)
+just publish-audio audio-YYYY.MM.DD  # upload built audio as a release (gh)
 just audio-check  # measure public/audio/ against the loudness and seam limits
 ```
 
@@ -52,8 +55,9 @@ just audio-check  # measure public/audio/ against the loudness and seam limits
 - Every recording is an entry in `sounds/sounds.json`; follow
   `sounds/README.md` to add one. Never hand-write processing notes or
   attribution elsewhere; the credits are generated from that file.
-- Never commit originals (`sounds/.cache/`). Keep `public/audio/` under
-  150 MB; re-render only when a recipe or original changes.
+- Never commit originals (`sounds/.cache/`) or built audio
+  (`public/audio/`); built audio ships as a GitHub release named in
+  `sounds.json`. Keep the live site under Pages' 1 GB.
 - Only recordings whose licence allows self-hosted redistribution: CC0, CC BY,
   public domain. No NC/ND licences, no AI-generated audio, no BBC Sound Effects.
   Check the licence on the recording's own page, not in a search result.

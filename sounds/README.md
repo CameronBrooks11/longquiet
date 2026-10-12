@@ -30,8 +30,16 @@ file is built (`scripts/build-sounds.sh` reads it).
    end blended into the start (8 is a good default; 0 for a recording
    already made to loop).
 3. Add the recording to the table in the top-level README.
-4. `just sounds` renders `public/audio/<id>.mp3` and checks it. Listen to
-   the whole file, and to the loop point, before committing.
+4. `just sounds` renders `public/audio/<id>.mp3`, records each file's
+   sha256 and size in `sounds.json`, and checks them. Listen to the
+   whole file, and to the loop point.
+5. `just publish-audio audio-YYYY.MM.DD` uploads every built file as a
+   new GitHub release and names it in `sounds.json` (needs `gh`). Commit
+   `sounds.json`; the deploy fetches that release and verifies each file
+   against its recorded hash. Publish before the pull request: CI checks
+   that the named release holds every recorded file, so the PR fails
+   until it does. If an upload fails partway, `publish-audio.sh` says how
+   to finish it.
 
 ## Checks
 
@@ -52,5 +60,8 @@ peak. Sudden jumps of 10 LU or more, or a level that drifts across the
 recording, are not measured by the check at all, and they startle or
 break the loop; reject those by listening.
 
-Built audio is committed while the total stays under 150 MB. Past that it
-moves to versioned release assets.
+Built audio is not committed. `public/audio/` is gitignored; `just
+fetch-audio` downloads the release named in `sounds.json` and refuses
+any file whose hash differs from the recorded one. Old releases are left
+in place, so any past commit can still be built. The live site must stay
+under GitHub Pages' 1 GB.

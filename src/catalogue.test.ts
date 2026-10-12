@@ -1,9 +1,11 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { describeProcessing, findSoundscape, soundscapes } from "./catalogue";
 import { defaults } from "./preferences";
 
-const audioDir = new URL("../public/audio/", import.meta.url);
+const manifest = JSON.parse(
+  readFileSync(new URL("../sounds/sounds.json", import.meta.url), "utf8"),
+) as { audio: { release: string; baseUrl: string } };
 
 // Licences whose terms allow self-hosting and streaming the recording here.
 // Spelled out, not imported, so editing the catalogue cannot widen it.
@@ -20,8 +22,17 @@ describe("catalogue", () => {
     );
   });
 
-  it.each(soundscapes)("$id ships its audio file", (s) => {
-    expect(existsSync(new URL(s.file, audioDir))).toBe(true);
+  // The audio itself is a release asset (just fetch-audio), not in git.
+  it.each(soundscapes)("$id records its built file", (s) => {
+    expect(s.build.sha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(s.build.bytes).toBeGreaterThan(0);
+  });
+
+  it("names an audio release to fetch from", () => {
+    expect(manifest.audio.release).toMatch(/^audio-\d{4}\.\d{2}\.\d{2}$/);
+    expect(manifest.audio.baseUrl).toMatch(
+      /^https:\/\/github\.com\/.+\/releases\/download$/,
+    );
   });
 
   it.each(soundscapes)("$id carries full attribution", (s) => {

@@ -27,6 +27,9 @@ jobs:
           package-manager-cache: false
       - run: just setup
       - run: just check
+      - run: just check-release
+        env:
+          GH_TOKEN: ${{ github.token }}
       - run: just test
       - run: just build
 
