@@ -8,6 +8,7 @@ import {
 import { moveIndex, tabStop } from "./keys";
 import { Player } from "./player";
 import { loadPreferences, savePreferences } from "./preferences";
+import { remainingLabel, SleepTimer } from "./sleep";
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -33,6 +34,8 @@ const panel = byId<HTMLDivElement>("section-panel");
 const playButton = byId<HTMLButtonElement>("play");
 const now = byId<HTMLParagraphElement>("now");
 const volume = byId<HTMLInputElement>("volume");
+const timerChoice = byId<HTMLSelectElement>("timer");
+const timerLeft = byId<HTMLSpanElement>("timer-left");
 
 const buttons = soundscapes.map((s) =>
   el("button", {
@@ -152,7 +155,43 @@ function render() {
   );
   const track = player.track;
   now.textContent = track ? `${track.title} — ${track.author}` : "";
+  followPlayback();
+  renderTimer();
 }
+
+// Sleep timer. Not saved between visits: tonight's timer is not tomorrow's.
+const SLEEP_FADE_MS = 30_000;
+const sleep = new SleepTimer();
+let wasPlaying = false;
+
+// Starting playback starts a waiting timer; pausing, by hand or by the
+// system, cancels it.
+function followPlayback() {
+  if (player.playing && !wasPlaying) sleep.started();
+  if (!player.playing && wasPlaying) sleep.cancel();
+  wasPlaying = player.playing;
+}
+
+function renderTimer() {
+  const left = sleep.remaining();
+  timerLeft.textContent = left === null ? "" : remainingLabel(left);
+  if (!sleep.on) timerChoice.value = "0";
+}
+
+// Checked every second while the page runs, and on the audio's own
+// timeupdate events, which may keep coming on a locked phone when timers
+// do not. Either way the deadline is wall-clock time.
+function checkTimer() {
+  if (sleep.expire()) player.pause(SLEEP_FADE_MS).catch(reportPlaybackError);
+  renderTimer();
+}
+
+timerChoice.addEventListener("change", () => {
+  sleep.set(Number(timerChoice.value), player.playing);
+  renderTimer();
+});
+setInterval(checkTimer, 1000);
+player.audio.addEventListener("timeupdate", checkTimer);
 
 function reportPlaybackError(err: unknown) {
   now.textContent = "Couldn't start playback. Tap play to try again.";

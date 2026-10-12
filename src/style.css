@@ -267,6 +267,42 @@ button {
   accent-color: var(--accent);
 }
 
+/* Sleep timer: a quiet line under the volume, the native picker on phones. */
+.timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.6rem;
+  margin-top: -1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.timer svg {
+  width: 1.1rem;
+  fill: var(--muted);
+}
+
+.timer select {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  padding: 0.2rem 0.1rem;
+  cursor: pointer;
+}
+
+.timer select:hover {
+  border-bottom-color: var(--accent);
+}
+
+.timer select option {
+  background: var(--bg);
+  color: var(--fg);
+}
+
 .hint {
   margin: -1rem 0 0;
   color: var(--muted);

@@ -74,6 +74,21 @@
         Use your device's volume buttons.
       </p>
 
+      <div class="timer">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M19.5 14.5A8 8 0 1 1 9.5 4.5a6.5 6.5 0 0 0 10 10z" />
+        </svg>
+        <label class="visually-hidden" for="timer">Sleep timer</label>
+        <select id="timer">
+          <option value="0">No sleep timer</option>
+          <option value="15">Stop after 15 min</option>
+          <option value="30">Stop after 30 min</option>
+          <option value="60">Stop after 1 hour</option>
+          <option value="90">Stop after 90 min</option>
+        </select>
+        <span class="timer-left" id="timer-left"></span>
+      </div>
+
       <details class="credits">
         <summary>Credits &amp; licences</summary>
         <ul id="credits"></ul>

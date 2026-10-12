@@ -189,9 +189,10 @@ export class Player {
     await this.fadeTo(this.target);
   }
 
-  async pause() {
+  // A sleep timer passes a long fade; a hidden page still stops at once.
+  async pause(fadeMs = FADE_MS) {
     this.setWanted(false);
-    await this.fadeTo(0);
+    await this.fadeTo(0, fadeMs);
     if (!this.wanted) {
       this.audio.pause();
       this.audio.volume = this.target;
@@ -231,7 +232,7 @@ export class Player {
 
   // A hidden page's timers barely run, so a lock-screen pause jumps straight
   // to the end rather than waiting on a throttled fade.
-  private fadeTo(to: number): Promise<void> {
+  private fadeTo(to: number, ms = FADE_MS): Promise<void> {
     this.cancelFade();
     if (document.hidden) {
       this.audio.volume = to;
@@ -243,7 +244,7 @@ export class Player {
     return new Promise((resolve) => {
       this.endFade = resolve;
       const step = () => {
-        const t = Math.min(1, (performance.now() - start) / FADE_MS);
+        const t = Math.min(1, (performance.now() - start) / ms);
         this.audio.volume = from + (this.fadeTarget - from) * t;
         if (t < 1) {
           this.fade = setTimeout(step, FADE_STEP_MS);

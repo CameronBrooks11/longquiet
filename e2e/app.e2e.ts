@@ -193,3 +193,39 @@ test("fits a 320 px phone without sideways scrolling", async ({ page }) => {
     }
   }
 });
+
+test("a sleep timer fades the sound out and pauses on time", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto("./");
+  const loop = items.find((i) => !i.tracks)!;
+  await page.getByRole("radio", { name: loop.label, exact: true }).click();
+  await page.getByLabel("Sleep timer").selectOption("15");
+  await expect(page.locator("#timer-left")).toHaveText("15 min left");
+  await page.locator("#play").click();
+  await expectAdvancing(page);
+
+  await page.clock.fastForward("10:00");
+  await expect(page.locator("#timer-left")).toHaveText("5 min left");
+  await page.clock.fastForward("05:01");
+  await expect(page.locator("body")).not.toHaveClass(/is-playing/);
+  await expect(page.getByLabel("Sleep timer")).toHaveValue("0");
+  await expect(page.locator("#timer-left")).toHaveText("");
+  expect((await audio(page))?.paused).toBe(false); // fading out
+
+  await page.clock.fastForward("00:31");
+  await expect.poll(async () => (await audio(page))?.paused).toBe(true);
+});
+
+test("pausing by hand cancels the sleep timer", async ({ page }) => {
+  await page.goto("./");
+  await page.getByLabel("Sleep timer").selectOption("30");
+  await expect(page.locator("#timer-left")).toHaveText("30 min left");
+  await page.locator("#play").click();
+  await expect(page.locator("body")).toHaveClass(/is-playing/);
+  await page.locator("#play").click();
+  await expect(page.locator("body")).not.toHaveClass(/is-playing/);
+  await expect(page.getByLabel("Sleep timer")).toHaveValue("0");
+  await expect(page.locator("#timer-left")).toHaveText("");
+});
