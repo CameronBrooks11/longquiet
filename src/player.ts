@@ -7,12 +7,22 @@ const FADE_MS = 600;
 export class Player {
   private target = 1;
   private wanted = false;
+  private waiting = false;
+  // Set when our own play() call will cause the element's next "play" event.
+  private ownPlay = false;
+  // Failures per file. Chrome keeps a failed response for a URL for the
+  // life of the page, so a retry asks for the same file at a new URL.
+  private failures = new Map<string, number>();
+  // The sound whose file the element holds; during a switch's fade-out
+  // that is still the old one, while current is already the new one.
+  private loaded: Soundscape | null = null;
   private fade = 0;
   private endFade: (() => void) | null = null;
   private current: Soundscape | null = null;
   // Bumped by every select, so a slower, older one can tell it was overtaken.
   private seq = 0;
   onchange: () => void = () => {};
+  onerror: (err: unknown) => void = () => {};
 
   constructor(
     private readonly baseUrl: string,
@@ -30,16 +40,51 @@ export class Player {
       }
     });
     this.audio.addEventListener("play", () => {
+      if (this.ownPlay) {
+        this.ownPlay = false;
+        return;
+      }
       if (!this.wanted) {
         this.audio.volume = this.target;
         this.setWanted(true);
       }
+    });
+    // Between asking to play and sound coming out: first load, or a stall.
+    this.audio.addEventListener("waiting", () => this.setWaiting(this.wanted));
+    this.audio.addEventListener("playing", () => this.setWaiting(false));
+    // A load or network failure, at the start or mid-play. load() clears the
+    // error and resets the element: until then play() would reject at once,
+    // and a dropped connection is not refetched, so a retry would never work.
+    // An error while paused is not reported, but the reset still matters:
+    // a new src clears the error (as load() would) and points the next play
+    // past the failed response.
+    this.audio.addEventListener("error", () => {
+      const err = this.audio.error;
+      const wanted = this.wanted;
+      this.cancelFade();
+      this.audio.volume = this.target;
+      if (wanted) this.setWanted(false);
+      if (this.loaded) {
+        const f = this.loaded.file;
+        this.failures.set(f, (this.failures.get(f) ?? 0) + 1);
+      }
+      if (this.current) {
+        this.load(this.current);
+      } else {
+        this.audio.load();
+      }
+      if (wanted) this.onerror(err);
     });
   }
 
   // What the listener asked for, which leads the element during a fade.
   get playing(): boolean {
     return this.wanted;
+  }
+
+  // Playback was asked for but no sound is coming out yet.
+  get loading(): boolean {
+    return this.wanted && this.waiting;
   }
 
   get soundscape(): Soundscape | null {
@@ -69,7 +114,7 @@ export class Player {
     this.onchange();
     if (resume) await this.fadeTo(0);
     if (seq !== this.seq) return;
-    this.audio.src = `${this.baseUrl}audio/${s.file}`;
+    this.load(s);
     if (resume && this.wanted) await this.play();
   }
 
@@ -79,12 +124,18 @@ export class Player {
     this.setWanted(true);
     if (this.audio.paused) {
       this.audio.volume = 0;
+      this.setWaiting(true);
+      this.ownPlay = true;
       try {
         await this.audio.play();
       } catch (err) {
-        // A newer select changed the source, which aborts this play();
-        // that select starts its own, so this is not a failure to report.
-        if (seq !== this.seq) return;
+        // No "play" event follows a rejection, unless a newer play() set the
+        // flag for its own.
+        if (seq === this.seq) this.ownPlay = false;
+        // Already handled: a newer select changed the source, the listener
+        // paused before anything loaded, or the "error" listener reported a
+        // failed load. Anything else (say, autoplay refused) is reported here.
+        if (seq !== this.seq || !this.wanted) return;
         this.setWanted(false);
         throw err;
       }
@@ -102,8 +153,24 @@ export class Player {
     }
   }
 
+  private load(s: Soundscape) {
+    this.loaded = s;
+    this.audio.src = this.srcFor(s);
+  }
+
+  private srcFor(s: Soundscape): string {
+    const n = this.failures.get(s.file);
+    return `${this.baseUrl}audio/${s.file}${n ? `?retry=${n}` : ""}`;
+  }
+
   toggle(): Promise<void> {
     return this.wanted ? this.pause() : this.play();
+  }
+
+  private setWaiting(w: boolean) {
+    if (this.waiting === w) return;
+    this.waiting = w;
+    this.onchange();
   }
 
   private setWanted(w: boolean) {
