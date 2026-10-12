@@ -73,6 +73,7 @@ export class Player {
     this.audio.addEventListener("ended", () => {
       if (!this.wanted || !this.current || this.current.loops) return;
       if (this.loaded !== this.track) return;
+      this.next();
     });
     // A load or network failure, at the start or mid-play. load() clears the
     // error and resets the element: until then play() would reject at once,
@@ -201,7 +202,7 @@ export class Player {
     const t = this.track;
     if (!this.current || !t) return;
     this.loaded = t;
-    this.audio.loop = false;
+    this.audio.loop = this.current.loops;
     this.audio.src = this.srcFor(t);
   }
 
