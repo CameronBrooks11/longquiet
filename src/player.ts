@@ -13,6 +13,9 @@ export class Player {
   // Failures per file. Chrome keeps a failed response for a URL for the
   // life of the page, so a retry asks for the same file at a new URL.
   private failures = new Map<string, number>();
+  // The sound whose file the element holds; during a switch's fade-out
+  // that is still the old one, while current is already the new one.
+  private loaded: Soundscape | null = null;
   private fade = 0;
   private endFade: (() => void) | null = null;
   private current: Soundscape | null = null;
@@ -61,10 +64,12 @@ export class Player {
       this.cancelFade();
       this.audio.volume = this.target;
       if (wanted) this.setWanted(false);
-      if (this.current) {
-        const f = this.current.file;
+      if (this.loaded) {
+        const f = this.loaded.file;
         this.failures.set(f, (this.failures.get(f) ?? 0) + 1);
-        this.audio.src = this.srcFor(this.current);
+      }
+      if (this.current) {
+        this.load(this.current);
       } else {
         this.audio.load();
       }
@@ -109,7 +114,7 @@ export class Player {
     this.onchange();
     if (resume) await this.fadeTo(0);
     if (seq !== this.seq) return;
-    this.audio.src = this.srcFor(s);
+    this.load(s);
     if (resume && this.wanted) await this.play();
   }
 
@@ -146,6 +151,11 @@ export class Player {
       this.audio.pause();
       this.audio.volume = this.target;
     }
+  }
+
+  private load(s: Soundscape) {
+    this.loaded = s;
+    this.audio.src = this.srcFor(s);
   }
 
   private srcFor(s: Soundscape): string {

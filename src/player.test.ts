@@ -322,6 +322,20 @@ describe("Player.loading", () => {
     expect(player.loading).toBe(false);
   });
 
+  it("blames the sound that failed, even mid-switch", async () => {
+    const { audio, player } = setup();
+    await playing(audio, player); // rain
+    const choice = player.select(forest);
+    await vi.advanceTimersByTimeAsync(200); // rain still fading out
+    audio.fail();
+    await vi.advanceTimersByTimeAsync(1000);
+    await choice;
+
+    expect(audio.src).toBe("/audio/forest.mp3");
+    await player.select(rain);
+    expect(audio.src).toBe("/audio/rain.mp3?retry=1");
+  });
+
   it("follows an outside play after a refused start", async () => {
     const { audio, player } = setup();
     await player.select(rain);
