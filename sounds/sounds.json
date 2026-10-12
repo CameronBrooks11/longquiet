@@ -4,10 +4,33 @@
     "baseUrl": "https://github.com/CameronBrooks11/longquiet/releases/download"
   },
   "loudnessTarget": -26,
+  "sections": [
+    {
+      "id": "nature",
+      "label": "Nature",
+      "kind": "loop"
+    },
+    {
+      "id": "brainwaves",
+      "label": "Brainwaves",
+      "kind": "tones"
+    },
+    {
+      "id": "reflective",
+      "label": "Reflective",
+      "kind": "playlist"
+    },
+    {
+      "id": "acoustic",
+      "label": "Acoustic",
+      "kind": "playlist"
+    }
+  ],
   "sounds": [
     {
       "id": "rain",
       "label": "Rain",
+      "section": "nature",
       "title": "Rainstorm 10 min",
       "author": "Valerie-Vivegnis",
       "authorUrl": "https://freesound.org/people/Valerie-Vivegnis/",
@@ -33,6 +56,7 @@
     {
       "id": "forest",
       "label": "Forest",
+      "section": "nature",
       "title": "Afternoon Woods in October - Midwest US (loop)",
       "author": "NickTayloe",
       "authorUrl": "https://freesound.org/people/NickTayloe/",
@@ -59,6 +83,7 @@
     {
       "id": "dawn",
       "label": "Dawn",
+      "section": "nature",
       "title": "Bird ambience. Coniferous forest dawn chorus.",
       "author": "SamsterBirdies",
       "authorUrl": "https://freesound.org/people/SamsterBirdies/",
@@ -85,6 +110,7 @@
     {
       "id": "stream",
       "label": "Stream",
+      "section": "nature",
       "title": "Stream flow over the stones in the fields and insect chirping",
       "author": "lastraindrop",
       "authorUrl": "https://freesound.org/people/lastraindrop/",
@@ -111,6 +137,7 @@
     {
       "id": "ocean",
       "label": "Ocean",
+      "section": "nature",
       "title": "Baltic Sea II - Zingst/Germany",
       "author": "pulswelle",
       "authorUrl": "https://freesound.org/people/pulswelle/",
@@ -137,6 +164,7 @@
     {
       "id": "night",
       "label": "Night",
+      "section": "nature",
       "title": "Serrinha do Alambari night frogs chorus with close crickets",
       "author": "MeliaRoger",
       "authorUrl": "https://freesound.org/people/MeliaRoger/",

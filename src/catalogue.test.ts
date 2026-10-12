@@ -1,6 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { describeProcessing, findSoundscape, soundscapes } from "./catalogue";
+import {
+  describeProcessing,
+  findSoundscape,
+  populatedSections,
+  sections,
+  soundsIn,
+  soundscapes,
+} from "./catalogue";
 import { defaults } from "./preferences";
 
 const manifest = JSON.parse(
@@ -65,6 +72,25 @@ describe("catalogue", () => {
     expect(findSoundscape(defaults.soundscape).id).toBe(defaults.soundscape);
     expect(findSoundscape("no-such-sound")).toBe(soundscapes[0]);
     expect(findSoundscape(null)).toBe(soundscapes[0]);
+  });
+});
+
+describe("sections", () => {
+  it("have unique ids and a known kind", () => {
+    expect(new Set(sections.map((s) => s.id)).size).toBe(sections.length);
+    for (const s of sections) {
+      expect(["loop", "tones", "playlist"]).toContain(s.kind);
+    }
+  });
+
+  it.each(soundscapes)("$id belongs to a listed section", (s) => {
+    expect(sections.map((x) => x.id)).toContain(s.section);
+  });
+
+  it("count as populated only with something to play, in listed order", () => {
+    const expected = sections.filter((s) => soundsIn(s.id).length > 0);
+    expect(populatedSections).toEqual(expected);
+    expect(populatedSections.length).toBeGreaterThan(0);
   });
 });
 
