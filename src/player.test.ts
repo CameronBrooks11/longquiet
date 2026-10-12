@@ -49,11 +49,25 @@ class FakeAudio {
       this.fire("pause");
     }
   }
-  // The file has loaded: a pending play() resolves.
+  error: Error | null = null;
+  // The file has loaded: sound starts and a pending play() resolves.
   load() {
     const p = this.pending;
     this.pending = null;
+    this.fire("playing");
     p?.resolve();
+  }
+  // Playback stalls for data, then resumes.
+  stall() {
+    this.fire("waiting");
+  }
+  resume() {
+    this.fire("playing");
+  }
+  // The network drops after playback had started.
+  fail() {
+    this.error = new Error("network");
+    this.fire("error");
   }
   // Something outside the page pauses it: unplugged headphones, a call.
   interrupt() {
@@ -103,6 +117,71 @@ describe("Player", () => {
     await vi.advanceTimersByTimeAsync(10);
 
     expect(player.playing).toBe(false);
+  });
+});
+
+describe("Player.loading", () => {
+  it("is on from pressing play until sound comes out", async () => {
+    const { audio, player } = setup();
+    await player.select(rain);
+    const started = player.play();
+    expect(player.playing).toBe(true);
+    expect(player.loading).toBe(true);
+
+    audio.load();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+    expect(player.loading).toBe(false);
+  });
+
+  it("clears when the listener pauses before anything loads", async () => {
+    const { player } = setup();
+    await player.select(rain);
+    void player.play();
+    const paused = player.pause();
+    await vi.advanceTimersByTimeAsync(1000);
+    await paused;
+    expect(player.loading).toBe(false);
+    expect(player.playing).toBe(false);
+  });
+
+  it("shows a mid-play stall until playback resumes", async () => {
+    const { audio, player } = setup();
+    await playing(audio, player);
+
+    audio.stall();
+    await vi.advanceTimersByTimeAsync(10);
+    expect(player.loading).toBe(true);
+    audio.resume();
+    await vi.advanceTimersByTimeAsync(10);
+    expect(player.loading).toBe(false);
+  });
+
+  it("is on again while a switch loads the new sound", async () => {
+    const { audio, player } = setup();
+    await playing(audio, player);
+
+    const choice = player.select(forest);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(player.loading).toBe(true);
+    audio.load();
+    await vi.advanceTimersByTimeAsync(1000);
+    await choice;
+    expect(player.loading).toBe(false);
+    expect(player.playing).toBe(true);
+  });
+
+  it("reports a failure after playback started and returns to Play", async () => {
+    const { audio, player } = setup();
+    const errors = vi.fn();
+    player.onerror = errors;
+    await playing(audio, player);
+
+    audio.fail();
+    await vi.advanceTimersByTimeAsync(10);
+    expect(player.playing).toBe(false);
+    expect(player.loading).toBe(false);
+    expect(errors).toHaveBeenCalledOnce();
   });
 });
 

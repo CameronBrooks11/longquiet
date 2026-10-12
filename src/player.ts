@@ -7,12 +7,16 @@ const FADE_MS = 600;
 export class Player {
   private target = 1;
   private wanted = false;
+  private waiting = false;
+  // Set when our own play() call will cause the element's next "play" event.
+  private ownPlay = false;
   private fade = 0;
   private endFade: (() => void) | null = null;
   private current: Soundscape | null = null;
   // Bumped by every select, so a slower, older one can tell it was overtaken.
   private seq = 0;
   onchange: () => void = () => {};
+  onerror: (err: unknown) => void = () => {};
 
   constructor(
     private readonly baseUrl: string,
@@ -30,16 +34,36 @@ export class Player {
       }
     });
     this.audio.addEventListener("play", () => {
+      if (this.ownPlay) {
+        this.ownPlay = false;
+        return;
+      }
       if (!this.wanted) {
         this.audio.volume = this.target;
         this.setWanted(true);
       }
+    });
+    // Between asking to play and sound coming out: first load, or a stall.
+    this.audio.addEventListener("waiting", () => this.setWaiting(this.wanted));
+    this.audio.addEventListener("playing", () => this.setWaiting(false));
+    // A network or decode failure after play() had already resolved.
+    this.audio.addEventListener("error", () => {
+      if (!this.wanted) return;
+      this.cancelFade();
+      this.audio.volume = this.target;
+      this.setWanted(false);
+      this.onerror(this.audio.error);
     });
   }
 
   // What the listener asked for, which leads the element during a fade.
   get playing(): boolean {
     return this.wanted;
+  }
+
+  // Playback was asked for but no sound is coming out yet.
+  get loading(): boolean {
+    return this.wanted && this.waiting;
   }
 
   get soundscape(): Soundscape | null {
@@ -79,6 +103,8 @@ export class Player {
     this.setWanted(true);
     if (this.audio.paused) {
       this.audio.volume = 0;
+      this.setWaiting(true);
+      this.ownPlay = true;
       try {
         await this.audio.play();
       } catch (err) {
@@ -104,6 +130,12 @@ export class Player {
 
   toggle(): Promise<void> {
     return this.wanted ? this.pause() : this.play();
+  }
+
+  private setWaiting(w: boolean) {
+    if (this.waiting === w) return;
+    this.waiting = w;
+    this.onchange();
   }
 
   private setWanted(w: boolean) {
