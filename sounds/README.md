@@ -30,12 +30,16 @@ file is built (`scripts/build-sounds.sh` reads it).
    `24-bit WAV`. In `recipe`, `excerpt` is the number of seconds to keep
    from the start (or `null` for all of it) and `crossfade` the seconds of
    end blended into the start (8 is a good default; 0 for a recording
-   already made to loop).
+   already made to loop). `limit`, optional, is a sample-peak ceiling in
+   dBFS (between −24 and 0) for a peak limiter after the gain: use it only
+   when rare transients, such as drops on a tent, would otherwise clip,
+   and say so in review. The credits mention it.
 3. Add the recording to the table in the top-level README.
 4. `just sounds` renders `public/audio/<id>.mp3`, records each file's
    sha256 and size in `sounds.json`, and checks them. Listen to the
    whole file, and to the loop point.
-5. `just publish-audio audio-YYYY.MM.DD` uploads every built file as a
+5. `just publish-audio audio-YYYY.MM.DD` (add `.N` for a second release
+   the same day) uploads every built file as a
    new GitHub release and names it in `sounds.json` (needs `gh`). Commit
    `sounds.json`; the deploy fetches that release and verifies each file
    against its recorded hash. Publish before the pull request: CI checks
@@ -58,7 +62,8 @@ its attribution, or an allowed licence.
 Screen a candidate before building it. A recording whose peaks sit more
 than about 25 dB above its average loudness (a crackling fire, close
 thunder) cannot reach the target without clipping, and fails on true
-peak. Sudden jumps of 10 LU or more, or a level that drifts across the
+peak. If only a handful of short transients exceed the ceiling, `limit`
+can take them down; if they are frequent, the recording does not fit. Sudden jumps of 10 LU or more, or a level that drifts across the
 recording, are not measured by the check at all, and they startle or
 break the loop; reject those by listening.
 

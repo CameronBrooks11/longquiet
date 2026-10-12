@@ -119,7 +119,9 @@ render() {
     post="volume=${gain}dB"
     if [ "$limit" != null ]; then
         # level=0: no make-up gain, so the limiter only ever turns peaks down.
-        post="$post,alimiter=limit=$(awk -v d="$limit" 'BEGIN { printf "%.4f", 10 ^ (d / 20) }'):level=0:attack=5:release=50"
+        # latency=1: compensate the attack look-ahead; without it the output is
+        # delayed 5 ms, opening a 5 ms hole at the start of the loop.
+        post="$post,alimiter=limit=$(awk -v d="$limit" 'BEGIN { printf "%.4f", 10 ^ (d / 20) }'):level=0:attack=5:release=50:latency=1"
     fi
     ffmpeg -nostdin -hide_banner -loglevel error -y -i "$mix" -af "$post" \
         -map_metadata -1 -c:a libmp3lame -q:a 2 "$out/$id.mp3"

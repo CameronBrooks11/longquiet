@@ -102,13 +102,13 @@ describe("describeProcessing", () => {
     expect(
       describeProcessing(
         "16-bit FLAC",
-        { excerpt: 620, crossfade: 8, limit: -2 },
+        { excerpt: 620, crossfade: 8, limit: -2.5 },
         -26,
       ),
     ).toBe(
       "From the original 16-bit FLAC; first 10:20 only; last 8 s crossfaded " +
         "into the first 8 s to smooth the loop point; levelled to −26 LUFS; " +
-        "rare peaks limited to −2 dBFS; encoded as MP3",
+        "rare peaks limited to −2.5 dBFS; encoded as MP3",
     );
   });
 

@@ -1,6 +1,6 @@
 {
   "audio": {
-    "release": "audio-2026.10.12.1",
+    "release": "audio-2026.10.12.2",
     "baseUrl": "https://github.com/CameronBrooks11/longquiet/releases/download"
   },
   "loudnessTarget": -26,
@@ -76,8 +76,8 @@
         "limit": -2.5
       },
       "build": {
-        "sha256": "378ec3afdbc1789752e93a5a6ec286071cd2a62096afdb9170b2e83932de0eb5",
-        "bytes": 18207720
+        "sha256": "4e9cfe3e536a916ebbbfe5457a160d43d62036aa69715cccbd9f8a820e49e85f",
+        "bytes": 18243780
       }
     },
     {
@@ -190,7 +190,7 @@
     },
     {
       "id": "birdsong-rain",
-      "label": "Drizzle",
+      "label": "Rainbirds",
       "section": "nature",
       "title": "Birds In Rain",
       "author": "hargissssound",
