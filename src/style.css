@@ -77,6 +77,14 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* The panel spans the column, so the grid inside sizes against it rather
+   than shrinking to its own content. */
+#section-panel {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .sections {
   display: flex;
   flex-wrap: wrap;
