@@ -50,13 +50,13 @@ export class Player {
         this.setWanted(true);
       }
     });
-    // Between asking to play and sound coming out: first load, or a stall.
     // Fades run on animation frames, which stop once the page is hidden: a
-    // phone locked right after pressing play would hold the fade wherever it
-    // was, possibly near silence. Finish any fade at once instead.
+    // phone locked as a sound starts would hold the fade wherever it was,
+    // possibly near silence. Finish any fade at once instead.
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) this.finishFade();
     });
+    // Between asking to play and sound coming out: first load, or a stall.
     this.audio.addEventListener("waiting", () => this.setWaiting(this.wanted));
     this.audio.addEventListener("playing", () => this.setWaiting(false));
     // A load or network failure, at the start or mid-play. load() clears the

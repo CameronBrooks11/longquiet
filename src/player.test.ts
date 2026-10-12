@@ -395,6 +395,7 @@ describe("Player fades", () => {
     await vi.advanceTimersByTimeAsync(100);
 
     page.hide();
+    expect(audio.volume).toBe(0); // the fade-out reached its end
     await paused;
     expect(audio.paused).toBe(true);
   });
