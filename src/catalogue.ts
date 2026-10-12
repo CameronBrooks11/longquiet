@@ -25,10 +25,9 @@ export interface Section {
   kind: SectionKind;
 }
 
-export interface Soundscape {
+// One built file: a looped recording, or one piece of a playlist.
+export interface Track {
   id: string;
-  label: string;
-  section: string;
   title: string;
   author: string;
   authorUrl: string;
@@ -41,6 +40,21 @@ export interface Soundscape {
   file: string;
   modifications: string;
 }
+
+// What the listener picks: one looped track, or a playlist played in order
+// and repeated.
+export interface Soundscape {
+  id: string;
+  label: string;
+  section: string;
+  tracks: readonly Track[];
+  loops: boolean;
+}
+
+type RawTrack = Omit<Track, "file" | "modifications">;
+type RawSound = { id: string; label: string; section: string } & (
+  RawTrack | { tracks: RawTrack[] }
+);
 
 function clock(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -77,15 +91,29 @@ export function describeProcessing(
   return steps.join("; ");
 }
 
-export const soundscapes: readonly Soundscape[] = data.sounds.map((s) => ({
-  ...s,
-  file: `${s.id}.mp3`,
-  modifications: describeProcessing(
-    s.source.format,
-    s.recipe,
-    data.loudnessTarget,
-  ),
-}));
+function toTrack(t: RawTrack): Track {
+  return {
+    ...t,
+    file: `${t.id}.mp3`,
+    modifications: describeProcessing(
+      t.source.format,
+      t.recipe,
+      data.loudnessTarget,
+    ),
+  };
+}
+
+export const soundscapes: readonly Soundscape[] = (
+  data.sounds as RawSound[]
+).map((s) => {
+  const { id, label, section } = s;
+  return "tracks" in s
+    ? { id, label, section, tracks: s.tracks.map(toTrack), loops: false }
+    : { id, label, section, tracks: [toTrack(s)], loops: true };
+});
+
+// Every built file, in catalogue order.
+export const tracks: readonly Track[] = soundscapes.flatMap((s) => s.tracks);
 
 export const sections = data.sections as readonly Section[];
 

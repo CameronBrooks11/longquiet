@@ -13,7 +13,7 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 manifest="$root/sounds/sounds.json"
 
 "$root/scripts/build-sounds.sh" verify
-ids=$(jq -er '.sounds[].id' "$manifest")
+ids=$(jq -er 'def files: .sounds[] | if .tracks then (.tracks[] | . + {loop: false}) else . + {loop: true} end; files | .id' "$manifest")
 files=()
 while read -r id; do files+=("$root/public/audio/$id.mp3"); done <<<"$ids"
 

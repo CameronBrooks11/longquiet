@@ -20,7 +20,7 @@ if [ "$release" = null ] || [ "$base" = null ]; then
 fi
 mkdir -p "$out"
 # Read the list first so a jq failure stops the script under set -e.
-list=$(jq -er '.sounds[] | [.id, (.build.sha256 // "null")] | @tsv' "$manifest")
+list=$(jq -er 'def files: .sounds[] | if .tracks then (.tracks[] | . + {loop: false}) else . + {loop: true} end; files | [.id, (.build.sha256 // "null")] | @tsv' "$manifest")
 
 while IFS=$'\t' read -r id sha; do
     [ "$sha" != null ] || die "$id: no recorded build; run just sounds"

@@ -7,6 +7,7 @@ import {
   sections,
   soundsIn,
   soundscapes,
+  tracks,
 } from "./catalogue";
 import { defaults } from "./preferences";
 
@@ -14,23 +15,32 @@ const manifest = JSON.parse(
   readFileSync(new URL("../sounds/sounds.json", import.meta.url), "utf8"),
 ) as { audio: { release: string; baseUrl: string } };
 
-// Licences whose terms allow self-hosting and streaming the recording here.
-// Spelled out, not imported, so editing the catalogue cannot widen it.
+// Licences whose terms allow self-hosting and streaming the recording here:
+// public domain, CC0, CC BY and CC BY-SA. Spelled out, not imported, so
+// editing the catalogue cannot widen it.
 const allowed = [
   "https://creativecommons.org/publicdomain/zero/1.0/",
+  "https://creativecommons.org/publicdomain/mark/1.0/",
+  "https://creativecommons.org/licenses/by/3.0/",
   "https://creativecommons.org/licenses/by/4.0/",
+  "https://creativecommons.org/licenses/by-sa/3.0/",
+  "https://creativecommons.org/licenses/by-sa/4.0/",
 ];
 
 describe("catalogue", () => {
   it("has unique ids and files", () => {
     expect(new Set(soundscapes.map((s) => s.id)).size).toBe(soundscapes.length);
-    expect(new Set(soundscapes.map((s) => s.file)).size).toBe(
-      soundscapes.length,
-    );
+    expect(new Set(tracks.map((t) => t.file)).size).toBe(tracks.length);
+  });
+
+  it.each(soundscapes)("$id has something to play", (s) => {
+    expect(s.tracks.length).toBeGreaterThan(0);
+    // A looped recording is exactly one track; a playlist plays through.
+    if (s.loops) expect(s.tracks).toHaveLength(1);
   });
 
   // The audio itself is a release asset (just fetch-audio), not in git.
-  it.each(soundscapes)("$id records its built file", (s) => {
+  it.each(tracks)("$id records its built file", (s) => {
     expect(s.build.sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(s.build.bytes).toBeGreaterThan(0);
   });
@@ -45,7 +55,7 @@ describe("catalogue", () => {
     );
   });
 
-  it.each(soundscapes)("$id carries full attribution", (s) => {
+  it.each(tracks)("$id carries full attribution", (s) => {
     expect(s.title).not.toBe("");
     expect(s.author).not.toBe("");
     expect(s.modifications).not.toBe("");
@@ -54,7 +64,7 @@ describe("catalogue", () => {
     expect(allowed).toContain(s.licence.url);
   });
 
-  it.each(soundscapes)("$id pins its original and a sane recipe", (s) => {
+  it.each(tracks)("$id pins its original and a sane recipe", (s) => {
     expect(s.source.sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(s.source.file).toMatch(/\.(wav|flac|aiff?)$/);
     expect(s.recipe.crossfade).toBeGreaterThanOrEqual(0);
@@ -68,7 +78,7 @@ describe("catalogue", () => {
       new URL("../README.md", import.meta.url),
       "utf8",
     );
-    for (const s of soundscapes) expect(readme).toContain(s.sourceUrl);
+    for (const s of tracks) expect(readme).toContain(s.sourceUrl);
   });
 
   it("resolves the default and falls back for unknown ids", () => {
