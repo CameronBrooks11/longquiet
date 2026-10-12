@@ -6,7 +6,9 @@ import { Player } from "./player";
 // play() unpauses at once, fires "play", and its promise waits for the file;
 // pause() fires "pause" and rejects a pending play() with AbortError;
 // changing src pauses silently (only abort/emptied) and rejects a pending
-// play() too. Events are queued tasks.
+// play() too; while error is set, play() rejects at once with no event, and
+// load() resets the element and clears the error. Events are queued tasks,
+// and a src change or load() drops any not yet dispatched.
 class FakeAudio {
   paused = true;
   volume = 1;
@@ -16,6 +18,7 @@ class FakeAudio {
   private pending: { resolve: () => void; reject: (e: Error) => void } | null =
     null;
   private listeners = new Map<string, (() => void)[]>();
+  private queued = new Set<ReturnType<typeof setTimeout>>();
 
   get src() {
     return this.source;
@@ -23,6 +26,7 @@ class FakeAudio {
   set src(v: string) {
     this.source = v;
     this.paused = true;
+    this.dropQueued();
     if (this.pending) {
       const p = this.pending;
       this.pending = null;
@@ -33,9 +37,25 @@ class FakeAudio {
     this.listeners.set(type, [...(this.listeners.get(type) ?? []), fn]);
   }
   private fire(type: string) {
-    setTimeout(() => this.listeners.get(type)?.forEach((fn) => fn()), 0);
+    const id = setTimeout(() => {
+      this.queued.delete(id);
+      this.listeners.get(type)?.forEach((fn) => fn());
+    }, 0);
+    this.queued.add(id);
   }
+  private dropQueued() {
+    this.queued.forEach((id) => clearTimeout(id));
+    this.queued.clear();
+  }
+  refuseNextPlay = false;
   play() {
+    if (this.error) {
+      return Promise.reject(new DOMException("errored", "NotSupportedError"));
+    }
+    if (this.refuseNextPlay) {
+      this.refuseNextPlay = false;
+      return Promise.reject(new DOMException("refused", "NotAllowedError"));
+    }
     if (this.paused) {
       this.paused = false;
       this.fire("play");
@@ -58,12 +78,22 @@ class FakeAudio {
     }
   }
   error: Error | null = null;
-  // The file has loaded: sound starts and a pending play() resolves.
-  load() {
+  // The file has arrived: sound starts and a pending play() resolves.
+  arrive() {
     const p = this.pending;
     this.pending = null;
     this.fire("playing");
     p?.resolve();
+  }
+  load() {
+    this.paused = true;
+    this.error = null;
+    this.dropQueued();
+    if (this.pending) {
+      const p = this.pending;
+      this.pending = null;
+      p.reject(new DOMException("interrupted by load()", "AbortError"));
+    }
   }
   // Playback stalls for data, then resumes.
   stall() {
@@ -108,7 +138,7 @@ function setup() {
 async function playing(audio: FakeAudio, player: Player) {
   await player.select(rain);
   const started = player.play();
-  audio.load();
+  audio.arrive();
   await vi.advanceTimersByTimeAsync(1000);
   await started;
 }
@@ -148,7 +178,7 @@ describe("Player.loading", () => {
     expect(player.playing).toBe(true);
     expect(player.loading).toBe(true);
 
-    audio.load();
+    audio.arrive();
     await vi.advanceTimersByTimeAsync(1000);
     await started;
     expect(player.loading).toBe(false);
@@ -186,12 +216,13 @@ describe("Player.loading", () => {
     const started = player.play();
     audio.failStart();
 
-    await expect(started).rejects.toThrow("no supported source");
+    await expect(started).resolves.toBeUndefined();
     await vi.advanceTimersByTimeAsync(10);
-    expect(errors).not.toHaveBeenCalled();
+    expect(errors).toHaveBeenCalledOnce();
     expect(player.playing).toBe(false);
     expect(player.loading).toBe(false);
     expect(audio.paused).toBe(true);
+    expect(audio.error).toBeNull();
   });
 
   it("loads afresh when play is pressed again after a failed start", async () => {
@@ -199,12 +230,12 @@ describe("Player.loading", () => {
     await player.select(rain);
     const first = player.play();
     audio.failStart();
-    await expect(first).rejects.toThrow();
+    await first;
 
     const retry = player.play();
     expect(audio.pendingPlay).toBe(true);
     expect(player.loading).toBe(true);
-    audio.load();
+    audio.arrive();
     await vi.advanceTimersByTimeAsync(1000);
     await retry;
     expect(player.playing).toBe(true);
@@ -230,7 +261,7 @@ describe("Player.loading", () => {
     const choice = player.select(forest);
     await vi.advanceTimersByTimeAsync(1000);
     expect(player.loading).toBe(true);
-    audio.load();
+    audio.arrive();
     await vi.advanceTimersByTimeAsync(1000);
     await choice;
     expect(player.loading).toBe(false);
@@ -248,6 +279,34 @@ describe("Player.loading", () => {
     expect(player.playing).toBe(false);
     expect(player.loading).toBe(false);
     expect(errors).toHaveBeenCalledOnce();
+    expect(audio.paused).toBe(true);
+    expect(audio.error).toBeNull();
+  });
+
+  it("can play again after a dropped connection", async () => {
+    const { audio, player } = setup();
+    await playing(audio, player);
+    audio.fail();
+    await vi.advanceTimersByTimeAsync(10);
+
+    const retry = player.play();
+    expect(audio.pendingPlay).toBe(true);
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await retry;
+    expect(player.playing).toBe(true);
+  });
+
+  it("follows an outside play after a refused start", async () => {
+    const { audio, player } = setup();
+    await player.select(rain);
+    audio.refuseNextPlay = true;
+    await expect(player.play()).rejects.toThrow("refused");
+    expect(player.playing).toBe(false);
+
+    void audio.play(); // the browser resumes it, e.g. a media key
+    await vi.advanceTimersByTimeAsync(10);
+    expect(player.playing).toBe(true);
   });
 });
 
@@ -270,7 +329,7 @@ describe("Player.select", () => {
 
     const all = [forest, stream, night].map((s) => player.select(s));
     await vi.advanceTimersByTimeAsync(1000);
-    audio.load();
+    audio.arrive();
     await vi.advanceTimersByTimeAsync(1000);
     await Promise.all(all);
 
@@ -289,7 +348,7 @@ describe("Player.select", () => {
     expect(audio.src).toBe("/audio/forest.mp3");
     const second = player.select(stream); // its src change aborts forest's
     await vi.advanceTimersByTimeAsync(1000);
-    audio.load();
+    audio.arrive();
     await vi.advanceTimersByTimeAsync(1000);
 
     await expect(first).resolves.toBeUndefined();
@@ -324,7 +383,7 @@ describe("Player.select", () => {
       await vi.advanceTimersByTimeAsync(2);
     }
     await vi.advanceTimersByTimeAsync(1000);
-    audio.load();
+    audio.arrive();
     await vi.advanceTimersByTimeAsync(1000);
     await Promise.all(all);
 

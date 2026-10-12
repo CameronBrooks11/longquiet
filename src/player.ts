@@ -10,9 +10,6 @@ export class Player {
   private waiting = false;
   // Set when our own play() call will cause the element's next "play" event.
   private ownPlay = false;
-  // True while our play() waits for the element to start; a failure then
-  // is reported by play() itself, not by the "error" listener.
-  private starting = false;
   private fade = 0;
   private endFade: (() => void) | null = null;
   private current: Soundscape | null = null;
@@ -49,14 +46,17 @@ export class Player {
     // Between asking to play and sound coming out: first load, or a stall.
     this.audio.addEventListener("waiting", () => this.setWaiting(this.wanted));
     this.audio.addEventListener("playing", () => this.setWaiting(false));
-    // A network or decode failure once playback is under way.
+    // A load or network failure, at the start or mid-play. load() clears the
+    // error and resets the element: until then play() would reject at once,
+    // and a dropped connection is not refetched, so a retry would never work.
     this.audio.addEventListener("error", () => {
-      if (!this.wanted || this.starting) return;
+      if (!this.wanted) return;
+      const err = this.audio.error;
       this.cancelFade();
       this.audio.volume = this.target;
       this.setWanted(false);
-      if (!this.audio.paused) this.audio.pause();
-      this.onerror(this.audio.error);
+      this.audio.load();
+      this.onerror(err);
     });
   }
 
@@ -109,21 +109,18 @@ export class Player {
       this.audio.volume = 0;
       this.setWaiting(true);
       this.ownPlay = true;
-      this.starting = true;
       try {
         await this.audio.play();
       } catch (err) {
-        this.ownPlay = false;
-        // Not failures: a newer select changed the source, or the listener
-        // paused before anything loaded. Both abort this play() on purpose.
+        // No "play" event follows a rejection, unless a newer play() set the
+        // flag for its own.
+        if (seq === this.seq) this.ownPlay = false;
+        // Already handled: a newer select changed the source, the listener
+        // paused before anything loaded, or the "error" listener reported a
+        // failed load. Anything else (say, autoplay refused) is reported here.
         if (seq !== this.seq || !this.wanted) return;
         this.setWanted(false);
-        // A failed load can leave the element unpaused; pause it so a retry
-        // starts a fresh load instead of fading up silence.
-        if (!this.audio.paused) this.audio.pause();
         throw err;
-      } finally {
-        this.starting = false;
       }
     }
     if (seq !== this.seq) return;
