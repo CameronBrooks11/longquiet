@@ -1,5 +1,6 @@
 import "./style.css";
 import { findSoundscape, soundscapes, type Soundscape } from "./catalogue";
+import { moveIndex } from "./keys";
 import { Player } from "./player";
 import { loadPreferences, savePreferences } from "./preferences";
 
@@ -36,6 +37,17 @@ const buttons = soundscapes.map((s) =>
 buttons.forEach((b) => b.setAttribute("role", "radio"));
 scapes.append(...buttons);
 
+// One tab stop for the group; arrows, Home and End move the selection.
+scapes.addEventListener("keydown", (e) => {
+  const i = buttons.indexOf(e.target as HTMLButtonElement);
+  if (i < 0) return;
+  const j = moveIndex(i, e.key, buttons.length);
+  if (j === null) return;
+  e.preventDefault();
+  buttons[j].focus();
+  void choose(soundscapes[j]);
+});
+
 byId<HTMLUListElement>("credits").append(
   ...soundscapes.map((s) =>
     el(
@@ -56,9 +68,11 @@ byId<HTMLUListElement>("credits").append(
 
 function render() {
   const current = player.soundscape;
-  buttons.forEach((b, i) =>
-    b.setAttribute("aria-checked", String(soundscapes[i] === current)),
-  );
+  const selected = Math.max(0, soundscapes.indexOf(current!));
+  buttons.forEach((b, i) => {
+    b.setAttribute("aria-checked", String(i === selected));
+    b.tabIndex = i === selected ? 0 : -1;
+  });
   document.body.classList.toggle("is-playing", player.playing);
   playButton.setAttribute("aria-label", player.playing ? "Pause" : "Play");
   now.textContent = current ? `${current.title} — ${current.author}` : "";
