@@ -148,8 +148,39 @@ button {
   }
 }
 
+/* Loading: a single accent arc turns slowly round the ring. */
+.play {
+  position: relative;
+}
+
+.play::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  pointer-events: none;
+}
+
+.is-loading .play {
+  border-color: var(--line);
+  animation: none;
+}
+
+.is-loading .play::before {
+  border-top-color: var(--accent);
+  animation: turn 1.4s linear infinite;
+}
+
+@keyframes turn {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .is-playing .play {
+  .is-playing .play,
+  .is-loading .play::before {
     animation: none;
   }
 }

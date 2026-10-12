@@ -75,7 +75,11 @@ function render() {
     b.tabIndex = i === stop ? 0 : -1;
   });
   document.body.classList.toggle("is-playing", player.playing);
-  playButton.setAttribute("aria-label", player.playing ? "Pause" : "Play");
+  document.body.classList.toggle("is-loading", player.loading);
+  playButton.setAttribute(
+    "aria-label",
+    player.loading ? "Pause (loading)" : player.playing ? "Pause" : "Play",
+  );
   now.textContent = current ? `${current.title} — ${current.author}` : "";
 }
 
@@ -91,6 +95,7 @@ function choose(s: Soundscape) {
 }
 
 player.onchange = render;
+player.onerror = reportPlaybackError;
 
 playButton.addEventListener("click", () => {
   player.toggle().catch(reportPlaybackError);
