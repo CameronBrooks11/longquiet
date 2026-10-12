@@ -27,6 +27,7 @@ class FakeAudio {
   set src(v: string) {
     this.source = v;
     this.paused = true;
+    this.error = null;
     this.dropQueued();
     if (this.pending) {
       const p = this.pending;
@@ -234,6 +235,7 @@ describe("Player.loading", () => {
     audio.failStart();
     await first;
 
+    expect(audio.src).toBe("/audio/rain.mp3?retry=1");
     const retry = player.play();
     expect(audio.pendingPlay).toBe(true);
     expect(player.loading).toBe(true);

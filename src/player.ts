@@ -10,6 +10,9 @@ export class Player {
   private waiting = false;
   // Set when our own play() call will cause the element's next "play" event.
   private ownPlay = false;
+  // Failures per file. Chrome keeps a failed response for a URL for the
+  // life of the page, so a retry asks for the same file at a new URL.
+  private failures = new Map<string, number>();
   private fade = 0;
   private endFade: (() => void) | null = null;
   private current: Soundscape | null = null;
@@ -49,14 +52,22 @@ export class Player {
     // A load or network failure, at the start or mid-play. load() clears the
     // error and resets the element: until then play() would reject at once,
     // and a dropped connection is not refetched, so a retry would never work.
-    // An error while paused is not reported, but the reset still matters.
+    // An error while paused is not reported, but the reset still matters:
+    // a new src clears the error (as load() would) and points the next play
+    // past the failed response.
     this.audio.addEventListener("error", () => {
       const err = this.audio.error;
       const wanted = this.wanted;
       this.cancelFade();
       this.audio.volume = this.target;
       if (wanted) this.setWanted(false);
-      this.audio.load();
+      if (this.current) {
+        const f = this.current.file;
+        this.failures.set(f, (this.failures.get(f) ?? 0) + 1);
+        this.audio.src = this.srcFor(this.current);
+      } else {
+        this.audio.load();
+      }
       if (wanted) this.onerror(err);
     });
   }
@@ -98,7 +109,7 @@ export class Player {
     this.onchange();
     if (resume) await this.fadeTo(0);
     if (seq !== this.seq) return;
-    this.audio.src = `${this.baseUrl}audio/${s.file}`;
+    this.audio.src = this.srcFor(s);
     if (resume && this.wanted) await this.play();
   }
 
@@ -135,6 +146,11 @@ export class Player {
       this.audio.pause();
       this.audio.volume = this.target;
     }
+  }
+
+  private srcFor(s: Soundscape): string {
+    const n = this.failures.get(s.file);
+    return `${this.baseUrl}audio/${s.file}${n ? `?retry=${n}` : ""}`;
   }
 
   toggle(): Promise<void> {
