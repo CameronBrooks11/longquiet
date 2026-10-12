@@ -153,5 +153,9 @@ working/
 planning/
 sounds/.cache/
 
+# Playwright output
+playwright-report/
+test-results/
+
 # Built audio lives in GitHub release assets (just fetch-audio)
 public/audio/
