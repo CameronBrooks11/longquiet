@@ -1,7 +1,7 @@
 :root {
   --bg: #f3f1ec;
   --fg: #23262b;
-  --muted: #6f7378;
+  --muted: #65696e;
   --line: #d9d5cc;
   --accent: #5d7a62;
   --accent-fg: #f3f1ec;
@@ -279,6 +279,10 @@ button {
   font-size: 0.9rem;
 }
 
+.timer-left:empty {
+  display: none;
+}
+
 .timer svg {
   width: 1.1rem;
   fill: var(--muted);
@@ -289,7 +293,8 @@ button {
   color: inherit;
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--line);
+  /* --muted, not --line: a control's edge needs 3:1 against the page. */
+  border-bottom: 1px solid var(--muted);
   padding: 0.2rem 0.1rem;
   cursor: pointer;
 }

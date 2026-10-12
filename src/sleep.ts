@@ -43,7 +43,8 @@ export class SleepTimer {
   }
 }
 
+// Whole minutes, rounded up; the last minute stays "1 min left", short
+// enough not to wrap on a narrow phone.
 export function remainingLabel(ms: number): string {
-  const minutes = Math.ceil(ms / 60_000);
-  return minutes > 1 ? `${minutes} min left` : "under a minute left";
+  return `${Math.max(1, Math.ceil(ms / 60_000))} min left`;
 }

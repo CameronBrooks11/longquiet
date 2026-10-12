@@ -208,6 +208,7 @@ test("a sleep timer fades the sound out and pauses on time", async ({
 
   await page.clock.fastForward("10:00");
   await expect(page.locator("#timer-left")).toHaveText("5 min left");
+  await expect(page.locator("body")).toHaveClass(/is-playing/);
   await page.clock.fastForward("05:01");
   await expect(page.locator("body")).not.toHaveClass(/is-playing/);
   await expect(page.getByLabel("Sleep timer")).toHaveValue("0");
@@ -228,4 +229,18 @@ test("pausing by hand cancels the sleep timer", async ({ page }) => {
   await expect(page.locator("body")).not.toHaveClass(/is-playing/);
   await expect(page.getByLabel("Sleep timer")).toHaveValue("0");
   await expect(page.locator("#timer-left")).toHaveText("");
+});
+
+test("a timer set while paused survives a change of sound and starts on play", async ({
+  page,
+}) => {
+  await page.goto("./");
+  const [first, second] = items.filter((i) => !i.tracks);
+  await page.getByRole("radio", { name: first.label, exact: true }).click();
+  await page.getByLabel("Sleep timer").selectOption("30");
+  await page.getByRole("radio", { name: second.label, exact: true }).click();
+  await page.locator("#play").click();
+  await expect(page.locator("body")).toHaveClass(/is-playing/);
+  await expect(page.getByLabel("Sleep timer")).toHaveValue("30");
+  await expect(page.locator("#timer-left")).toHaveText("30 min left");
 });

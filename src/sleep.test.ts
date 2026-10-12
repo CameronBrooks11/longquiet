@@ -89,9 +89,9 @@ describe("remainingLabel", () => {
     expect(remainingLabel(2 * 60_000)).toBe("2 min left");
   });
 
-  it("says under a minute for the last minute", () => {
-    expect(remainingLabel(60_000)).toBe("under a minute left");
-    expect(remainingLabel(1)).toBe("under a minute left");
-    expect(remainingLabel(0)).toBe("under a minute left");
+  it("shows the last minute as 1 min, never 0", () => {
+    expect(remainingLabel(60_000)).toBe("1 min left");
+    expect(remainingLabel(1)).toBe("1 min left");
+    expect(remainingLabel(0)).toBe("1 min left");
   });
 });

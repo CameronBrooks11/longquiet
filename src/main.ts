@@ -168,21 +168,29 @@ let wasPlaying = false;
 // system, cancels it.
 function followPlayback() {
   if (player.playing && !wasPlaying) sleep.started();
-  if (!player.playing && wasPlaying) sleep.cancel();
+  if (!player.playing && wasPlaying && sleep.on) {
+    sleep.cancel();
+    timerChoice.value = "0";
+  }
   wasPlaying = player.playing;
 }
 
+// Runs several times a second; writes only when the minute changes, and
+// leaves the select alone so an open list is not reset under the pointer.
 function renderTimer() {
   const left = sleep.remaining();
-  timerLeft.textContent = left === null ? "" : remainingLabel(left);
-  if (!sleep.on) timerChoice.value = "0";
+  const label = left === null ? "" : remainingLabel(left);
+  if (timerLeft.textContent !== label) timerLeft.textContent = label;
 }
 
 // Checked every second while the page runs, and on the audio's own
 // timeupdate events, which may keep coming on a locked phone when timers
 // do not. Either way the deadline is wall-clock time.
 function checkTimer() {
-  if (sleep.expire()) player.pause(SLEEP_FADE_MS).catch(reportPlaybackError);
+  if (sleep.expire()) {
+    timerChoice.value = "0";
+    player.pause(SLEEP_FADE_MS).catch(reportPlaybackError);
+  }
   renderTimer();
 }
 
