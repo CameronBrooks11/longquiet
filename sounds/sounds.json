@@ -1,0 +1,80 @@
+{
+  "loudnessTarget": -26,
+  "sounds": [
+    {
+      "id": "rain",
+      "label": "Rain",
+      "title": "Rainstorm 10 min",
+      "author": "Valerie-Vivegnis",
+      "authorUrl": "https://freesound.org/people/Valerie-Vivegnis/",
+      "sourceUrl": "https://freesound.org/people/Valerie-Vivegnis/sounds/759545/",
+      "licence": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "source": {
+        "file": "759545__valerie-vivegnis__rainstorm-10-min.wav",
+        "format": "16-bit WAV",
+        "sha256": "95b7ccd65476e26fadc8d69b8c3a4b8a129650e87a7fb4544795ed44d7c2eaa2"
+      },
+      "recipe": { "excerpt": null, "crossfade": 8 }
+    },
+    {
+      "id": "forest",
+      "label": "Forest",
+      "title": "Afternoon Woods in October - Midwest US (loop)",
+      "author": "NickTayloe",
+      "authorUrl": "https://freesound.org/people/NickTayloe/",
+      "sourceUrl": "https://freesound.org/people/NickTayloe/sounds/830253/",
+      "licence": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "recorded": "Albion, Indiana, United States",
+      "source": {
+        "file": "830253__nicktayloe__afternoon-woods-in-october-midwest-us-loop.flac",
+        "format": "24-bit FLAC",
+        "sha256": "4c246e18c01fef99a91fba6f30f66762fc9a2da7114960d58f04e83ff2d0ffa3"
+      },
+      "recipe": { "excerpt": null, "crossfade": 0 }
+    },
+    {
+      "id": "stream",
+      "label": "Stream",
+      "title": "Stream flow over the stones in the fields and insect chirping",
+      "author": "lastraindrop",
+      "authorUrl": "https://freesound.org/people/lastraindrop/",
+      "sourceUrl": "https://freesound.org/people/lastraindrop/sounds/732848/",
+      "licence": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "recorded": "Guilin Shi, Guangxi, China",
+      "source": {
+        "file": "732848__lastraindrop__stream-flow-over-the-stones-in-the-fields-and-insect-chirping.wav",
+        "format": "24-bit WAV",
+        "sha256": "f46b7827cc293fc39cc29b4fae9a2ea3979e179395674d9775cc318acbc0656c"
+      },
+      "recipe": { "excerpt": 620, "crossfade": 8 }
+    },
+    {
+      "id": "night",
+      "label": "Night",
+      "title": "Serrinha do Alambari night frogs chorus with close crickets",
+      "author": "MeliaRoger",
+      "authorUrl": "https://freesound.org/people/MeliaRoger/",
+      "sourceUrl": "https://freesound.org/people/MeliaRoger/sounds/645706/",
+      "licence": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "recorded": "Resende, Rio de Janeiro, Brazil",
+      "source": {
+        "file": "645706__meliaroger__ambrurl_br-serrinha-do-alambari-night-frogs-chorus-with-close-crickets_melia-roger_ortf-schoeps.wav",
+        "format": "24-bit WAV",
+        "sha256": "1e85547965a33688ebdd5a807eef94c2f9f1b94a496738e74fe15ab46860607f"
+      },
+      "recipe": { "excerpt": null, "crossfade": 8 }
+    }
+  ]
+}

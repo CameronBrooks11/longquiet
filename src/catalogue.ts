@@ -1,81 +1,72 @@
-// Every recording the app can play. The credits panel is rendered from this
-// list, so a sound cannot ship without its attribution.
+// Every recording the app can play comes from sounds/sounds.json, the same
+// file scripts/build-sounds.sh renders from. The credits panel is built from
+// it, so a sound cannot ship without its attribution, and the description of
+// what was done to each file comes from the recipe that did it.
+import data from "../sounds/sounds.json";
 
 export interface Licence {
   name: string;
   url: string;
 }
 
+export interface Recipe {
+  excerpt: number | null;
+  crossfade: number;
+}
+
 export interface Soundscape {
   id: string;
   label: string;
-  file: string;
   title: string;
   author: string;
   authorUrl: string;
   sourceUrl: string;
   licence: Licence;
   recorded?: string;
+  source: { file: string; format: string; sha256: string };
+  recipe: Recipe;
+  file: string;
   modifications: string;
 }
 
-export const CC0: Licence = {
-  name: "CC0 1.0",
-  url: "https://creativecommons.org/publicdomain/zero/1.0/",
-};
+function clock(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
 
-const PREVIEW = "From the Freesound high-quality MP3 preview";
-const LEVELLED = "levelled to −26 LUFS and re-encoded as MP3";
+// Typographic minus, as the credits are prose.
+function signed(n: number): string {
+  return `${n < 0 ? "−" : ""}${Math.abs(n)}`;
+}
 
-export const soundscapes: readonly Soundscape[] = [
-  {
-    id: "rain",
-    label: "Rain",
-    file: "rain.mp3",
-    title: "Rainstorm 10 min",
-    author: "Valerie-Vivegnis",
-    authorUrl: "https://freesound.org/people/Valerie-Vivegnis/",
-    sourceUrl: "https://freesound.org/people/Valerie-Vivegnis/sounds/759545/",
-    licence: CC0,
-    modifications: `${PREVIEW}; last 8 s crossfaded into the first 8 s to smooth the loop point; ${LEVELLED}`,
-  },
-  {
-    id: "forest",
-    label: "Forest",
-    file: "forest.mp3",
-    title: "Afternoon Woods in October - Midwest US (loop)",
-    author: "NickTayloe",
-    authorUrl: "https://freesound.org/people/NickTayloe/",
-    sourceUrl: "https://freesound.org/people/NickTayloe/sounds/830253/",
-    licence: CC0,
-    recorded: "Albion, Indiana, United States",
-    modifications: `${PREVIEW}; ${LEVELLED}`,
-  },
-  {
-    id: "stream",
-    label: "Stream",
-    file: "stream.mp3",
-    title: "Stream flow over the stones in the fields and insect chirping",
-    author: "lastraindrop",
-    authorUrl: "https://freesound.org/people/lastraindrop/",
-    sourceUrl: "https://freesound.org/people/lastraindrop/sounds/732848/",
-    licence: CC0,
-    recorded: "Guilin Shi, Guangxi, China",
-    modifications: `${PREVIEW}; first 10:20 only; last 8 s crossfaded into the first 8 s to smooth the loop point; ${LEVELLED}`,
-  },
-  {
-    id: "night",
-    label: "Night",
-    file: "night.mp3",
-    title: "Serrinha do Alambari night frogs chorus with close crickets",
-    author: "MeliaRoger",
-    authorUrl: "https://freesound.org/people/MeliaRoger/",
-    sourceUrl: "https://freesound.org/people/MeliaRoger/sounds/645706/",
-    licence: CC0,
-    recorded: "Resende, Rio de Janeiro, Brazil",
-    modifications: `${PREVIEW}; last 8 s crossfaded into the first 8 s to smooth the loop point; ${LEVELLED}`,
-  },
-];
+export function describeProcessing(
+  format: string,
+  recipe: Recipe,
+  target: number,
+): string {
+  const steps = [`From the original ${format}`];
+  if (recipe.excerpt !== null)
+    steps.push(`first ${clock(recipe.excerpt)} only`);
+  if (recipe.crossfade > 0) {
+    const x = recipe.crossfade;
+    steps.push(
+      `last ${x} s crossfaded into the first ${x} s to smooth the loop point`,
+    );
+  }
+  steps.push(`levelled to ${signed(target)} LUFS and encoded as MP3`);
+  return steps.join("; ");
+}
+
+export const soundscapes: readonly Soundscape[] = data.sounds.map((s) => ({
+  ...s,
+  file: `${s.id}.mp3`,
+  modifications: describeProcessing(
+    s.source.format,
+    s.recipe,
+    data.loudnessTarget,
+  ),
+}));
 
 export function findSoundscape(id: string | null | undefined): Soundscape {
   return soundscapes.find((s) => s.id === id) ?? soundscapes[0];

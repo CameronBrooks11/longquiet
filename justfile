@@ -33,6 +33,14 @@ check: fmt-check lint typecheck
 test:
     npm exec -- vitest run
 
+# Render public/audio/ from the originals in sounds/.cache, then check it
+sounds:
+    scripts/build-sounds.sh build
+
+# Check loudness, true peak and loop seam of every file in public/audio/
+audio-check:
+    scripts/build-sounds.sh check
+
 # Dev server
 run:
     npm run dev

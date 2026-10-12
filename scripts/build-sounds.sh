@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+# build-sounds.sh build|check
+#
+#   build  verify each original in sounds/.cache against its sha256 in
+#          sounds/sounds.json, render public/audio/<id>.mp3, then check
+#   check  measure the committed public/audio/<id>.mp3 files and fail if any
+#          is off the loudness target by more than 1 LU, has a true peak
+#          above -1 dBTP, or steps more than 1.5 dB at its loop point
+#
+# Render per sound: optional excerpt, optional crossfaded loop, a static gain
+# to the loudness target measured on the lossless intermediate, then one
+# encode with LAME VBR q2.
+#
+# The loop: out = in[X, end-X] + crossfade(in[end-X, end] -> in[0, X]). It
+# finishes at in[X], where it starts, so a plain <audio loop> has no seam.
+# Each segment is a separate input because acrossfade produced no output when
+# fed from asplit; the fade is 0.1 s shorter than X because the decoded tail
+# can come out slightly shorter than the container duration.
+#
+# Needs bash, jq, ffmpeg/ffprobe and awk.
+set -euo pipefail
+
+root=$(cd "$(dirname "$0")/.." && pwd)
+manifest="$root/sounds/sounds.json"
+cache="$root/sounds/.cache"
+out="$root/public/audio"
+
+target=$(jq -r '.loudnessTarget' "$manifest")
+max_lu_off=1
+max_true_peak=-1
+max_seam_db=1.5
+
+die() { echo "error: $*" >&2; exit 1; }
+
+# Integrated loudness (LUFS) and true peak (dBTP) of a file, space-separated.
+loudness() {
+    ffmpeg -nostdin -hide_banner -nostats -i "$1" -af ebur128=peak=true:framelog=quiet -f null - 2>&1 |
+        awk '/^ *I:/ { i = $2 } /^ *Peak:/ { p = $2 } END { print i, p }'
+}
+
+# RMS level (dBFS) of one second of a file starting at $2 seconds.
+rms_at() {
+    ffmpeg -nostdin -hide_banner -nostats -ss "$2" -i "$1" -t 1 \
+        -af astats=measure_perchannel=none:measure_overall=RMS_level -f null - 2>&1 |
+        awk '/RMS level dB:/ { r = $NF } END { print r }'
+}
+
+duration() {
+    ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$1"
+}
+
+# Prints "<id> <LUFS> <dBTP> <seam dB> ok|FAIL" and returns 1 on FAIL.
+measure() {
+    local id=$1 f=$2 lufs tp dur first last seam verdict
+    read -r lufs tp < <(loudness "$f")
+    dur=$(duration "$f")
+    first=$(rms_at "$f" 0)
+    last=$(rms_at "$f" "$(awk -v d="$dur" 'BEGIN { print d - 1 }')")
+    seam=$(awk -v a="$first" -v b="$last" 'BEGIN { printf "%.1f", a - b }')
+    verdict=$(awk -v l="$lufs" -v t="$target" -v p="$tp" -v s="$seam" \
+        -v ml="$max_lu_off" -v mp="$max_true_peak" -v ms="$max_seam_db" '
+        function abs(x) { return x < 0 ? -x : x }
+        BEGIN { print (abs(l - t) <= ml && p <= mp && abs(s) <= ms) ? "ok" : "FAIL" }')
+    printf '%-8s %7s LUFS %6s dBTP  seam %5s dB  %s\n' "$id" "$lufs" "$tp" "$seam" "$verdict"
+    [ "$verdict" = ok ]
+}
+
+render() {
+    local id=$1 file=$2 sha=$3 excerpt=$4 x=$5 in mix dur end fade graph lufs gain
+    in="$cache/$file"
+    [ -f "$in" ] || die "$id: missing original $in (download it from the source page)"
+    echo "$sha  $in" | sha256sum --check --quiet - || die "$id: $file does not match its sha256"
+
+    mix="$tmp/$id.wav"
+    dur=$(duration "$in")
+    [ "$excerpt" = null ] || dur=$excerpt
+    if [ "$x" = 0 ]; then
+        ffmpeg -nostdin -hide_banner -loglevel error -i "$in" -af "atrim=0:$dur" -c:a pcm_f32le "$mix"
+    else
+        end=$(awk -v d="$dur" -v x="$x" 'BEGIN { print d - x }')
+        fade=$(awk -v x="$x" 'BEGIN { print x - 0.1 }')
+        graph="
+          [0:a]atrim=$x:$end,asetpts=PTS-STARTPTS[body];
+          [1:a]atrim=$end:$dur,asetpts=PTS-STARTPTS[tail];
+          [2:a]atrim=0:$x,asetpts=PTS-STARTPTS[head];
+          [tail][head]acrossfade=d=$fade:c1=qsin:c2=qsin[seam];
+          [body][seam]concat=n=2:v=0:a=1[out]"
+        ffmpeg -nostdin -hide_banner -loglevel error -i "$in" -i "$in" -i "$in" \
+            -filter_complex "$graph" -map '[out]' -c:a pcm_f32le "$mix"
+    fi
+    read -r lufs _ < <(loudness "$mix")
+    gain=$(awk -v t="$target" -v l="$lufs" 'BEGIN { printf "%.2f", t - l }')
+    ffmpeg -nostdin -hide_banner -loglevel error -y -i "$mix" -af "volume=${gain}dB" \
+        -map_metadata -1 -c:a libmp3lame -q:a 2 "$out/$id.mp3"
+    echo "built $id.mp3 (source $lufs LUFS, gain $gain dB)"
+}
+
+sounds() {
+    jq -r '.sounds[] | [.id, .source.file, .source.sha256, (.recipe.excerpt // "null"), .recipe.crossfade] | @tsv' "$manifest"
+}
+
+case "${1:-}" in
+build)
+    mkdir -p "$out"
+    tmp=$(mktemp -d)
+    trap 'rm -rf -- "$tmp"' EXIT
+    while IFS=$'\t' read -r id file sha excerpt x; do
+        render "$id" "$file" "$sha" "$excerpt" "$x"
+    done < <(sounds)
+    rm -rf -- "$tmp"
+    trap - EXIT
+    exec "$0" check
+    ;;
+check)
+    status=0
+    while IFS=$'\t' read -r id _; do
+        [ -f "$out/$id.mp3" ] || die "$id: missing $out/$id.mp3"
+        measure "$id" "$out/$id.mp3" || status=1
+    done < <(sounds)
+    exit "$status"
+    ;;
+*)
+    echo "usage: $0 build|check" >&2
+    exit 64
+    ;;
+esac
