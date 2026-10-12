@@ -21,11 +21,25 @@ const playlistSection = sections.find((s) => s.id === playlist.section)!;
 // in the DOM, and fails the test on any console error or uncaught exception.
 const test = base.extend({
   page: async ({ page }, use) => {
-    const errors: string[] = [];
+    const errors: Promise<string>[] = [];
+    // An Error passed to console.error prints as a handle; ask for its text.
     page.on("console", (m) => {
-      if (m.type() === "error") errors.push(m.text());
+      if (m.type() !== "error") return;
+      errors.push(
+        Promise.all(
+          m
+            .args()
+            .map((a) =>
+              a
+                .evaluate((v) =>
+                  v instanceof Error ? `${v.name}: ${v.message}` : String(v),
+                )
+                .catch(() => m.text()),
+            ),
+        ).then((parts) => parts.join(" ")),
+      );
     });
-    page.on("pageerror", (e) => errors.push(String(e)));
+    page.on("pageerror", (e) => errors.push(Promise.resolve(String(e))));
     await page.addInitScript(() => {
       const play = HTMLMediaElement.prototype.play;
       HTMLMediaElement.prototype.play = function () {
@@ -34,7 +48,7 @@ const test = base.extend({
       };
     });
     await use(page);
-    expect(errors, "console errors").toEqual([]);
+    expect(await Promise.all(errors), "console errors").toEqual([]);
   },
 });
 
@@ -67,11 +81,10 @@ test("shows every populated section, its sounds and every credit", async ({
   await page.goto("./");
   await expect(page.getByRole("tab")).toHaveText(sections.map((s) => s.label));
   for (const s of sections) {
-    await page.getByRole("tab", { name: s.label }).click();
-    await expect(page.getByRole("tab", { name: s.label })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    await page.getByRole("tab", { name: s.label, exact: true }).click();
+    await expect(
+      page.getByRole("tab", { name: s.label, exact: true }),
+    ).toHaveAttribute("aria-selected", "true");
     await expect(page.getByRole("radio")).toHaveText(
       items.filter((i) => i.section === s.id).map((i) => i.label),
     );
@@ -85,7 +98,7 @@ test("plays a loop, switches sound while playing, and pauses", async ({
 }) => {
   await page.goto("./");
   const [first, second] = items.filter((i) => !i.tracks);
-  await page.getByRole("radio", { name: first.label }).click();
+  await page.getByRole("radio", { name: first.label, exact: true }).click();
   await page.locator("#play").click();
   await expect(page.locator("body")).toHaveClass(/is-playing/);
   await expectAdvancing(page);
@@ -94,7 +107,7 @@ test("plays a loop, switches sound while playing, and pauses", async ({
     loop: true,
   });
 
-  await page.getByRole("radio", { name: second.label }).click();
+  await page.getByRole("radio", { name: second.label, exact: true }).click();
   await expect
     .poll(async () => (await audio(page))?.file)
     .toBe(`${second.id}.mp3`);
@@ -110,8 +123,10 @@ test("a playlist moves on to its next piece at the end of one", async ({
 }) => {
   const [one, two] = playlist.tracks!;
   await page.goto("./");
-  await page.getByRole("tab", { name: playlistSection.label }).click();
-  await page.getByRole("radio", { name: playlist.label }).click();
+  await page
+    .getByRole("tab", { name: playlistSection.label, exact: true })
+    .click();
+  await page.getByRole("radio", { name: playlist.label, exact: true }).click();
   await page.locator("#play").click();
   await expectAdvancing(page);
   expect(await audio(page)).toMatchObject({
@@ -135,15 +150,15 @@ test("a playlist moves on to its next piece at the end of one", async ({
 test("arrow keys move through sounds and sections", async ({ page }) => {
   await page.goto("./");
   const nature = items.filter((i) => i.section === sections[0].id);
-  await page.getByRole("radio", { name: nature[0].label }).click();
+  await page.getByRole("radio", { name: nature[0].label, exact: true }).click();
   await page.keyboard.press("ArrowRight");
-  const next = page.getByRole("radio", { name: nature[1].label });
+  const next = page.getByRole("radio", { name: nature[1].label, exact: true });
   await expect(next).toBeFocused();
   await expect(next).toHaveAttribute("aria-checked", "true");
 
-  await page.getByRole("tab", { name: sections[0].label }).focus();
+  await page.getByRole("tab", { name: sections[0].label, exact: true }).focus();
   await page.keyboard.press("ArrowRight");
-  const tab = page.getByRole("tab", { name: sections[1].label });
+  const tab = page.getByRole("tab", { name: sections[1].label, exact: true });
   await expect(tab).toBeFocused();
   await expect(tab).toHaveAttribute("aria-selected", "true");
 });
@@ -151,12 +166,11 @@ test("arrow keys move through sounds and sections", async ({ page }) => {
 test("remembers the chosen sound across a reload", async ({ page }) => {
   await page.goto("./");
   const pick = items.filter((i) => !i.tracks)[2];
-  await page.getByRole("radio", { name: pick.label }).click();
+  await page.getByRole("radio", { name: pick.label, exact: true }).click();
   await page.reload();
-  await expect(page.getByRole("radio", { name: pick.label })).toHaveAttribute(
-    "aria-checked",
-    "true",
-  );
+  await expect(
+    page.getByRole("radio", { name: pick.label, exact: true }),
+  ).toHaveAttribute("aria-checked", "true");
 });
 
 test("fits a 320 px phone without sideways scrolling", async ({ page }) => {
