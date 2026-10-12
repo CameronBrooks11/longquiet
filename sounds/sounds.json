@@ -1,6 +1,6 @@
 {
   "audio": {
-    "release": "audio-2026.10.12.2",
+    "release": "audio-2026.10.12.3",
     "baseUrl": "https://github.com/CameronBrooks11/longquiet/releases/download"
   },
   "loudnessTarget": -26,
@@ -348,6 +348,380 @@
         "sha256": "b35ad378ad7418e02c5cb0540a0d08a843b69a46a1762a93e178231a866b78e0",
         "bytes": 12777356
       }
+    },
+    {
+      "id": "nocturnes",
+      "label": "Nocturnes",
+      "section": "reflective",
+      "tracks": [
+        {
+          "id": "nocturne-op9-2",
+          "title": "Nocturne in E-flat major, Op. 9 No. 2",
+          "author": "Frédéric Chopin, played by Frank Levy",
+          "authorUrl": "https://musopen.org/",
+          "sourceUrl": "https://archive.org/details/musopen-chopin-complete-works-flac",
+          "licence": {
+            "name": "CC0 1.0",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+          },
+          "source": {
+            "file": "musopen-chopin__Nocturne in E flat major, Op. 9 no. 2.flac",
+            "format": "24-bit FLAC",
+            "sha256": "964158421c39e9cdc618e0c5b1a2da1acbc589ea156ee2e22fb4949ba9098a90"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "e095f6e566c8be7bc8dfda4468034a07a4e71ce276c266fc3b828e4e0de5678a",
+            "bytes": 4666532
+          }
+        },
+        {
+          "id": "nocturne-op27-2",
+          "title": "Nocturne in D-flat major, Op. 27 No. 2",
+          "author": "Frédéric Chopin, played by Frank Levy",
+          "authorUrl": "https://musopen.org/",
+          "sourceUrl": "https://archive.org/details/musopen-chopin-complete-works-flac",
+          "licence": {
+            "name": "CC0 1.0",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+          },
+          "source": {
+            "file": "musopen-chopin__Nocturne in D flat major, Op. 27 no. 2.flac",
+            "format": "24-bit FLAC",
+            "sha256": "9fb7644aeba83d7a42b5ef46bf3607dca22a968e45404db027b2584339f0b42a"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "e925bc520eed09017fd85cb1f1760b93f7602a2864dbfece26da843722cca80d",
+            "bytes": 6414932
+          }
+        },
+        {
+          "id": "nocturne-op15-2",
+          "title": "Nocturne in F-sharp major, Op. 15 No. 2",
+          "author": "Frédéric Chopin, played by Luke Faulkner",
+          "authorUrl": "https://musopen.org/",
+          "sourceUrl": "https://archive.org/details/musopen-chopin-complete-works-flac",
+          "licence": {
+            "name": "CC0 1.0",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+          },
+          "source": {
+            "file": "musopen-chopin__Nocturne in F sharp major, Op. 15, no. 2.flac",
+            "format": "16-bit FLAC",
+            "sha256": "94bdc6f8481f8a1a99d5bb8d472a9f7d08cf0e107d0966c2ea18ff4c47e2b57a"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "bb315cdaa3938977065bfbe87745ab32c65c0938ef352509486571c7e9e298f9",
+            "bytes": 4879707
+          }
+        },
+        {
+          "id": "prelude-op28-15",
+          "title": "Prelude in D-flat major, Op. 28 No. 15 (“Raindrop”)",
+          "author": "Frédéric Chopin, played by Jeannette Fang",
+          "authorUrl": "https://musopen.org/",
+          "sourceUrl": "https://archive.org/details/musopen-chopin-complete-works-flac",
+          "licence": {
+            "name": "CC0 1.0",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+          },
+          "source": {
+            "file": "musopen-chopin__Preludes, Op. 28 - No. 15 'Raindrop'.flac",
+            "format": "16-bit FLAC",
+            "sha256": "c779a8c099545192dfb2b98d0cb81acaab0f8a1bc100de3bdff821d58b88b51b"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "2d113b3f33bb372109ed13d3c05d7ebecbad1ca7373d80df40256c8ed87d6424",
+            "bytes": 5408967
+          }
+        },
+        {
+          "id": "nocturne-op55-2",
+          "title": "Nocturne in E-flat major, Op. 55 No. 2",
+          "author": "Frédéric Chopin, played by Xuan He",
+          "authorUrl": "https://musopen.org/",
+          "sourceUrl": "https://archive.org/details/musopen-chopin-complete-works-flac",
+          "licence": {
+            "name": "CC0 1.0",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+          },
+          "source": {
+            "file": "musopen-chopin__Nocturne in E flat major, Op. 55 no. 2.flac",
+            "format": "16-bit FLAC",
+            "sha256": "cc6e1f79288c6120f787d3e833c9880fdd9f13e62d112a8dd782487229bb790a"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "7caeb7e512f8408084a716f1f66d0289d66062c49d52937af256107386370015",
+            "bytes": 5249331
+          }
+        },
+        {
+          "id": "nocturne-op62-2",
+          "title": "Nocturne in E major, Op. 62 No. 2",
+          "author": "Frédéric Chopin, played by Luke Faulkner",
+          "authorUrl": "https://musopen.org/",
+          "sourceUrl": "https://archive.org/details/musopen-chopin-complete-works-flac",
+          "licence": {
+            "name": "CC0 1.0",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+          },
+          "source": {
+            "file": "musopen-chopin__Nocturne in E major, Op. 62 no. 2.flac",
+            "format": "16-bit FLAC",
+            "sha256": "06f2360300dd367916b602950603e44421259e8f74d45491a2295264fc7bbe62"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "17d8af93ddcaa7bc32a019123a48e3c5acc4f9a3ee933c1af1b7a0dcb9f1eb41",
+            "bytes": 5559491
+          }
+        },
+        {
+          "id": "nocturne-op72",
+          "title": "Nocturne in E minor, Op. posth. 72",
+          "author": "Frédéric Chopin, played by Luke Faulkner",
+          "authorUrl": "https://musopen.org/",
+          "sourceUrl": "https://archive.org/details/musopen-chopin-complete-works-flac",
+          "licence": {
+            "name": "CC0 1.0",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+          },
+          "source": {
+            "file": "musopen-chopin__Nocturne in E minor, Op. posth. 72.flac",
+            "format": "16-bit FLAC",
+            "sha256": "f5a2a790765a063053e83c22148bafb0f2dd9cd2f27c8b9b5b8e8510d6abf694"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "25a443d08040d803ebd4c35054fd05673b5436ccfad0b46c6a442503193f6d98",
+            "bytes": 4421987
+          }
+        },
+        {
+          "id": "berceuse-op57",
+          "title": "Berceuse in D-flat major, Op. 57",
+          "author": "Frédéric Chopin, played by Olga Gurevich",
+          "authorUrl": "https://musopen.org/",
+          "sourceUrl": "https://archive.org/details/musopen-chopin-complete-works-flac",
+          "licence": {
+            "name": "CC0 1.0",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+          },
+          "source": {
+            "file": "musopen-chopin__Berceuse in D-flat major, Op. 57 .flac",
+            "format": "24-bit FLAC",
+            "sha256": "4d25e5746c555f20e8e41827f01672800a39a92c26f8126cc059d1463972a652"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "f3b529add487961b7ba35e53bc6011b40ade2460e8064da8512f74abf3179e19",
+            "bytes": 4104163
+          }
+        },
+        {
+          "id": "nocturne-op32-1",
+          "title": "Nocturne in B major, Op. 32 No. 1",
+          "author": "Frédéric Chopin, played by Frank Levy",
+          "authorUrl": "https://musopen.org/",
+          "sourceUrl": "https://archive.org/details/musopen-chopin-complete-works-flac",
+          "licence": {
+            "name": "CC0 1.0",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+          },
+          "source": {
+            "file": "musopen-chopin__Nocturnes, Op. 32 - No. 1. Nocturne in B major.flac",
+            "format": "24-bit FLAC",
+            "sha256": "da70d1b15663684d04ba60ea90a76cade694b6d83c9f2ca9f0c5a858342f8e25"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "1cb61a1d5ed06a18dbe676a86b0bc7d8561059533ccdb40a05db59bbf66c588d",
+            "bytes": 5075252
+          }
+        },
+        {
+          "id": "nocturne-op9-1",
+          "title": "Nocturne in B-flat minor, Op. 9 No. 1",
+          "author": "Frédéric Chopin, played by Olga Gurevich",
+          "authorUrl": "https://musopen.org/",
+          "sourceUrl": "https://archive.org/details/musopen-chopin-complete-works-flac",
+          "licence": {
+            "name": "CC0 1.0",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+          },
+          "source": {
+            "file": "musopen-chopin__Nocturne in B flat minor, Op. 9 no. 1.flac",
+            "format": "16-bit FLAC",
+            "sha256": "c8b11bbf16f6e2e1abe18b893c10959bfa2a694bd3f3008d369877aaa3868f89"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "1309b12aad4d8e27a2dffb1155c113cb2a68a45e4dc3382961eb4a9ac9420919",
+            "bytes": 6710204
+          }
+        },
+        {
+          "id": "nocturne-b49",
+          "title": "Nocturne in C-sharp minor, B. 49 (“Lento con gran espressione”)",
+          "author": "Frédéric Chopin, played by Frank Levy",
+          "authorUrl": "https://musopen.org/",
+          "sourceUrl": "https://archive.org/details/musopen-chopin-complete-works-flac",
+          "licence": {
+            "name": "CC0 1.0",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+          },
+          "source": {
+            "file": "musopen-chopin__Nocturne in C sharp minor 'Lento con gran espressione', B. 49 (Op. posth.).flac",
+            "format": "24-bit FLAC",
+            "sha256": "89f12253a907c9ed804bf89d1b0c2c3d051be5561ee1fc71841351b23262597b"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "6830a690a29668235e2d3a29a59bfd6f6c82bd83b93d96de903d08c09ae2cafb",
+            "bytes": 3832580
+          }
+        }
+      ]
+    },
+    {
+      "id": "guitar",
+      "label": "Guitar",
+      "section": "acoustic",
+      "tracks": [
+        {
+          "id": "gymnopedie-1",
+          "title": "Gymnopédie No. 1",
+          "author": "Erik Satie, played by Michael Laucke on classical guitar",
+          "authorUrl": "https://commons.wikimedia.org/wiki/User:Mlaucke",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Satie_Gymnopedie_No_1_performed_by_Michael_Laucke.flac",
+          "licence": {
+            "name": "CC BY-SA 4.0",
+            "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+          },
+          "source": {
+            "file": "commons__Satie_Gymnopedie_No_1_performed_by_Michael_Laucke.flac",
+            "format": "16-bit FLAC",
+            "sha256": "b284038a8bc0d7c6faf36f430cfbca965da3334f0cd2532560d864b0859c85a0"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "e0c1db4253fa6a89dc367111282a22c4a5326ee5ce1ae4611263e1fcc6ea05cb",
+            "bytes": 3295632
+          }
+        },
+        {
+          "id": "gymnopedie-2",
+          "title": "Gymnopédie No. 2",
+          "author": "Erik Satie, played by Michael Laucke on classical guitar",
+          "authorUrl": "https://commons.wikimedia.org/wiki/User:Mlaucke",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Satie_Gymnopedie_No_2_performed_by_Michael_Laucke.flac",
+          "licence": {
+            "name": "CC BY-SA 4.0",
+            "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+          },
+          "source": {
+            "file": "commons__Satie_Gymnopedie_No_2_performed_by_Michael_Laucke.flac",
+            "format": "16-bit FLAC",
+            "sha256": "8c66ed6c6b811888d9e64549b3356947c2f1663dada0b29e2a74a1b68ab16637"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "4b43df616d0ce9377df3a406acafb7509267da0b65ed6fd8c5977e5e7c9cef45",
+            "bytes": 2711136
+          }
+        },
+        {
+          "id": "gymnopedie-3",
+          "title": "Gymnopédie No. 3",
+          "author": "Erik Satie, played by Michael Laucke on classical guitar",
+          "authorUrl": "https://commons.wikimedia.org/wiki/User:Mlaucke",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Satie_Gymnopedie_No_3_performed_by_Michael_Laucke.flac",
+          "licence": {
+            "name": "CC BY-SA 4.0",
+            "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+          },
+          "source": {
+            "file": "commons__Satie_Gymnopedie_No_3_performed_by_Michael_Laucke.flac",
+            "format": "16-bit FLAC",
+            "sha256": "7c2a5de4a9e6dd7b531552723541fcd84abbe545bee929a672cffc3cc5d62e3f"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "e0c7124c706a463b5198d6385b4de6d1c29f80e738cad01159a0c24fbc93bf66",
+            "bytes": 2232077
+          }
+        },
+        {
+          "id": "leyenda",
+          "title": "Leyenda (Asturias)",
+          "author": "Isaac Albéniz, played by Michael Laucke (guitar, with bass and castanets)",
+          "authorUrl": "https://commons.wikimedia.org/wiki/User:Mlaucke",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Legend_(Leyenda)_performed_by_Michael_Laucke.flac",
+          "licence": {
+            "name": "CC BY-SA 4.0",
+            "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+          },
+          "source": {
+            "file": "commons__Legend_(Leyenda)_performed_by_Michael_Laucke.flac",
+            "format": "16-bit FLAC",
+            "sha256": "bb5a14ce7d84d08c9e878aa482ea1a9eb208c977ebd870f316175199a15504fd"
+          },
+          "recipe": {
+            "excerpt": null,
+            "crossfade": 0
+          },
+          "build": {
+            "sha256": "3ad2112583391419405b344abb8b10cf4c6898dc72f33f95666ad18087ef0a98",
+            "bytes": 9833204
+          }
+        }
+      ]
     }
   ]
 }

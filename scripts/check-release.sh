@@ -17,7 +17,7 @@ repo=${base#https://github.com/}
 repo=${repo%/releases/download}
 
 assets=$(gh api "repos/$repo/releases/tags/$release" --jq '.assets[] | [.name, .digest, .size] | @tsv')
-wanted=$(jq -er '.sounds[] | [.id, .build.sha256, .build.bytes] | @tsv' "$manifest")
+wanted=$(jq -er 'def files: .sounds[] | if .tracks then (.tracks[] | . + {loop: false}) else . + {loop: true} end; files | [.id, .build.sha256, .build.bytes] | @tsv' "$manifest")
 
 status=0
 while IFS=$'\t' read -r id sha bytes; do

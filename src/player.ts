@@ -1,4 +1,4 @@
-import type { Soundscape } from "./catalogue";
+import type { Soundscape, Track } from "./catalogue";
 
 const FADE_MS = 600;
 // Fades step on timers, not animation frames: frames stall in a visible but
@@ -6,8 +6,9 @@ const FADE_MS = 600;
 // while timers keep running there.
 const FADE_STEP_MS = 20;
 
-// One looping <audio> element. A plain media element, rather than Web Audio,
-// is what phones keep playing with the screen locked.
+// One <audio> element, looping a recording or playing through a playlist. A
+// plain media element, rather than Web Audio, is what phones keep playing
+// with the screen locked.
 export class Player {
   private target = 1;
   private wanted = false;
@@ -17,13 +18,15 @@ export class Player {
   // Failures per file. Chrome keeps a failed response for a URL for the
   // life of the page, so a retry asks for the same file at a new URL.
   private failures = new Map<string, number>();
-  // The sound whose file the element holds; during a switch's fade-out
-  // that is still the old one, while current is already the new one.
-  private loaded: Soundscape | null = null;
+  // The track whose file the element holds; during a switch's fade-out
+  // that is still the old one, while current is already the new choice.
+  private loaded: Track | null = null;
   private fade: ReturnType<typeof setTimeout> | undefined;
   private endFade: (() => void) | null = null;
   private fadeTarget = 0;
   private current: Soundscape | null = null;
+  // Position in the current choice's tracks; always 0 for a looped recording.
+  private trackIndex = 0;
   // Bumped by every select, so a slower, older one can tell it was overtaken.
   private seq = 0;
   onchange: () => void = () => {};
@@ -37,8 +40,9 @@ export class Player {
     this.audio.preload = "none";
     // The system can pause or resume behind our back: unplugged headphones,
     // a phone call, a hardware media key.
+    // A playlist track reaching its end also fires "pause"; that is not one.
     this.audio.addEventListener("pause", () => {
-      if (this.wanted) {
+      if (this.wanted && !this.audio.ended) {
         this.cancelFade();
         this.audio.volume = this.target;
         this.setWanted(false);
@@ -63,6 +67,14 @@ export class Player {
     // Between asking to play and sound coming out: first load, or a stall.
     this.audio.addEventListener("waiting", () => this.setWaiting(this.wanted));
     this.audio.addEventListener("playing", () => this.setWaiting(false));
+    // A playlist moves on to its next track, and starts over after the last;
+    // but not when the element still holds the previous choice, ending
+    // during a switch's fade-out.
+    this.audio.addEventListener("ended", () => {
+      if (!this.wanted || !this.current || this.current.loops) return;
+      if (this.loaded !== this.track) return;
+      this.next();
+    });
     // A load or network failure, at the start or mid-play. load() clears the
     // error and resets the element: until then play() would reject at once,
     // and a dropped connection is not refetched, so a retry would never work.
@@ -80,7 +92,7 @@ export class Player {
         this.failures.set(f, (this.failures.get(f) ?? 0) + 1);
       }
       if (this.current) {
-        this.load(this.current);
+        this.loadTrack();
       } else {
         this.audio.load();
       }
@@ -96,6 +108,11 @@ export class Player {
   // Playback was asked for but no sound is coming out yet.
   get loading(): boolean {
     return this.wanted && this.waiting;
+  }
+
+  // What is playing now: the recording, or the playlist's current track.
+  get track(): Track | null {
+    return this.current?.tracks[this.trackIndex] ?? null;
   }
 
   get soundscape(): Soundscape | null {
@@ -123,12 +140,27 @@ export class Player {
     const seq = ++this.seq;
     const resume = this.wanted;
     this.current = s;
+    this.trackIndex = 0;
     this.updateMediaSession();
     this.onchange();
     if (resume) await this.fadeTo(0);
     if (seq !== this.seq) return;
-    this.load(s);
+    this.loadTrack();
     if (resume && this.wanted) await this.play();
+  }
+
+  // The next track of a playlist, wrapping round; also the lock screen's
+  // "next track". It fades in like any start.
+  private next() {
+    if (!this.current || this.current.loops) return;
+    // A new source aborts any play() still waiting on the old one; bumping
+    // seq marks that one as overtaken rather than a failure to report.
+    this.seq++;
+    this.trackIndex = (this.trackIndex + 1) % this.current.tracks.length;
+    this.loadTrack();
+    this.updateMediaSession();
+    this.onchange();
+    if (this.wanted) this.play().catch((err: unknown) => this.onerror(err));
   }
 
   async play() {
@@ -166,12 +198,15 @@ export class Player {
     }
   }
 
-  private load(s: Soundscape) {
-    this.loaded = s;
-    this.audio.src = this.srcFor(s);
+  private loadTrack() {
+    const t = this.track;
+    if (!this.current || !t) return;
+    this.loaded = t;
+    this.audio.loop = this.current.loops;
+    this.audio.src = this.srcFor(t);
   }
 
-  private srcFor(s: Soundscape): string {
+  private srcFor(s: Track): string {
     const n = this.failures.get(s.file);
     return `${this.baseUrl}audio/${s.file}${n ? `?retry=${n}` : ""}`;
   }
@@ -236,13 +271,20 @@ export class Player {
   }
 
   private updateMediaSession() {
-    if (!("mediaSession" in navigator) || !this.current) return;
+    const t = this.track;
+    if (!("mediaSession" in navigator) || !this.current || !t) return;
     navigator.mediaSession.metadata = new MediaMetadata({
-      title: this.current.label,
-      artist: `${this.current.title} — ${this.current.author}`,
-      album: "longquiet",
+      title: this.current.loops ? this.current.label : t.title,
+      artist: this.current.loops ? `${t.title} — ${t.author}` : t.author,
+      album: this.current.loops
+        ? "longquiet"
+        : `longquiet · ${this.current.label}`,
     });
     navigator.mediaSession.setActionHandler("play", () => void this.play());
     navigator.mediaSession.setActionHandler("pause", () => void this.pause());
+    navigator.mediaSession.setActionHandler(
+      "nexttrack",
+      this.current.loops ? null : () => this.next(),
+    );
   }
 }

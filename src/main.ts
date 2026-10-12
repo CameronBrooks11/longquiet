@@ -104,20 +104,25 @@ sectionList.addEventListener(
   ),
 );
 
+// One line per built file; a playlist's tracks are numbered under its name.
 byId<HTMLUListElement>("credits").append(
-  ...soundscapes.map((s) =>
-    el(
-      "li",
-      {},
-      el("strong", { textContent: s.label }),
-      " — ",
-      el("a", { href: s.sourceUrl, textContent: `“${s.title}”` }),
-      " by ",
-      el("a", { href: s.authorUrl, textContent: s.author }),
-      s.recorded ? `, recorded in ${s.recorded}` : "",
-      ". ",
-      el("a", { href: s.licence.url, textContent: s.licence.name }),
-      `. ${s.modifications}.`,
+  ...soundscapes.flatMap((s) =>
+    s.tracks.map((t, i) =>
+      el(
+        "li",
+        {},
+        el("strong", {
+          textContent: s.loops ? s.label : `${s.label} ${i + 1}`,
+        }),
+        " — ",
+        el("a", { href: t.sourceUrl, textContent: `“${t.title}”` }),
+        " by ",
+        el("a", { href: t.authorUrl, textContent: t.author }),
+        t.recorded ? `, recorded in ${t.recorded}` : "",
+        ". ",
+        el("a", { href: t.licence.url, textContent: t.licence.name }),
+        `. ${t.modifications}.`,
+      ),
     ),
   ),
 );
@@ -145,7 +150,8 @@ function render() {
     "aria-label",
     player.loading ? "Pause (loading)" : player.playing ? "Pause" : "Play",
   );
-  now.textContent = current ? `${current.title} — ${current.author}` : "";
+  const track = player.track;
+  now.textContent = track ? `${track.title} — ${track.author}` : "";
 }
 
 function reportPlaybackError(err: unknown) {

@@ -73,10 +73,19 @@ duration() {
     ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$1"
 }
 
-# Prints one line of measurements and ok|FAIL; returns 1 on FAIL.
+# Prints one line of measurements and ok|FAIL; returns 1 on FAIL. A playlist
+# track ($3 = false) does not loop, so it has no seam to judge.
 measure() {
-    local id=$1 f=$2 lufs tp dur first last seam limit verdict
+    local id=$1 f=$2 loops=$3 lufs tp dur first last seam limit verdict
     read -r lufs tp < <(loudness "$f")
+    if [ "$loops" = false ]; then
+        verdict=$(awk -v l="$lufs" -v t="$target" -v p="$tp" -v ml="$max_lu_off" -v mp="$max_true_peak" '
+            function abs(x) { return x < 0 ? -x : x }
+            BEGIN { print (abs(l - t) <= ml && p <= mp) ? "ok" : "FAIL" }')
+        printf '%-8s %7s LUFS %6s dBTP  (track, no loop)  %s\n' "$id" "$lufs" "$tp" "$verdict"
+        [ "$verdict" = ok ]
+        return
+    fi
     dur=$(duration "$f")
     first=$(rms_at "$f" 0)
     last=$(rms_at "$f" "$(awk -v d="$dur" 'BEGIN { print d - 1 }')")
@@ -131,7 +140,7 @@ render() {
 }
 
 sounds() {
-    jq -r '.sounds[] | [.id, .source.file, .source.sha256, (.recipe.excerpt // "null"), .recipe.crossfade, (.recipe.limit // "null")] | @tsv' "$manifest"
+    jq -r 'def files: .sounds[] | if .tracks then (.tracks[] | . + {loop: false}) else . + {loop: true} end; files | [.id, .source.file, .source.sha256, (.recipe.excerpt // "null"), .recipe.crossfade, (.recipe.limit // "null"), .loop] | @tsv' "$manifest"
 }
 
 record() {
@@ -142,7 +151,7 @@ record() {
         bytes=$(wc -c <"$out/$id.mp3")
         next=$(mktemp)
         jq --arg id "$id" --arg sha "$sha" --argjson bytes "$bytes" \
-            '(.sounds[] | select(.id == $id)).build = {sha256: $sha, bytes: $bytes}' \
+            'def files: .sounds[] | if .tracks then .tracks[] else . end; (files | select(.id == $id)).build = {sha256: $sha, bytes: $bytes}' \
             "$manifest" >"$next"
         mv -- "$next" "$manifest"
     done < <(sounds)
@@ -154,7 +163,7 @@ build)
     mkdir -p "$out"
     tmp=$(mktemp -d)
     trap 'rm -rf -- "$tmp"' EXIT
-    while IFS=$'\t' read -r id file sha excerpt x limit; do
+    while IFS=$'\t' read -r id file sha excerpt x limit _; do
         render "$id" "$file" "$sha" "$excerpt" "$x" "$limit"
     done < <(sounds)
     rm -rf -- "$tmp"
@@ -167,7 +176,7 @@ record)
     ;;
 verify)
     status=0
-    list=$(jq -er '.sounds[] | [.id, .build.sha256] | @tsv' "$manifest")
+    list=$(jq -er 'def files: .sounds[] | if .tracks then (.tracks[] | . + {loop: false}) else . + {loop: true} end; files | [.id, .build.sha256] | @tsv' "$manifest")
     while IFS=$'\t' read -r id sha; do
         if ! echo "$sha  $out/$id.mp3" | sha256sum --check --quiet - 2>/dev/null; then
             echo "$id: $out/$id.mp3 is missing or differs from its recorded build" >&2
@@ -178,9 +187,9 @@ verify)
     ;;
 check)
     status=0
-    while IFS=$'\t' read -r id _; do
+    while IFS=$'\t' read -r id _ _ _ _ _ loops; do
         [ -f "$out/$id.mp3" ] || die "$id: missing $out/$id.mp3"
-        measure "$id" "$out/$id.mp3" || status=1
+        measure "$id" "$out/$id.mp3" "$loops" || status=1
     done < <(sounds)
     exit "$status"
     ;;
