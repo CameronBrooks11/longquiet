@@ -15,7 +15,9 @@ soundscape, press play, and leave it running.
 | ---------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------- |
 | Rain       | [Rainstorm 10 min](https://freesound.org/people/Valerie-Vivegnis/sounds/759545/)                                          | Valerie-Vivegnis | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | Forest     | [Afternoon Woods in October - Midwest US (loop)](https://freesound.org/people/NickTayloe/sounds/830253/)                  | NickTayloe       | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| Dawn       | [Bird ambience. Coniferous forest dawn chorus.](https://freesound.org/people/SamsterBirdies/sounds/745273/)               | SamsterBirdies   | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | Stream     | [Stream flow over the stones in the fields and insect chirping](https://freesound.org/people/lastraindrop/sounds/732848/) | lastraindrop     | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| Ocean      | [Baltic Sea II - Zingst/Germany](https://freesound.org/people/pulswelle/sounds/667010/)                                   | pulswelle        | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | Night      | [Serrinha do Alambari night frogs chorus with close crickets](https://freesound.org/people/MeliaRoger/sounds/645706/)     | MeliaRoger       | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 
 The files in `public/audio/` are built from the uploaded originals by

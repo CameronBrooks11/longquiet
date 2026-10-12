@@ -77,11 +77,12 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Two even rows of three; six sounds is the catalogue's size. */
 .scapes {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
+  width: min(100%, 22rem);
 }
 
 .scapes button {

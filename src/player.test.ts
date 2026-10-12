@@ -61,7 +61,14 @@ class FakeAudio {
   }
 }
 
-const [rain, forest, stream, night] = soundscapes;
+function sound(id: string) {
+  const s = soundscapes.find((x) => x.id === id);
+  if (!s) throw new Error(`no soundscape ${id}`);
+  return s;
+}
+const [rain, forest, stream, night] = ["rain", "forest", "stream", "night"].map(
+  sound,
+);
 
 function setup() {
   const audio = new FakeAudio();
