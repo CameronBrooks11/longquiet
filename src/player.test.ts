@@ -153,12 +153,29 @@ async function playing(audio: FakeAudio, player: Player) {
   await started;
 }
 
+const page = {
+  hidden: false,
+  listeners: new Map<string, (() => void)[]>(),
+  addEventListener(type: string, fn: () => void) {
+    this.listeners.set(type, [...(this.listeners.get(type) ?? []), fn]);
+  },
+  hide() {
+    this.hidden = true;
+    this.listeners.get("visibilitychange")?.forEach((fn) => fn());
+  },
+};
+
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance"] });
-  vi.stubGlobal("document", { hidden: false });
+  vi.stubGlobal("document", page);
+  page.hidden = false;
+  page.listeners.clear();
   vi.stubGlobal("navigator", {});
+  // Like a browser, frames do not run while the page is hidden.
   vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) =>
-    setTimeout(() => cb(performance.now()), 16),
+    setTimeout(() => {
+      if (!page.hidden) cb(performance.now());
+    }, 16),
   );
   vi.stubGlobal("cancelAnimationFrame", (id: number) => clearTimeout(id));
 });
@@ -353,6 +370,34 @@ describe("Player.loading", () => {
     void audio.play(); // the browser resumes it, e.g. a media key
     await vi.advanceTimersByTimeAsync(10);
     expect(player.playing).toBe(true);
+  });
+});
+
+describe("Player fades", () => {
+  it("finish at once when the page is hidden mid-fade", async () => {
+    const { audio, player } = setup();
+    player.setVolume(0.7);
+    await player.select(rain);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(100); // fading up
+    expect(audio.volume).toBeLessThan(0.7);
+
+    page.hide(); // e.g. the phone is locked
+    expect(audio.volume).toBeCloseTo(0.7);
+    await started;
+  });
+
+  it("let a pause complete when the page is hidden mid-fade", async () => {
+    const { audio, player } = setup();
+    await playing(audio, player);
+    const paused = player.pause();
+    await vi.advanceTimersByTimeAsync(100);
+
+    page.hide();
+    expect(audio.volume).toBe(0); // the fade-out reached its end
+    await paused;
+    expect(audio.paused).toBe(true);
   });
 });
 

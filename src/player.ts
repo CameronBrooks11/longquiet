@@ -18,6 +18,7 @@ export class Player {
   private loaded: Soundscape | null = null;
   private fade = 0;
   private endFade: (() => void) | null = null;
+  private fadeTarget = 0;
   private current: Soundscape | null = null;
   // Bumped by every select, so a slower, older one can tell it was overtaken.
   private seq = 0;
@@ -48,6 +49,12 @@ export class Player {
         this.audio.volume = this.target;
         this.setWanted(true);
       }
+    });
+    // Fades run on animation frames, which stop once the page is hidden: a
+    // phone locked as a sound starts would hold the fade wherever it was,
+    // possibly near silence. Finish any fade at once instead.
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) this.finishFade();
     });
     // Between asking to play and sound coming out: first load, or a stall.
     this.audio.addEventListener("waiting", () => this.setWaiting(this.wanted));
@@ -191,6 +198,7 @@ export class Player {
     }
     const from = this.audio.volume;
     const start = performance.now();
+    this.fadeTarget = to;
     return new Promise((resolve) => {
       this.endFade = resolve;
       const step = (now: number) => {
@@ -206,6 +214,12 @@ export class Player {
       };
       this.fade = requestAnimationFrame(step);
     });
+  }
+
+  private finishFade() {
+    if (!this.fade) return;
+    this.audio.volume = this.fadeTarget;
+    this.cancelFade();
   }
 
   private cancelFade() {
