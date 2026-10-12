@@ -5,7 +5,7 @@ import {
   soundscapes,
   type Soundscape,
 } from "./catalogue";
-import { moveIndex } from "./keys";
+import { moveIndex, tabStop } from "./keys";
 import { Player } from "./player";
 import { loadPreferences, savePreferences } from "./preferences";
 
@@ -29,6 +29,7 @@ player.setVolume(prefs.volume);
 
 const scapes = byId<HTMLDivElement>("scapes");
 const sectionList = byId<HTMLDivElement>("sections");
+const panel = byId<HTMLDivElement>("section-panel");
 const playButton = byId<HTMLButtonElement>("play");
 const now = byId<HTMLParagraphElement>("now");
 const volume = byId<HTMLInputElement>("volume");
@@ -53,13 +54,15 @@ const tabs = populatedSections.map((section) => {
     textContent: section.label,
     onclick: () => showSection(section.id),
   });
+  tab.id = `section-${section.id}`;
   tab.setAttribute("role", "tab");
-  tab.setAttribute("aria-controls", "scapes");
+  tab.setAttribute("aria-controls", "section-panel");
   return tab;
 });
 sectionList.append(...tabs);
-// One section needs no switcher.
+// One section needs no switcher; with more, the grid sits in a tab panel.
 sectionList.hidden = tabs.length < 2;
+if (tabs.length > 1) panel.setAttribute("role", "tabpanel");
 
 function showSection(id: string) {
   shown = id;
@@ -74,12 +77,13 @@ function visibleButtons(): HTMLButtonElement[] {
 function onArrows(
   items: () => HTMLButtonElement[],
   activate: (b: HTMLButtonElement) => void,
+  vertical = true,
 ) {
   return (e: KeyboardEvent) => {
     const list = items();
     const i = list.indexOf(e.target as HTMLButtonElement);
     if (i < 0 || e.altKey || e.ctrlKey || e.metaKey) return;
-    const j = moveIndex(i, e.key, list.length);
+    const j = moveIndex(i, e.key, list.length, vertical);
     if (j === null) return;
     e.preventDefault();
     list[j].focus();
@@ -96,6 +100,7 @@ sectionList.addEventListener(
   onArrows(
     () => tabs,
     (t) => showSection(populatedSections[tabs.indexOf(t)].id),
+    false,
   ),
 );
 
@@ -123,16 +128,12 @@ function render() {
     const selected = populatedSections[i].id === shown;
     t.setAttribute("aria-selected", String(selected));
     t.tabIndex = selected ? 0 : -1;
+    if (selected && tabs.length > 1) {
+      panel.setAttribute("aria-labelledby", t.id);
+    }
   });
-  scapes.setAttribute(
-    "aria-label",
-    populatedSections.find((s) => s.id === shown)?.label ?? "Soundscape",
-  );
-  // The tab stop sits on the selected sound if it is on show, else the
-  // section's first sound.
-  const visible = visibleButtons();
   const selected = current ? buttons[soundscapes.indexOf(current)] : null;
-  const stop = selected && visible.includes(selected) ? selected : visible[0];
+  const stop = tabStop(visibleButtons(), selected);
   buttons.forEach((b, i) => {
     b.hidden = soundscapes[i].section !== shown;
     b.setAttribute("aria-checked", String(soundscapes[i] === current));
