@@ -18,8 +18,9 @@
 # step between adjacent seconds, with 1.5 dB as the floor for steady sounds.
 #
 # Render per sound: optional excerpt, optional crossfaded loop, a static gain
-# to the loudness target measured on the lossless intermediate, then one
-# encode with LAME VBR q2.
+# to the loudness target measured on the lossless intermediate, an optional
+# peak limiter (recipe.limit, dBFS) for recordings whose rare transients would
+# otherwise clip, then one encode with LAME VBR q2.
 #
 # The loop: out = in[X, end-X] + crossfade(in[end-X, end] -> in[0, X]). It
 # finishes at in[X], where it starts, so a plain <audio loop> has no seam.
@@ -91,7 +92,7 @@ measure() {
 }
 
 render() {
-    local id=$1 file=$2 sha=$3 excerpt=$4 x=$5 in mix dur end fade graph lufs gain
+    local id=$1 file=$2 sha=$3 excerpt=$4 x=$5 limit=$6 in mix dur end fade graph lufs gain post
     in="$cache/$file"
     [ -f "$in" ] || die "$id: missing original $in (download it from the source page)"
     echo "$sha  $in" | sha256sum --check --quiet - || die "$id: $file does not match its sha256"
@@ -115,13 +116,20 @@ render() {
     fi
     read -r lufs _ < <(loudness "$mix")
     gain=$(awk -v t="$target" -v l="$lufs" 'BEGIN { printf "%.2f", t - l }')
-    ffmpeg -nostdin -hide_banner -loglevel error -y -i "$mix" -af "volume=${gain}dB" \
+    post="volume=${gain}dB"
+    if [ "$limit" != null ]; then
+        # level=0: no make-up gain, so the limiter only ever turns peaks down.
+        post="$post,alimiter=limit=$(awk -v d="$limit" 'BEGIN { printf "%.4f", 10 ^ (d / 20) }'):level=0:attack=5:release=50"
+    fi
+    ffmpeg -nostdin -hide_banner -loglevel error -y -i "$mix" -af "$post" \
         -map_metadata -1 -c:a libmp3lame -q:a 2 "$out/$id.mp3"
-    echo "built $id.mp3 (source $lufs LUFS, gain $gain dB)"
+    local note=""
+    [ "$limit" = null ] || note=", peaks limited to $limit dBFS"
+    echo "built $id.mp3 (source $lufs LUFS, gain $gain dB$note)"
 }
 
 sounds() {
-    jq -r '.sounds[] | [.id, .source.file, .source.sha256, (.recipe.excerpt // "null"), .recipe.crossfade] | @tsv' "$manifest"
+    jq -r '.sounds[] | [.id, .source.file, .source.sha256, (.recipe.excerpt // "null"), .recipe.crossfade, (.recipe.limit // "null")] | @tsv' "$manifest"
 }
 
 record() {
@@ -144,8 +152,8 @@ build)
     mkdir -p "$out"
     tmp=$(mktemp -d)
     trap 'rm -rf -- "$tmp"' EXIT
-    while IFS=$'\t' read -r id file sha excerpt x; do
-        render "$id" "$file" "$sha" "$excerpt" "$x"
+    while IFS=$'\t' read -r id file sha excerpt x limit; do
+        render "$id" "$file" "$sha" "$excerpt" "$x" "$limit"
     done < <(sounds)
     rm -rf -- "$tmp"
     trap - EXIT

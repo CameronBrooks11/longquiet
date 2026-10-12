@@ -14,10 +14,16 @@ soundscape, press play, and leave it running.
 | Soundscape | Recording                                                                                                                 | By               | Licence                                                       |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------- |
 | Rain       | [Rainstorm 10 min](https://freesound.org/people/Valerie-Vivegnis/sounds/759545/)                                          | Valerie-Vivegnis | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| Tent       | [heavy rain on a small tent](https://freesound.org/people/Petrosilia/sounds/592997/)                                      | Petrosilia       | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | Forest     | [Afternoon Woods in October - Midwest US (loop)](https://freesound.org/people/NickTayloe/sounds/830253/)                  | NickTayloe       | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| Wind       | [young trees creaking in the wind](https://freesound.org/people/Garuda1982/sounds/624737/)                                | Garuda1982       | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| Meadow     | [La vilaine summer meadow pm1](https://freesound.org/people/bruno.auzet/sounds/810415/)                                   | bruno.auzet      | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | Dawn       | [Bird ambience. Coniferous forest dawn chorus.](https://freesound.org/people/SamsterBirdies/sounds/745273/)               | SamsterBirdies   | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| Drizzle    | [Birds In Rain](https://freesound.org/people/hargissssound/sounds/390399/)                                                | hargissssound    | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | Stream     | [Stream flow over the stones in the fields and insect chirping](https://freesound.org/people/lastraindrop/sounds/732848/) | lastraindrop     | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| Waterfall  | [distant waterfall](https://freesound.org/people/pippone59/sounds/788715/)                                                | pippone59        | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | Ocean      | [Baltic Sea II - Zingst/Germany](https://freesound.org/people/pulswelle/sounds/667010/)                                   | pulswelle        | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| Shore      | [Weston Shore Very Calm Early Morning](https://freesound.org/people/richwise/sounds/482292/)                              | richwise         | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | Night      | [Serrinha do Alambari night frogs chorus with close crickets](https://freesound.org/people/MeliaRoger/sounds/645706/)     | MeliaRoger       | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 
 The audio is built from the uploaded originals by

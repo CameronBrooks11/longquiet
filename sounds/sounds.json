@@ -1,6 +1,6 @@
 {
   "audio": {
-    "release": "audio-2026.10.12",
+    "release": "audio-2026.10.12.1",
     "baseUrl": "https://github.com/CameronBrooks11/longquiet/releases/download"
   },
   "loudnessTarget": -26,
@@ -54,6 +54,33 @@
       }
     },
     {
+      "id": "tent",
+      "label": "Tent",
+      "section": "nature",
+      "title": "heavy rain on a small tent",
+      "author": "Petrosilia",
+      "authorUrl": "https://freesound.org/people/Petrosilia/",
+      "sourceUrl": "https://freesound.org/people/Petrosilia/sounds/592997/",
+      "licence": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "source": {
+        "file": "592997__petrosilia__heavy-rain-on-a-small-tent.flac",
+        "format": "16-bit FLAC",
+        "sha256": "b827c4f81af859d6dea43e1632d079178e83df9aa5e844dbd227cf7da388669c"
+      },
+      "recipe": {
+        "excerpt": 620,
+        "crossfade": 8,
+        "limit": -2.5
+      },
+      "build": {
+        "sha256": "378ec3afdbc1789752e93a5a6ec286071cd2a62096afdb9170b2e83932de0eb5",
+        "bytes": 18207720
+      }
+    },
+    {
       "id": "forest",
       "label": "Forest",
       "section": "nature",
@@ -78,6 +105,60 @@
       "build": {
         "sha256": "9309168d0e704a5dd72dcf05e81bdc90a31f1caa0ece8f6e0fd41d84015d683f",
         "bytes": 13562414
+      }
+    },
+    {
+      "id": "wind",
+      "label": "Wind",
+      "section": "nature",
+      "title": "young trees creaking in the wind",
+      "author": "Garuda1982",
+      "authorUrl": "https://freesound.org/people/Garuda1982/",
+      "sourceUrl": "https://freesound.org/people/Garuda1982/sounds/624737/",
+      "licence": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "recorded": "Leipzig, Saxony, Germany",
+      "source": {
+        "file": "624737__garuda1982__young-trees-creaking-in-the-wind.wav",
+        "format": "16-bit WAV",
+        "sha256": "6771da0fa71d839ea731d4db632ae445e488fb301949996659451f01ff28c8c8"
+      },
+      "recipe": {
+        "excerpt": null,
+        "crossfade": 8
+      },
+      "build": {
+        "sha256": "bc00ea25ef45e439a3ab1dfe0910b75264e78980b3204fa5659aa885dc887fa2",
+        "bytes": 8802092
+      }
+    },
+    {
+      "id": "meadow",
+      "label": "Meadow",
+      "section": "nature",
+      "title": "La vilaine summer meadow pm1",
+      "author": "bruno.auzet",
+      "authorUrl": "https://freesound.org/people/bruno.auzet/",
+      "sourceUrl": "https://freesound.org/people/bruno.auzet/sounds/810415/",
+      "licence": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "recorded": "Saint-Dolay, Morbihan, France",
+      "source": {
+        "file": "810415__brunoauzet__la-vilaine-summer-meadow-pm1.wav",
+        "format": "24-bit WAV",
+        "sha256": "1a2db1580e6cf2c2fcb8aa41879ae8e6cb0097b53d64581e8d123bf293e72d6c"
+      },
+      "recipe": {
+        "excerpt": 360,
+        "crossfade": 8
+      },
+      "build": {
+        "sha256": "36c731e073bdd0c020e659449b491b65e63d7332a180668c6d11866aa74c5dd9",
+        "bytes": 8413676
       }
     },
     {
@@ -108,6 +189,33 @@
       }
     },
     {
+      "id": "birdsong-rain",
+      "label": "Drizzle",
+      "section": "nature",
+      "title": "Birds In Rain",
+      "author": "hargissssound",
+      "authorUrl": "https://freesound.org/people/hargissssound/",
+      "sourceUrl": "https://freesound.org/people/hargissssound/sounds/390399/",
+      "licence": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "recorded": "Cranford, New Jersey, United States",
+      "source": {
+        "file": "390399__hargissssound__birds-in-rain.wav",
+        "format": "16-bit WAV",
+        "sha256": "7bdc03c78911adc4e851e1e7461e93340e753aeeec688ba282acd8724da41ddf"
+      },
+      "recipe": {
+        "excerpt": null,
+        "crossfade": 8
+      },
+      "build": {
+        "sha256": "da16e7f7308ade2b5fd53bbedd0bbe3535b3a86bfee2fb33ec36298644e4d67b",
+        "bytes": 8360684
+      }
+    },
+    {
       "id": "stream",
       "label": "Stream",
       "section": "nature",
@@ -135,6 +243,32 @@
       }
     },
     {
+      "id": "waterfall",
+      "label": "Waterfall",
+      "section": "nature",
+      "title": "distant waterfall",
+      "author": "pippone59",
+      "authorUrl": "https://freesound.org/people/pippone59/",
+      "sourceUrl": "https://freesound.org/people/pippone59/sounds/788715/",
+      "licence": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "source": {
+        "file": "788715__pippone59__distant-waterfall.wav",
+        "format": "24-bit WAV",
+        "sha256": "0ddc5a50ee1352c6b0ead07b736b4702e5b3e02050fd045c74590fdf0b25eaa1"
+      },
+      "recipe": {
+        "excerpt": null,
+        "crossfade": 8
+      },
+      "build": {
+        "sha256": "ee9551e5fe1a306ffda19e42bebd8823c477e1e8f7bad6cd302d4459dac3b463",
+        "bytes": 7610828
+      }
+    },
+    {
       "id": "ocean",
       "label": "Ocean",
       "section": "nature",
@@ -159,6 +293,33 @@
       "build": {
         "sha256": "efb8a3ecade374edf975b3d53887b50cf75cc01b084234050af7c2b5ff27d1a7",
         "bytes": 13283756
+      }
+    },
+    {
+      "id": "shore",
+      "label": "Shore",
+      "section": "nature",
+      "title": "Weston Shore Very Calm Early Morning",
+      "author": "richwise",
+      "authorUrl": "https://freesound.org/people/richwise/",
+      "sourceUrl": "https://freesound.org/people/richwise/sounds/482292/",
+      "licence": {
+        "name": "CC0 1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      "recorded": "Southampton, City Of Southampton, England, United Kingdom",
+      "source": {
+        "file": "482292__richwise__weston-shore-very-calm-early-morning.wav",
+        "format": "32-bit float WAV",
+        "sha256": "7b03e46d697e0d5b6a171cb14778628acda2ed021b3e68e1521a7843ea846ba2"
+      },
+      "recipe": {
+        "excerpt": null,
+        "crossfade": 8
+      },
+      "build": {
+        "sha256": "e5d3394445ec7681525001e85b78489d4766aaf5c0444a647e0c93cdc3c0de54",
+        "bytes": 12147500
       }
     },
     {

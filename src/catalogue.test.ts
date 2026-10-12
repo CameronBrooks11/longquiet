@@ -36,7 +36,10 @@ describe("catalogue", () => {
   });
 
   it("names an audio release to fetch from", () => {
-    expect(manifest.audio.release).toMatch(/^audio-\d{4}\.\d{2}\.\d{2}$/);
+    // CalVer, with .N for a second release on the same day.
+    expect(manifest.audio.release).toMatch(
+      /^audio-\d{4}\.\d{2}\.\d{2}(\.\d+)?$/,
+    );
     expect(manifest.audio.baseUrl).toMatch(
       /^https:\/\/github\.com\/.+\/releases\/download$/,
     );
@@ -95,6 +98,20 @@ describe("sections", () => {
 });
 
 describe("describeProcessing", () => {
+  it("says when rare peaks were limited", () => {
+    expect(
+      describeProcessing(
+        "16-bit FLAC",
+        { excerpt: 620, crossfade: 8, limit: -2 },
+        -26,
+      ),
+    ).toBe(
+      "From the original 16-bit FLAC; first 10:20 only; last 8 s crossfaded " +
+        "into the first 8 s to smooth the loop point; levelled to −26 LUFS; " +
+        "rare peaks limited to −2 dBFS; encoded as MP3",
+    );
+  });
+
   it("names only the steps the recipe takes", () => {
     expect(
       describeProcessing("24-bit FLAC", { excerpt: null, crossfade: 0 }, -26),

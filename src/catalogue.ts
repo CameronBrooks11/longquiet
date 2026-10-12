@@ -12,6 +12,7 @@ export interface Licence {
 export interface Recipe {
   excerpt: number | null;
   crossfade: number;
+  limit?: number | null;
 }
 
 // How a section plays: one looped recording, generated tones, or a run of
@@ -66,7 +67,13 @@ export function describeProcessing(
       `last ${x} s crossfaded into the first ${x} s to smooth the loop point`,
     );
   }
-  steps.push(`levelled to ${signed(target)} LUFS and encoded as MP3`);
+  if (recipe.limit != null) {
+    steps.push(`levelled to ${signed(target)} LUFS`);
+    steps.push(`rare peaks limited to ${signed(recipe.limit)} dBFS`);
+    steps.push("encoded as MP3");
+  } else {
+    steps.push(`levelled to ${signed(target)} LUFS and encoded as MP3`);
+  }
   return steps.join("; ");
 }
 
