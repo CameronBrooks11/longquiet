@@ -182,6 +182,8 @@ test("fits a 320 px phone without sideways scrolling", async ({ page }) => {
   await page.goto("./");
   for (const s of sections) {
     await page.getByRole("tab", { name: s.label, exact: true }).click();
+    // Choose the section's first item, so a playlist shows its next button.
+    await page.getByRole("radio").first().click();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
     );
@@ -190,6 +192,11 @@ test("fits a 320 px phone without sideways scrolling", async ({ page }) => {
       const box = (await r.boundingBox())!;
       expect(box.x, s.label).toBeGreaterThanOrEqual(0);
       expect(box.x + box.width, s.label).toBeLessThanOrEqual(320);
+    }
+    const next = page.getByRole("button", { name: "Next piece" });
+    if (await next.isVisible()) {
+      const box = (await next.boundingBox())!;
+      expect(box.x + box.width, `${s.label} next`).toBeLessThanOrEqual(320);
     }
   }
 });
@@ -243,4 +250,34 @@ test("a timer set while paused survives a change of sound and starts on play", a
   await expect(page.locator("body")).toHaveClass(/is-playing/);
   await expect(page.getByLabel("Sleep timer")).toHaveValue("30");
   await expect(page.locator("#timer-left")).toHaveText("30 min left");
+});
+
+test("the next button skips through a playlist and is hidden for loops", async ({
+  page,
+}) => {
+  const [one, two] = playlist.tracks!;
+  await page.goto("./");
+  const next = page.getByRole("button", { name: "Next piece" });
+  await expect(next).toBeHidden();
+  await page
+    .getByRole("tab", { name: playlistSection.label, exact: true })
+    .click();
+  await page.getByRole("radio", { name: playlist.label, exact: true }).click();
+  await expect(next).toBeVisible();
+  await page.locator("#play").click();
+  await expectAdvancing(page);
+  expect((await audio(page))?.file).toBe(`${one.id}.mp3`);
+
+  await next.click();
+  await expect(page.locator("#now")).toContainText(two.title);
+  await expect
+    .poll(async () => (await audio(page))?.file)
+    .toBe(`${two.id}.mp3`);
+  await expectAdvancing(page);
+  await expect(page.locator("body")).toHaveClass(/is-playing/);
+
+  await page.getByRole("tab", { name: sections[0].label, exact: true }).click();
+  const loop = items.find((i) => !i.tracks)!;
+  await page.getByRole("radio", { name: loop.label, exact: true }).click();
+  await expect(next).toBeHidden();
 });
