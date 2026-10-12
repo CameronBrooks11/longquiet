@@ -41,6 +41,7 @@ just fmt          # prettier --write
 just lint         # eslint
 just check        # fmt-check + lint + typecheck (CI-equivalent)
 just test         # vitest run
+just e2e          # Playwright smoke tests of dist/, Chromium/Firefox/WebKit (CI)
 just run          # dev server
 just build        # production build into dist/
 just preview      # build, then serve dist/ locally
