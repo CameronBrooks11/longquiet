@@ -5,15 +5,19 @@ const FADE_MS = 600;
 // One looping <audio> element. A plain media element, rather than Web Audio,
 // is what phones keep playing with the screen locked.
 export class Player {
-  readonly audio = new Audio();
   private target = 1;
   private wanted = false;
   private fade = 0;
   private endFade: (() => void) | null = null;
   private current: Soundscape | null = null;
+  // Bumped by every select, so a slower, older one can tell it was overtaken.
+  private seq = 0;
   onchange: () => void = () => {};
 
-  constructor(private readonly baseUrl: string) {
+  constructor(
+    private readonly baseUrl: string,
+    readonly audio: HTMLAudioElement = new Audio(),
+  ) {
     this.audio.loop = true;
     this.audio.preload = "none";
     // The system can pause or resume behind our back: unplugged headphones,
@@ -54,28 +58,38 @@ export class Player {
     if (!this.fade) this.audio.volume = v;
   }
 
+  // The choice takes effect at once (UI, Media Session); the element follows
+  // after the fade-out, and only if no newer choice has come in meanwhile.
   async select(s: Soundscape) {
     if (this.current?.id === s.id) return;
+    const seq = ++this.seq;
     const resume = this.wanted;
-    if (resume) await this.fadeTo(0);
     this.current = s;
-    this.audio.src = `${this.baseUrl}audio/${s.file}`;
     this.updateMediaSession();
+    this.onchange();
+    if (resume) await this.fadeTo(0);
+    if (seq !== this.seq) return;
+    this.audio.src = `${this.baseUrl}audio/${s.file}`;
     if (resume && this.wanted) await this.play();
   }
 
   async play() {
     if (!this.current) return;
+    const seq = this.seq;
     this.setWanted(true);
     if (this.audio.paused) {
       this.audio.volume = 0;
       try {
         await this.audio.play();
       } catch (err) {
+        // A newer select changed the source, which aborts this play();
+        // that select starts its own, so this is not a failure to report.
+        if (seq !== this.seq) return;
         this.setWanted(false);
         throw err;
       }
     }
+    if (seq !== this.seq) return;
     await this.fadeTo(this.target);
   }
 

@@ -31,7 +31,7 @@ const buttons = soundscapes.map((s) =>
   el("button", {
     type: "button",
     textContent: s.label,
-    onclick: () => void choose(s),
+    onclick: () => choose(s),
   }),
 );
 buttons.forEach((b) => b.setAttribute("role", "radio"));
@@ -40,12 +40,12 @@ scapes.append(...buttons);
 // One tab stop for the group; arrows, Home and End move the selection.
 scapes.addEventListener("keydown", (e) => {
   const i = buttons.indexOf(e.target as HTMLButtonElement);
-  if (i < 0) return;
+  if (i < 0 || e.altKey || e.ctrlKey || e.metaKey) return;
   const j = moveIndex(i, e.key, buttons.length);
   if (j === null) return;
   e.preventDefault();
   buttons[j].focus();
-  void choose(soundscapes[j]);
+  choose(soundscapes[j]);
 });
 
 byId<HTMLUListElement>("credits").append(
@@ -68,31 +68,32 @@ byId<HTMLUListElement>("credits").append(
 
 function render() {
   const current = player.soundscape;
-  const selected = Math.max(0, soundscapes.indexOf(current!));
+  // The tab stop sits on the selected sound, or the first if none is.
+  const stop = current ? soundscapes.indexOf(current) : 0;
   buttons.forEach((b, i) => {
-    b.setAttribute("aria-checked", String(i === selected));
-    b.tabIndex = i === selected ? 0 : -1;
+    b.setAttribute("aria-checked", String(soundscapes[i] === current));
+    b.tabIndex = i === stop ? 0 : -1;
   });
   document.body.classList.toggle("is-playing", player.playing);
   playButton.setAttribute("aria-label", player.playing ? "Pause" : "Play");
   now.textContent = current ? `${current.title} — ${current.author}` : "";
 }
 
-async function choose(s: Soundscape) {
+function reportPlaybackError(err: unknown) {
+  now.textContent = "Couldn't start playback. Tap play to try again.";
+  console.error(err);
+}
+
+function choose(s: Soundscape) {
   prefs.soundscape = s.id;
   savePreferences(localStorage, prefs);
-  const pending = player.select(s);
-  render();
-  await pending;
+  player.select(s).catch(reportPlaybackError);
 }
 
 player.onchange = render;
 
 playButton.addEventListener("click", () => {
-  player.toggle().catch((err: unknown) => {
-    now.textContent = "Couldn't start playback. Tap play to try again.";
-    console.error(err);
-  });
+  player.toggle().catch(reportPlaybackError);
 });
 
 if (Player.volumeIsControllable()) {
