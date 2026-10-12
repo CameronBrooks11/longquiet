@@ -36,7 +36,10 @@ file is built (`scripts/build-sounds.sh` reads it).
 5. `just publish-audio audio-YYYY.MM.DD` uploads every built file as a
    new GitHub release and names it in `sounds.json` (needs `gh`). Commit
    `sounds.json`; the deploy fetches that release and verifies each file
-   against its recorded hash.
+   against its recorded hash. Publish before the pull request: CI checks
+   that the named release holds every recorded file, so the PR fails
+   until it does. If an upload fails partway, `publish-audio.sh` says how
+   to finish it.
 
 ## Checks
 

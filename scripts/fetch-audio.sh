@@ -19,6 +19,8 @@ if [ "$release" = null ] || [ "$base" = null ]; then
     die "sounds.json has no audio.release / audio.baseUrl"
 fi
 mkdir -p "$out"
+# Read the list first so a jq failure stops the script under set -e.
+list=$(jq -er '.sounds[] | [.id, (.build.sha256 // "null")] | @tsv' "$manifest")
 
 while IFS=$'\t' read -r id sha; do
     [ "$sha" != null ] || die "$id: no recorded build; run just sounds"
@@ -28,11 +30,14 @@ while IFS=$'\t' read -r id sha; do
         continue
     fi
     part="$file.part"
-    curl -fsSL --retry 3 -o "$part" "$base/$release/$id.mp3" || die "$id: download failed from $base/$release/$id.mp3"
+    if ! curl -fsSL --retry 3 -o "$part" "$base/$release/$id.mp3"; then
+        rm -f -- "$part"
+        die "$id: download failed from $base/$release/$id.mp3"
+    fi
     if ! echo "$sha  $part" | sha256sum --check --quiet - >/dev/null 2>&1; then
         rm -f -- "$part"
         die "$id: downloaded file does not match its recorded sha256"
     fi
     mv -- "$part" "$file"
     echo "fetched $id.mp3"
-done < <(jq -r '.sounds[] | [.id, (.build.sha256 // "null")] | @tsv' "$manifest")
+done <<<"$list"

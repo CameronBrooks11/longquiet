@@ -157,12 +157,13 @@ record)
     ;;
 verify)
     status=0
+    list=$(jq -er '.sounds[] | [.id, .build.sha256] | @tsv' "$manifest")
     while IFS=$'\t' read -r id sha; do
         if ! echo "$sha  $out/$id.mp3" | sha256sum --check --quiet - 2>/dev/null; then
             echo "$id: $out/$id.mp3 is missing or differs from its recorded build" >&2
             status=1
         fi
-    done < <(jq -r '.sounds[] | [.id, .build.sha256] | @tsv' "$manifest")
+    done <<<"$list"
     exit "$status"
     ;;
 check)
