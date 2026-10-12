@@ -62,6 +62,8 @@ just fetch-audio  # download the audio release into public/audio/ (once)
 just run          # dev server at http://localhost:5173/longquiet/
 just check        # format check, lint, typecheck
 just test         # unit tests
+just e2e          # browser smoke tests of dist/ (CI runs them; locally
+                  # needs `npm exec -- playwright install` first)
 just build        # static site in dist/
 ```
 

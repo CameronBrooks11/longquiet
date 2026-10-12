@@ -55,6 +55,10 @@ check-release:
 audio-check:
     scripts/build-sounds.sh check
 
+# Browser smoke tests of the built site (CI; needs fetch-audio, build, browsers)
+e2e:
+    npm exec -- playwright test
+
 # Dev server
 run:
     npm run dev
