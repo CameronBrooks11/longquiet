@@ -247,6 +247,25 @@ test("fits a 320 px phone without sideways scrolling", async ({ page }) => {
   }
 });
 
+test("the tabs stay put when switching sections", async ({ page }) => {
+  for (const size of [
+    { width: 1280, height: 720 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(size);
+    await page.goto("./");
+    const tabs = page.getByRole("tablist");
+    const at = (await tabs.boundingBox())!.y;
+    for (const s of [...sections, sections[0]]) {
+      await page.getByRole("tab", { name: s.label, exact: true }).click();
+      expect(
+        (await tabs.boundingBox())!.y,
+        `${size.width} px, ${s.label}`,
+      ).toBe(at);
+    }
+  }
+});
+
 test("a sleep timer fades the sound out and pauses on time", async ({
   page,
 }) => {
