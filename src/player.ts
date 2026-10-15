@@ -187,6 +187,8 @@ export class Player {
     const resume = this.wanted;
     this.current = s;
     this.trackIndex = 0;
+    // Before the fade's await, while a tap that chose a loop still counts.
+    if (resume) this.prime();
     this.updateMediaSession();
     this.onchange();
     if (resume) await this.fadeTo(0);
@@ -301,10 +303,11 @@ export class Player {
   // Play the waiting element once, silently, while this call can still count
   // as the listener's tap; then it may start on its own later.
   private prime() {
-    if (this.primed || !this.current?.loops || !this.audio.src) return;
+    const t = this.track;
+    if (this.primed || !this.current?.loops || !t) return;
     this.primed = true;
     const b = this.spare;
-    b.src = this.audio.src;
+    b.src = this.srcFor(t);
     b.muted = true;
     b.play().then(
       () => {

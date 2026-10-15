@@ -954,6 +954,20 @@ describe("Player loop handover", () => {
     expect(spare.muted).toBe(false);
   });
 
+  it("primes the second element at the tap that switches a playlist to a loop", async () => {
+    const { audio, spare, player } = setup();
+    await player.select(playlist);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+    expect(spare.src).toBe("");
+    void player.select(rain);
+    expect(spare.src).toBe("/audio/rain.mp3");
+    expect(spare.muted).toBe(true);
+    expect(spare.paused).toBe(false);
+  });
+
   it("starts the other copy as this one fades out, then hands over at its end", async () => {
     const { audio, spare, player } = await looping();
     audio.tick(600 - overlap - 0.5);
