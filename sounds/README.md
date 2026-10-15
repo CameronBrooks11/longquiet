@@ -37,14 +37,15 @@ file is built (`scripts/build-sounds.sh` reads it).
    `sha256sum sounds/.cache/<file>`; `source.format` reads like
    `24-bit WAV`. A loop needs a lossless original (WAV, FLAC, AIFF); a
    playlist piece may use a lossy one (`Ogg Vorbis`, `MP3`) when no
-   lossless copy exists, since it is only levelled and re-encoded. In `recipe`, `excerpt` is the number of seconds to keep
-   from the start (or `null` for all of it) and `crossfade` the seconds of
-   fade at each end of a loop, which the player overlaps into a crossfade
-   (8 is a good default; a loop needs more than 0, and a playlist piece
-   uses 0). `limit`, optional, is a sample-peak ceiling in
-   dBFS (between −24 and 0) for a peak limiter after the gain: use it only
-   when rare transients, such as drops on a tent, would otherwise clip,
-   and say so in review. The credits mention it.
+   lossless copy exists, since it is only levelled and re-encoded. In
+   `recipe`, `excerpt` is the number of seconds to keep from the start
+   (or `null` for all of it) and `crossfade` the seconds of fade at each
+   end of a loop, which the player overlaps into a crossfade (8 is a good
+   default; a loop needs more than 0, and a playlist piece uses 0).
+   `limit`, optional, is a sample-peak ceiling for a peak limiter after
+   the gain, in dBFS from −24 to 0: use it only when rare transients,
+   such as drops on a tent, would otherwise clip, and say so in review.
+   The credits mention it.
 3. Add the recording to the table in the top-level README.
 4. `just sounds` renders `public/audio/<id>.mp3`, records each file's
    sha256 and size in `sounds.json`, and checks them. Listen to the
@@ -78,7 +79,8 @@ Screen a candidate before building it. A recording whose peaks sit more
 than about 25 dB above its average loudness (a crackling fire, close
 thunder) cannot reach the target without clipping, and fails on true
 peak. If only a handful of short transients exceed the ceiling, `limit`
-can take them down; if they are frequent, the recording does not fit. Sudden jumps of 10 LU or more, or a level that drifts across the
+can take them down; if they are frequent, the recording does not fit.
+Sudden jumps of 10 LU or more, or a level that drifts across the
 recording, are not measured by the check at all, and they startle or
 break the loop; reject those by listening.
 
