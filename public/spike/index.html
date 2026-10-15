@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>#34 spike</title>
+    <style>
+      body {
+        font: 16px/1.4 system-ui, sans-serif;
+        margin: 1rem;
+        max-width: 36rem;
+      }
+      button {
+        font: inherit;
+        padding: 0.8rem 1.4rem;
+        margin: 0.25rem 0.25rem 0.25rem 0;
+      }
+      pre {
+        background: #eee;
+        padding: 0.5rem;
+        white-space: pre-wrap;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>#34 spike</h1>
+    <p>
+      Press Start, lock the phone and listen for 2 minutes. The rain should run
+      on with no gaps. Then unlock and screenshot the box.
+    </p>
+    <button id="start">Start</button>
+    <button id="stop">Stop</button>
+    <pre id="out">not started</pre>
+    <p>Rain: "Rainstorm 10 min" by Valerie-Vivegnis, CC0, a 33 s excerpt.</p>
+
+    <script>
+      // Two elements take turns. The clip fades in over its first 3 s and out
+      // over its last 3 s; the next one starts when the current one has 3 s
+      // left, so the fades overlap into a crossfade and nothing restarts.
+      const X = 3;
+      const SRC = "rain-clip.mp3";
+      const els = [new Audio(SRC), new Audio(SRC)];
+      els.forEach((e) => (e.preload = "auto"));
+      let cur = 0;
+      let wanted = false;
+      let nextStarted = false;
+      const s = {
+        t0: 0,
+        handovers: 0,
+        lateness: [],
+        rejects: [],
+        pauses: 0,
+        hidden: 0,
+        hiddenAt: 0,
+      };
+      const out = document.getElementById("out");
+
+      function render() {
+        if (!s.t0) return;
+        const late = s.lateness.length
+          ? Math.max(...s.lateness.map(Math.abs)).toFixed(2) + " s"
+          : "-";
+        out.textContent = [
+          "running for: " + ((Date.now() - s.t0) / 1000).toFixed(0) + " s",
+          "page hidden for: " +
+            (
+              (s.hidden + (s.hiddenAt ? Date.now() - s.hiddenAt : 0)) /
+              1000
+            ).toFixed(0) +
+            " s",
+          "handovers: " + s.handovers + " (one every 30 s)",
+          "worst handover timing error: " + late,
+          "second player refused to start: " +
+            (s.rejects.length ? s.rejects.join(", ") : "never"),
+          "unexpected pauses: " + s.pauses,
+          "playing now: player " +
+            (cur + 1) +
+            ", paused=" +
+            els[cur].paused +
+            ", at " +
+            els[cur].currentTime.toFixed(1) +
+            " s",
+        ].join("\n");
+      }
+
+      function check() {
+        const a = els[cur];
+        if (!wanted || nextStarted || !a.duration) return;
+        const left = a.duration - a.currentTime;
+        if (left > X) return;
+        nextStarted = true;
+        const b = els[1 - cur];
+        b.currentTime = 0;
+        s.lateness.push(X - left);
+        b.play().then(
+          () => {
+            s.handovers++;
+            render();
+          },
+          (err) => {
+            s.rejects.push(err.name);
+            render();
+          },
+        );
+      }
+
+      els.forEach((e, i) => {
+        e.addEventListener("timeupdate", () => {
+          if (i === cur) check();
+        });
+        e.addEventListener("ended", () => {
+          if (i !== cur) return;
+          cur = 1 - cur;
+          nextStarted = false;
+          render();
+        });
+        e.addEventListener("pause", () => {
+          if (wanted && !e.ended) s.pauses++;
+        });
+      });
+      setInterval(() => {
+        check();
+        render();
+      }, 1000);
+      document.addEventListener("visibilitychange", () => {
+        if (!s.t0) return;
+        if (document.hidden) s.hiddenAt = Date.now();
+        else if (s.hiddenAt) {
+          s.hidden += Date.now() - s.hiddenAt;
+          s.hiddenAt = 0;
+        }
+        render();
+      });
+
+      document.getElementById("start").onclick = async () => {
+        // Approve the second element for later playback while this tap counts
+        // as a user gesture.
+        const b = els[1];
+        b.muted = true;
+        try {
+          await b.play();
+        } catch (e) {
+          s.rejects.push("prime " + e.name);
+        }
+        b.pause();
+        b.currentTime = 0;
+        b.muted = false;
+        cur = 0;
+        nextStarted = false;
+        wanted = true;
+        Object.assign(s, {
+          t0: Date.now(),
+          handovers: 0,
+          lateness: [],
+          rejects: s.rejects.filter((r) => r.startsWith("prime")),
+          pauses: 0,
+          hidden: 0,
+          hiddenAt: 0,
+        });
+        els[0].currentTime = 0;
+        await els[0].play();
+        render();
+      };
+      document.getElementById("stop").onclick = () => {
+        wanted = false;
+        els.forEach((e) => e.pause());
+        render();
+      };
+    </script>
+  </body>
+</html>
