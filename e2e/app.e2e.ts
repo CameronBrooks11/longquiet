@@ -104,7 +104,6 @@ test("hands a loop over to a second element at its end", async ({ page }) => {
   await page.goto("./");
   const loop = items.find((i) => !i.tracks)!;
   await page.getByRole("radio", { name: loop.label, exact: true }).click();
-  await page.locator("#play").click();
   await expectAdvancing(page);
   await page.evaluate((overlap) => {
     const w = window as unknown as {
@@ -149,7 +148,6 @@ test("plays a loop, switches sound while playing, and pauses", async ({
   await page.goto("./");
   const [first, second] = items.filter((i) => !i.tracks);
   await page.getByRole("radio", { name: first.label, exact: true }).click();
-  await page.locator("#play").click();
   await expect(page.locator("body")).toHaveClass(/is-playing/);
   await expectAdvancing(page);
   expect(await audio(page)).toMatchObject({
@@ -177,7 +175,6 @@ test("a playlist moves on to its next piece at the end of one", async ({
     .getByRole("tab", { name: playlistSection.label, exact: true })
     .click();
   await page.getByRole("radio", { name: playlist.label, exact: true }).click();
-  await page.locator("#play").click();
   await expectAdvancing(page);
   expect(await audio(page)).toMatchObject({
     file: `${one.id}.mp3`,
@@ -194,6 +191,28 @@ test("a playlist moves on to its next piece at the end of one", async ({
     .toBe(`${two.id}.mp3`);
   await expectAdvancing(page);
   await expect(page.locator("#now")).toContainText(two.title);
+  await expect(page.locator("body")).toHaveClass(/is-playing/);
+});
+
+test("tapping a sound plays it; arrow keys only select", async ({ page }) => {
+  await page.goto("./");
+  const [first, second, third] = items.filter((i) => !i.tracks);
+  await page.getByRole("radio", { name: first.label, exact: true }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(
+    page.getByRole("radio", { name: second.label, exact: true }),
+  ).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator("body")).not.toHaveClass(/is-playing/);
+  expect(await audio(page)).toBeNull();
+
+  await page.getByRole("radio", { name: third.label, exact: true }).click();
+  await expect(page.locator("body")).toHaveClass(/is-playing/);
+  await expectAdvancing(page);
+  expect((await audio(page))?.file).toBe(`${third.id}.mp3`);
+
+  // Tapping the sound already playing leaves it playing.
+  await page.getByRole("radio", { name: third.label, exact: true }).click();
+  await expectAdvancing(page);
   await expect(page.locator("body")).toHaveClass(/is-playing/);
 });
 
@@ -272,10 +291,9 @@ test("a sleep timer fades the sound out and pauses on time", async ({
   await page.clock.install();
   await page.goto("./");
   const loop = items.find((i) => !i.tracks)!;
-  await page.getByRole("radio", { name: loop.label, exact: true }).click();
   await page.getByLabel("Sleep timer").selectOption("15");
   await expect(page.locator("#timer-left")).toHaveText("15 min left");
-  await page.locator("#play").click();
+  await page.getByRole("radio", { name: loop.label, exact: true }).click();
   await expectAdvancing(page);
 
   await page.clock.fastForward("10:00");
@@ -308,9 +326,12 @@ test("a timer set while paused survives a change of sound and starts on play", a
 }) => {
   await page.goto("./");
   const [first, second] = items.filter((i) => !i.tracks);
-  await page.getByRole("radio", { name: first.label, exact: true }).click();
   await page.getByLabel("Sleep timer").selectOption("30");
-  await page.getByRole("radio", { name: second.label, exact: true }).click();
+  await page.getByRole("radio", { name: first.label, exact: true }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(
+    page.getByRole("radio", { name: second.label, exact: true }),
+  ).toHaveAttribute("aria-checked", "true");
   await page.locator("#play").click();
   await expect(page.locator("body")).toHaveClass(/is-playing/);
   await expect(page.getByLabel("Sleep timer")).toHaveValue("30");
@@ -329,7 +350,6 @@ test("the next button skips through a playlist and is hidden for loops", async (
     .click();
   await page.getByRole("radio", { name: playlist.label, exact: true }).click();
   await expect(next).toBeVisible();
-  await page.locator("#play").click();
   await expectAdvancing(page);
   expect((await audio(page))?.file).toBe(`${one.id}.mp3`);
 
