@@ -42,7 +42,7 @@ const buttons = soundscapes.map((s) =>
   el("button", {
     type: "button",
     textContent: s.label,
-    onclick: () => choose(s),
+    onclick: () => choose(s, true),
   }),
 );
 buttons.forEach((b) => b.setAttribute("role", "radio"));
@@ -208,11 +208,17 @@ function reportPlaybackError(err: unknown) {
   console.error(err);
 }
 
-function choose(s: Soundscape) {
+// A tap plays what it chose; the arrow keys only move the selection while
+// paused, so browsing with the keyboard stays silent.
+function choose(s: Soundscape, start = false) {
   shown = s.section;
   prefs.soundscape = s.id;
   savePreferences(localStorage, prefs);
+  const playing = player.playing;
+  // While paused, select() loads the new source before its first await, so
+  // play() still runs inside the tap, as iOS requires.
   player.select(s).catch(reportPlaybackError);
+  if (start && !playing) player.play().catch(reportPlaybackError);
 }
 
 player.onchange = render;
