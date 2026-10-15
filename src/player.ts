@@ -37,8 +37,11 @@ export class Player {
   // drives, and the other waits to take over at a loop's end.
   private readonly els: readonly [HTMLAudioElement, HTMLAudioElement];
   private active = 0;
-  // The waiting element has been started for the current copy's end.
+  // The waiting element has been started for the current copy's end, and
+  // has since produced sound; `handovers` tells a late answer from an old one.
   private handingOver = false;
+  private spareSounding = false;
+  private handovers = 0;
   // The waiting element has played once on a tap, which iOS requires before
   // it may start later on its own with the screen locked.
   private primed = false;
@@ -85,6 +88,17 @@ export class Player {
       el.addEventListener(type, () => {
         if (el === this.audio) fn();
       });
+    // The waiting element: sound from it means a handover can go ahead. A
+    // failure resets it, as for the playing one, so the next handover gets a
+    // working element, and gives up on any handover under way.
+    el.addEventListener("playing", () => {
+      if (el !== this.audio && this.handingOver) this.spareSounding = true;
+    });
+    el.addEventListener("error", () => {
+      if (el === this.audio) return;
+      if (this.handingOver) this.abandonHandover();
+      el.load();
+    });
     // The system can pause or resume behind our back: unplugged headphones,
     // a phone call, a hardware media key.
     // A playlist track reaching its end also fires "pause"; that is not one.
@@ -267,32 +281,53 @@ export class Player {
     this.audio.src = this.srcFor(t);
   }
 
-  // Start the waiting element once the playing copy is into its fade-out.
+  // Start the waiting element once the playing copy is into its fade-out,
+  // at the matching point of its fade-in: from the top, or further in when
+  // the copy was paused and resumed within its last seconds.
   private handOver() {
     const overlap = this.current?.overlap ?? 0;
     if (!this.wanted || overlap <= 0 || this.handingOver) return;
     if (this.loaded !== this.track) return;
     const a = this.audio;
-    if (!(a.duration - a.currentTime <= overlap)) return;
+    const left = a.duration - a.currentTime;
+    if (!(left <= overlap)) return;
     this.handingOver = true;
+    this.spareSounding = false;
+    const n = ++this.handovers;
     const b = this.spare;
     if (b.src !== a.src) b.src = a.src;
-    b.currentTime = 0;
+    else if (b.error) b.load();
+    b.currentTime = Math.max(0, overlap - left);
     b.volume = a.volume;
-    // Refused: this copy plays out and restarts itself, with the gap.
-    b.play().catch(() => {});
+    b.play().catch(() => {
+      if (n === this.handovers && this.handingOver) this.abandonHandover();
+    });
   }
 
-  // The playing copy has ended. The other one takes over if it started;
-  // otherwise this one starts again, as a plain loop would.
+  // The waiting element cannot take over: refused, failed, or silent at the
+  // end. The playing copy skips its own fade-out and carries on from the end
+  // of its fade-in, so the loop cuts with a seek's brief gap instead of
+  // fading to silence and back.
+  private abandonHandover() {
+    this.dropSpare();
+    const a = this.audio;
+    const overlap = this.current?.overlap ?? 0;
+    if (this.wanted && a.duration - a.currentTime <= overlap) {
+      a.currentTime = overlap;
+    }
+  }
+
+  // The playing copy has ended. The other one takes over if it is sounding;
+  // otherwise this one starts again past its fade-in.
   private loopOver() {
-    const started = this.handingOver && !this.spare.paused;
-    this.handingOver = false;
-    if (started) {
+    if (this.handingOver && this.spareSounding && !this.spare.paused) {
+      this.handingOver = false;
       this.active = 1 - this.active;
+      this.setWaiting(false);
       return;
     }
-    this.audio.currentTime = 0;
+    this.dropSpare();
+    this.audio.currentTime = this.current?.overlap ?? 0;
     this.audio.play().catch((err: unknown) => {
       if (!this.wanted) return;
       this.setWanted(false);
@@ -322,6 +357,8 @@ export class Player {
 
   private dropSpare() {
     this.handingOver = false;
+    this.spareSounding = false;
+    this.handovers++;
     this.spare.pause();
   }
 
