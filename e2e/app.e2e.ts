@@ -236,6 +236,8 @@ test("remembers the chosen sound across a reload", async ({ page }) => {
   await page.goto("./");
   const pick = items.filter((i) => !i.tracks)[2];
   await page.getByRole("radio", { name: pick.label, exact: true }).click();
+  // The tap starts it; reloading mid-start would abort that play().
+  await expectAdvancing(page);
   await page.reload();
   await expect(
     page.getByRole("radio", { name: pick.label, exact: true }),
