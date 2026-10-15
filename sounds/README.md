@@ -32,7 +32,8 @@ file is built (`scripts/build-sounds.sh` reads it).
    file, and save it in `sounds/.cache/` under its downloaded name. That
    directory is gitignored: originals are never committed.
 2. Add an entry to `sounds.json`, with `section` set to one of the ids
-   in `sections` (a section appears in the app once it has a sound).
+   in `sections`. Every section holds at least two sounds, so a new section
+   is added with its sounds, never empty or with one.
    `source.sha256` is the output of
    `sha256sum sounds/.cache/<file>`; `source.format` reads like
    `24-bit WAV`. A loop needs a lossless original (WAV, FLAC, AIFF); a
