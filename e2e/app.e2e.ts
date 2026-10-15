@@ -101,6 +101,54 @@ test("shows every populated section, its sounds and every credit", async ({
 // A loop's copies take turns on two elements (#34): near the end of one, the
 // other starts from the top, and the first plays out and stops.
 test("hands a loop over to a second element at its end", async ({ page }) => {
+  // TEMPORARY diagnostics for the WebKit failure.
+  await page.addInitScript(() => {
+    const w = window as unknown as {
+      diag: string[];
+      allEls: HTMLMediaElement[];
+    };
+    w.diag = [];
+    w.allEls = [];
+    const t0 = performance.now();
+    const Orig = window.Audio;
+    const st = (e: HTMLMediaElement) =>
+      `ct=${e.currentTime.toFixed(2)} d=${e.duration.toFixed(1)} p=${e.paused} end=${e.ended} rs=${e.readyState} ns=${e.networkState} err=${e.error?.code ?? "-"} m=${e.muted} v=${e.volume.toFixed(2)}`;
+    (window as unknown as { Audio: unknown }).Audio = function (src?: string) {
+      const el = new Orig(src);
+      const i = w.allEls.push(el) - 1;
+      for (const type of [
+        "play",
+        "playing",
+        "pause",
+        "waiting",
+        "seeking",
+        "seeked",
+        "ended",
+        "stalled",
+        "canplay",
+        "canplaythrough",
+        "error",
+        "emptied",
+        "loadstart",
+        "loadeddata",
+        "abort",
+      ]) {
+        el.addEventListener(type, () =>
+          w.diag.push(
+            `${(performance.now() - t0).toFixed(0)} el${i} ${type} ${st(el)}`,
+          ),
+        );
+      }
+      return el;
+    } as unknown as typeof Audio;
+    setInterval(() => {
+      w.allEls.forEach((el, i) =>
+        w.diag.push(
+          `${(performance.now() - t0).toFixed(0)} el${i} tick ${st(el)}`,
+        ),
+      );
+    }, 500);
+  });
   await page.goto("./");
   const loop = items.find((i) => !i.tracks)!;
   await page.getByRole("radio", { name: loop.label, exact: true }).click();
@@ -130,15 +178,25 @@ test("hands a loop over to a second element at its end", async ({ page }) => {
     .toBe(true);
   expect(await audio(page)).toMatchObject({ file: `${loop.id}.mp3` });
   expect((await audio(page))!.time).toBeLessThan(loop.recipe!.crossfade + 2);
-  await expect
-    .poll(
-      () =>
-        page.evaluate(
-          () => (window as unknown as { first: HTMLMediaElement }).first.ended,
-        ),
-      { timeout: 20_000 },
-    )
-    .toBe(true);
+  try {
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            () =>
+              (window as unknown as { first: HTMLMediaElement }).first.ended,
+          ),
+        { timeout: 20_000 },
+      )
+      .toBe(true);
+  } finally {
+    const diag = await page.evaluate(
+      () => (window as unknown as { diag: string[] }).diag,
+    );
+    console.log(
+      "DIAG\n" + diag.filter((l) => !l.includes(" tick ") || true).join("\n"),
+    );
+  }
   await expectAdvancing(page);
   await expect(page.locator("body")).toHaveClass(/is-playing/);
 });
