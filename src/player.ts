@@ -8,6 +8,8 @@ const FADE_STEP_MS = 20;
 // A loop's next copy that has made no sound this long after starting is
 // given up on, while the playing copy is still near full level.
 const SPARE_WAIT_S = 2;
+// HTMLMediaElement.HAVE_FUTURE_DATA: enough buffered to keep playing.
+const HAVE_FUTURE_DATA = 3;
 
 // One <audio> element, looping a recording or playing through a playlist. A
 // plain media element, rather than Web Audio, is what phones keep playing
@@ -40,16 +42,13 @@ export class Player {
   // drives, and the other waits to take over at a loop's end.
   private readonly els: readonly [HTMLAudioElement, HTMLAudioElement];
   private active = 0;
-  // The waiting element has been started for the current copy's end, and
-  // has since produced sound.
+  // The waiting element has been started for the current copy's end.
   private handingOver = false;
-  private spareSounding = false;
   // Where the playing copy was when the handover started.
   private handoverAt = 0;
   // The waiting element has played once on a tap, which iOS requires before
   // it may start later on its own with the screen locked.
   private primed = false;
-  private priming = false;
   // The URL the waiting element was last given, and the file it holds,
   // which can differ from the playing one's: after a failure on either, or
   // primed for a loop while the old choice still plays.
@@ -98,21 +97,13 @@ export class Player {
       el.addEventListener(type, () => {
         if (el === this.audio) fn();
       });
-    // The waiting element: a handover goes ahead only while it is making
-    // sound. A failure gives up any handover under way, and counts against
-    // the file it holds, as for the playing one, so the next handover asks
-    // for it at a new URL.
-    el.addEventListener("playing", () => {
-      if (el !== this.audio && this.handingOver) this.spareSounding = true;
-    });
-    el.addEventListener("waiting", () => {
-      if (el !== this.audio) this.spareSounding = false;
-    });
+    // The waiting element: a failure gives up any handover under way, and
+    // counts against the file it holds, as for the playing one, so the next
+    // handover asks for it at a new URL.
     el.addEventListener("error", () => {
       if (el === this.audio) return;
       const f = this.spareFile;
       if (f) this.failures.set(f, (this.failures.get(f) ?? 0) + 1);
-      this.spareUrl = null;
       if (this.handingOver) this.abandonHandover();
     });
     // The system can pause or resume behind our back: unplugged headphones,
@@ -139,15 +130,15 @@ export class Player {
     // Between asking to play and sound coming out: first load, or a stall.
     on("waiting", () => this.setWaiting(this.wanted));
     on("playing", () => this.setWaiting(false));
-    // A loop's copy has ended: the other element carries on. A playlist moves
-    // on to its next track, and starts over after the last. Neither when the
-    // element still holds the previous choice, ending during a switch's
-    // fade-out.
+    // A loop's copy has ended: the other element carries on, even during a
+    // pause's fade, so a Play then resumes the copy that is sounding. A
+    // playlist moves on to its next track, and starts over after the last.
+    // Neither when the element still holds the previous choice, ending
+    // during a switch's fade-out.
     on("ended", () => {
-      if (!this.wanted || !this.current) return;
-      if (this.loaded !== this.track) return;
+      if (!this.current || this.loaded !== this.track) return;
       if (this.current.loops) this.loopOver();
-      else void this.next();
+      else if (this.wanted) void this.next();
     });
     on("timeupdate", () => {
       this.handOver();
@@ -259,6 +250,10 @@ export class Player {
     const seq = this.seq;
     this.setWanted(true);
     this.prime();
+    // A loop copy that ended during a pause's fade resumes past its fade-in.
+    if (this.audio.ended && this.current.overlap > 0) {
+      this.audio.currentTime = this.current.overlap;
+    }
     if (this.audio.paused) {
       this.audio.volume = 0;
       this.setWaiting(true);
@@ -312,7 +307,6 @@ export class Player {
     const left = a.duration - a.currentTime;
     if (!(left <= overlap)) return;
     this.handingOver = true;
-    this.spareSounding = false;
     const b = this.spare;
     this.handoverAt = a.currentTime;
     const url = this.srcFor(t);
@@ -322,29 +316,27 @@ export class Player {
       this.spareFile = t.file;
     }
     b.currentTime = Math.max(0, overlap - left);
-    // A priming play still under way leaves the element playing and muted,
-    // and a play() on a playing element fires no new "playing": its promise
-    // settling is the word either way. An answer to a handover already
-    // dropped (by a pause, say) is ignored.
+    // A priming play still under way would leave it muted. A refusal of a
+    // handover already dropped (by a pause, say) is ignored.
     b.muted = false;
-    b.play().then(
-      () => {
-        if (this.handingOver && !b.paused) this.spareSounding = true;
-      },
-      () => {
-        if (this.handingOver) this.abandonHandover();
-      },
-    );
+    b.play().catch(() => {
+      if (this.handingOver) this.abandonHandover();
+    });
+  }
+
+  // Making sound now, judged from the element's state rather than from the
+  // order its events arrive in, which differs between engines.
+  private sounding(el: HTMLAudioElement): boolean {
+    return !el.paused && !el.error && el.readyState >= HAVE_FUTURE_DATA;
   }
 
   // A next copy still silent a moment after starting will not be ready in
   // time: give up on it now rather than at the end of the fade-out.
   private watchHandover() {
-    if (!this.wanted || !this.handingOver || this.spareSounding) return;
+    if (!this.wanted || !this.handingOver) return;
     if (this.loaded !== this.track) return;
-    if (this.audio.currentTime - this.handoverAt > SPARE_WAIT_S) {
-      this.abandonHandover();
-    }
+    if (this.audio.currentTime - this.handoverAt <= SPARE_WAIT_S) return;
+    if (!this.sounding(this.spare)) this.abandonHandover();
   }
 
   // The waiting element cannot take over: refused, failed, or silent. The
@@ -361,15 +353,16 @@ export class Player {
   }
 
   // The playing copy has ended. The other one takes over if it is sounding;
-  // otherwise this one starts again past its fade-in.
+  // otherwise this one starts again past its fade-in, unless paused.
   private loopOver() {
-    if (this.handingOver && this.spareSounding && !this.spare.paused) {
+    if (this.handingOver && this.sounding(this.spare)) {
       this.handingOver = false;
       this.active = 1 - this.active;
       this.setWaiting(false);
       return;
     }
     this.dropSpare();
+    if (!this.wanted) return;
     this.audio.currentTime = this.current?.overlap ?? 0;
     this.audio.play().catch((err: unknown) => {
       if (!this.wanted) return;
@@ -382,8 +375,7 @@ export class Player {
   // as the listener's tap; then it may start on its own later.
   private prime() {
     const t = this.track;
-    if (this.primed || this.priming || !this.current?.loops || !t) return;
-    this.priming = true;
+    if (this.primed || !this.current?.loops || !t) return;
     const b = this.spare;
     const url = this.srcFor(t);
     b.src = url;
@@ -394,13 +386,11 @@ export class Player {
     b.play().then(
       () => {
         this.primed = true;
-        this.priming = false;
         // A handover may have started the element meanwhile.
         if (!this.handingOver) b.pause();
         b.muted = false;
       },
       () => {
-        this.priming = false;
         b.muted = false;
       },
     );
@@ -408,7 +398,6 @@ export class Player {
 
   private dropSpare() {
     this.handingOver = false;
-    this.spareSounding = false;
     this.spare.pause();
   }
 

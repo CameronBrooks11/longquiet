@@ -18,8 +18,18 @@ class FakeAudio {
   muted = false;
   loop = false;
   preload = "";
-  currentTime = 0;
   duration = NaN;
+  // Enough buffered to play (4) once the file arrives; a new source, a
+  // reload or a seek drops it until data comes again, and a stall to 2.
+  readyState = 0;
+  private time = 0;
+  get currentTime() {
+    return this.time;
+  }
+  set currentTime(v: number) {
+    this.time = v;
+    this.readyState = Math.min(this.readyState, 1);
+  }
   private source = "";
   private pending: { resolve: () => void; reject: (e: Error) => void }[] = [];
   private rejectPending(e: Error) {
@@ -33,8 +43,12 @@ class FakeAudio {
   get src() {
     return this.source;
   }
+  // How many times a source was set: each one starts a fresh fetch.
+  loads = 0;
   set src(v: string) {
+    this.loads++;
     this.source = v;
+    this.readyState = 0;
     this.paused = true;
     this.ended = false;
     this.error = null;
@@ -89,10 +103,12 @@ class FakeAudio {
     if (this.error) return; // a failed fetch delivers nothing until load()
     const ps = this.pending;
     this.pending = [];
+    this.readyState = 4;
     this.fire("playing");
     ps.forEach((p) => p.resolve());
   }
   load() {
+    this.readyState = 0;
     this.paused = true;
     this.ended = false;
     this.error = null;
@@ -101,9 +117,11 @@ class FakeAudio {
   }
   // Playback stalls for data, then resumes.
   stall() {
+    this.readyState = 2;
     this.fire("waiting");
   }
   resume() {
+    this.readyState = 4;
     this.fire("playing");
   }
   // The file cannot be loaded at all: "error" fires, then the pending
@@ -132,7 +150,7 @@ class FakeAudio {
   }
   // Playback reaches a position: the clock moves and "timeupdate" fires.
   tick(t: number) {
-    this.currentTime = t;
+    this.time = t;
     this.fire("timeupdate");
   }
   // Something outside the page pauses it: unplugged headphones, a call.
@@ -1171,6 +1189,75 @@ describe("Player loop handover", () => {
     expect(spare.muted).toBe(false);
   });
 
+  it("hands over when a pause's fade outlasts the copy, so Play resumes one copy", async () => {
+    const s = await looping();
+    await handingOver(s);
+    void s.player.pause(30000);
+    await vi.advanceTimersByTimeAsync(5000);
+    s.audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(s.player.audio).toBe(s.spare);
+    void s.player.play();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(s.spare.paused).toBe(false);
+    expect(s.audio.paused).toBe(true);
+  });
+
+  it("stops both copies when a pause's fade ends after a handover", async () => {
+    const s = await looping();
+    await handingOver(s);
+    const paused = s.player.pause(30000);
+    await vi.advanceTimersByTimeAsync(5000);
+    s.audio.end();
+    await vi.advanceTimersByTimeAsync(30000);
+    await paused;
+    expect(s.audio.paused).toBe(true);
+    expect(s.spare.paused).toBe(true);
+  });
+
+  it("resumes a copy that ended while paused past its fade-in", async () => {
+    const s = await looping();
+    void s.player.pause(30000);
+    await vi.advanceTimersByTimeAsync(1000);
+    s.audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(s.audio.currentTime).not.toBe(overlap);
+    void s.player.play();
+    expect(s.audio.currentTime).toBe(overlap);
+    expect(s.audio.paused).toBe(false);
+  });
+
+  it("reports a copy that cannot restart itself", async () => {
+    const { audio, player } = await looping();
+    const errors = vi.fn();
+    player.onerror = errors;
+    audio.refuseNextPlay = true;
+    audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(player.playing).toBe(false);
+    expect(errors).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not give up the old sound's handover during a change's fade-out", async () => {
+    const { audio, spare, player } = await looping();
+    audio.tick(600 - overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    void player.select(forest);
+    audio.tick(600 - overlap + 3);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(audio.currentTime).toBe(600 - overlap + 3);
+    expect(spare.paused).toBe(false);
+  });
+
+  it("keeps what the primed element has fetched rather than loading it again", async () => {
+    const { audio, spare } = await looping();
+    const loads = spare.loads;
+    audio.tick(600 - overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(spare.loads).toBe(loads);
+    expect(spare.paused).toBe(false);
+  });
+
   it("hands back again at the next copy's end", async () => {
     const s = await looping();
     const { audio, spare, player } = s;
@@ -1271,8 +1358,11 @@ describe("Player loop handover", () => {
     const { audio, player } = await looping();
     audio.tick(600 - overlap + 0.2);
     await vi.advanceTimersByTimeAsync(0);
+    // The change of sound fades out, then drops the waiting element, whose
+    // pending play() rejects after the handover is gone.
     void player.select(forest);
-    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(audio.src).toBe("/audio/forest.mp3");
     expect(audio.currentTime).toBeCloseTo(600 - overlap + 0.2);
   });
 
