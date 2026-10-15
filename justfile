@@ -62,6 +62,7 @@ audio-seam id:
 # Browser smoke tests of the built site (CI; needs fetch-audio, build, browsers)
 e2e:
     npm exec -- playwright test
+    npm exec -- playwright test --project=webkit -g "hands a loop over" --repeat-each=20
 
 # Dev server
 run:
