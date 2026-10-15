@@ -224,9 +224,9 @@ export class Player {
     this.onchange();
     if (resume) await this.fadeTo(0);
     if (seq !== this.seq) return;
-    // Only a handover of the old sound needs stopping; a priming play that
-    // this tap started must run on.
-    if (this.handingOver) this.dropSpare();
+    // A handover of the old sound stops; a priming play for a loop chosen
+    // with this tap runs on.
+    if (this.handingOver || !s.loops) this.dropSpare();
     this.loadTrack();
     if (resume && this.wanted) await this.play();
   }
@@ -407,8 +407,9 @@ export class Player {
       () => {
         this.primed = true;
         this.priming = false;
-        // A handover may have started the element meanwhile.
-        if (!this.handingOver) b.pause();
+        // A handover may have started the element meanwhile, or made it the
+        // playing one.
+        if (b === this.spare && !this.handingOver) b.pause();
         b.muted = false;
       },
       () => {

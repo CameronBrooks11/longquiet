@@ -1148,6 +1148,54 @@ describe("Player loop handover", () => {
     expect(player.audio).toBe(audio);
   });
 
+  it("leaves the playing copy alone when a priming play settles after the switch", async () => {
+    const { audio, spare, player } = setup();
+    await player.select(rain);
+    spare.refuseNextPlay = true;
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+    const paused = player.pause();
+    await vi.advanceTimersByTimeAsync(1000);
+    await paused;
+
+    // Resumed late: the priming play and the handover overlap, and the
+    // clock moves before the play settles.
+    audio.duration = 600;
+    audio.currentTime = 600 - overlap + 0.2;
+    void player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(0);
+    audio.tick(600 - overlap + 0.5);
+    await vi.advanceTimersByTimeAsync(0);
+    spare.advance(5);
+    audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(player.audio).toBe(spare);
+    spare.arrive();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(spare.paused).toBe(false);
+    expect(player.playing).toBe(true);
+  });
+
+  it("stops a priming play when the choice moves to a playlist", async () => {
+    const { audio, spare, player } = setup();
+    await player.select(playlist);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+    void player.select(rain);
+    await vi.advanceTimersByTimeAsync(1000);
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(spare.paused).toBe(false);
+    void player.select(playlist);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(spare.paused).toBe(true);
+  });
+
   it("does not switch to a copy the system paused", async () => {
     const s = await looping();
     await handingOver(s);
