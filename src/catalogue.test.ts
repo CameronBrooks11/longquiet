@@ -73,20 +73,22 @@ describe("catalogue", () => {
     }
   });
 
-  // A loop is cut and crossfaded, so it starts from a lossless original. A
-  // playlist piece may come from a lossy one when no lossless copy exists;
-  // the credits name the format either way.
   // An element looping itself goes briefly silent at each restart on iOS
-  // Safari (#34), so every loop is played as overlapping copies instead.
-  it.each(soundscapes)("$id overlaps only if it loops", (s) => {
+  // Safari (#34), so every loop is played as overlapping copies instead, and
+  // its file is faded at both ends. A playlist piece is not.
+  it.each(soundscapes)("$id fades its ends only if it loops", (s) => {
     if (s.loops) {
       expect(s.overlap).toBeGreaterThan(0);
       expect(s.overlap).toBe(s.tracks[0].recipe.crossfade);
     } else {
       expect(s.overlap).toBe(0);
+      for (const t of s.tracks) expect(t.recipe.crossfade).toBe(0);
     }
   });
 
+  // A loop is cut and crossfaded, so it starts from a lossless original. A
+  // playlist piece may come from a lossy one when no lossless copy exists;
+  // the credits name the format either way.
   it.each(soundscapes.filter((s) => s.loops))(
     "$id loops from a lossless original",
     (s) => {

@@ -122,7 +122,8 @@ test("hands a loop over to a second element at its end", async ({ page }) => {
             audio: HTMLMediaElement;
             first: HTMLMediaElement;
           };
-          return w.audio !== w.first && !w.audio.paused;
+          // The copies overlap: the first is still playing its fade-out.
+          return w.audio !== w.first && !w.audio.paused && !w.first.paused;
         }),
       { timeout: 20_000 },
     )
