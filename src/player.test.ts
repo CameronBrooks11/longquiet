@@ -9,7 +9,8 @@ import { Player } from "./player";
 // play() too; while the error is an unsupported source (code 4), play()
 // rejects at once with no event, and after a network error (code 2) it waits
 // forever; load() resets the element and clears the error. Events are queued tasks,
-// and a src change or load() drops any not yet dispatched.
+// and a src change or load() drops any not yet dispatched. Every play() call
+// still pending is settled together, as the spec's list of pending promises.
 class FakeAudio {
   paused = true;
   ended = false;
@@ -20,8 +21,12 @@ class FakeAudio {
   currentTime = 0;
   duration = NaN;
   private source = "";
-  private pending: { resolve: () => void; reject: (e: Error) => void } | null =
-    null;
+  private pending: { resolve: () => void; reject: (e: Error) => void }[] = [];
+  private rejectPending(e: Error) {
+    const ps = this.pending;
+    this.pending = [];
+    ps.forEach((p) => p.reject(e));
+  }
   private listeners = new Map<string, (() => void)[]>();
   private queued = new Set<ReturnType<typeof setTimeout>>();
 
@@ -34,11 +39,9 @@ class FakeAudio {
     this.ended = false;
     this.error = null;
     this.dropQueued();
-    if (this.pending) {
-      const p = this.pending;
-      this.pending = null;
-      p.reject(new DOMException("interrupted by a new load", "AbortError"));
-    }
+    this.rejectPending(
+      new DOMException("interrupted by a new load", "AbortError"),
+    );
   }
   addEventListener(type: string, fn: () => void) {
     this.listeners.set(type, [...(this.listeners.get(type) ?? []), fn]);
@@ -68,7 +71,7 @@ class FakeAudio {
       this.fire("play");
     }
     return new Promise<void>((resolve, reject) => {
-      this.pending = { resolve, reject };
+      this.pending.push({ resolve, reject });
     });
   }
   pause() {
@@ -76,33 +79,25 @@ class FakeAudio {
       this.paused = true;
       this.fire("pause");
     }
-    if (this.pending) {
-      const p = this.pending;
-      this.pending = null;
-      p.reject(
-        new DOMException("interrupted by a call to pause()", "AbortError"),
-      );
-    }
+    this.rejectPending(
+      new DOMException("interrupted by a call to pause()", "AbortError"),
+    );
   }
   error: { code: number } | null = null;
   // The file has arrived: sound starts and a pending play() resolves.
   arrive() {
     if (this.error) return; // a failed fetch delivers nothing until load()
-    const p = this.pending;
-    this.pending = null;
+    const ps = this.pending;
+    this.pending = [];
     this.fire("playing");
-    p?.resolve();
+    ps.forEach((p) => p.resolve());
   }
   load() {
     this.paused = true;
     this.ended = false;
     this.error = null;
     this.dropQueued();
-    if (this.pending) {
-      const p = this.pending;
-      this.pending = null;
-      p.reject(new DOMException("interrupted by load()", "AbortError"));
-    }
+    this.rejectPending(new DOMException("interrupted by load()", "AbortError"));
   }
   // Playback stalls for data, then resumes.
   stall() {
@@ -116,12 +111,12 @@ class FakeAudio {
   failStart() {
     this.error = { code: 4 };
     this.listeners.get("error")?.forEach((fn) => fn());
-    const p = this.pending;
-    this.pending = null;
-    p?.reject(new DOMException("no supported source", "NotSupportedError"));
+    this.rejectPending(
+      new DOMException("no supported source", "NotSupportedError"),
+    );
   }
   get pendingPlay() {
-    return this.pending !== null;
+    return this.pending.length > 0;
   }
   // The network drops (MEDIA_ERR_NETWORK), playing or not.
   fail() {
@@ -1039,6 +1034,120 @@ describe("Player loop handover", () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(s.player.audio).toBe(s.spare);
     expect(s.spare.currentTime).toBe(overlap);
+  });
+
+  it("does not switch to a copy a late priming play paused", async () => {
+    const { audio, spare, player } = setup();
+    await player.select(rain);
+    spare.refuseNextPlay = true;
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+    const paused = player.pause();
+    await vi.advanceTimersByTimeAsync(1000);
+    await paused;
+
+    // Resumed in the copy's last seconds: priming and the handover overlap.
+    audio.duration = 600;
+    audio.currentTime = 600 - overlap + 0.2;
+    void player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(0);
+    audio.tick(600 - overlap + 0.5);
+    await vi.advanceTimersByTimeAsync(0);
+    spare.arrive();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(spare.paused).toBe(false);
+    audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(player.audio).toBe(spare);
+    expect(player.playing).toBe(true);
+    expect(player.audio.paused).toBe(false);
+  });
+
+  it("does not switch to a copy the system paused", async () => {
+    const s = await looping();
+    await handingOver(s);
+    s.spare.interrupt();
+    await vi.advanceTimersByTimeAsync(0);
+    s.audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(s.player.audio).toBe(s.audio);
+    expect(s.audio.paused).toBe(false);
+  });
+
+  it("blames the file a failed priming play was for", async () => {
+    const { audio, spare, player } = setup();
+    await player.select(playlist);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+    void player.select(rain);
+    spare.fail();
+    await vi.advanceTimersByTimeAsync(1000);
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    audio.duration = 600;
+    audio.tick(600 - overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(spare.src).toBe("/audio/rain.mp3?retry=1");
+    expect(spare.error).toBeNull();
+  });
+
+  it("blames the file a failed handover was for after a change of loop", async () => {
+    const s = await looping();
+    void s.player.select(forest);
+    await vi.advanceTimersByTimeAsync(1000);
+    s.audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    s.audio.duration = 600;
+    s.audio.tick(600 - forest.overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    s.spare.fail();
+    await vi.advanceTimersByTimeAsync(0);
+    s.audio.tick(600 - forest.overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(s.spare.src).toBe("/audio/forest.mp3?retry=1");
+  });
+
+  it("ignores a waiting element's error outside a handover", async () => {
+    const { audio, spare } = await looping();
+    audio.currentTime = 100;
+    spare.fail();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(audio.currentTime).toBe(100);
+  });
+
+  it("does not seek the playing copy for a silent handover once paused", async () => {
+    const { audio, player } = await looping();
+    audio.tick(600 - overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    void player.pause(30000);
+    audio.tick(600 - overlap + 3);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(audio.currentTime).toBe(600 - overlap + 3);
+  });
+
+  it("takes the playing copy's own stall and recovery as no word on the other", async () => {
+    const s = await looping();
+    s.audio.tick(600 - overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    s.audio.stall();
+    s.audio.resume();
+    await vi.advanceTimersByTimeAsync(0);
+    s.audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(s.player.audio).toBe(s.audio);
+
+    const t = await looping();
+    await handingOver(t);
+    t.audio.stall();
+    await vi.advanceTimersByTimeAsync(0);
+    t.audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(t.player.audio).toBe(t.spare);
   });
 
   it("hands back again at the next copy's end", async () => {
