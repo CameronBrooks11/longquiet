@@ -121,6 +121,11 @@ describe("sections", () => {
     }
   });
 
+  // A tab holding one button, or none, is navigation with nothing to choose.
+  it.each(sections)("$id holds at least two sounds", (s) => {
+    expect(soundsIn(s.id).length).toBeGreaterThanOrEqual(2);
+  });
+
   it.each(soundscapes)("$id belongs to a listed section", (s) => {
     expect(sections.map((x) => x.id)).toContain(s.section);
   });

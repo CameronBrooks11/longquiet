@@ -6,7 +6,7 @@ Instructions for AI coding agents working in this repository.
 
 longquiet is a single-page web app for long, quiet listening: real field
 recordings on a loop (Nature) and openly licensed music as playlists
-(Reflective, Acoustic), with a sleep timer. It is static, has no backend or
+(Music: piano and guitar), with a sleep timer. It is static, has no backend or
 tracking, and is deployed to GitHub Pages at
 `https://cameronbrooks11.github.io/longquiet/`. Open work is in the issue
 tracker; the epic is #2.
