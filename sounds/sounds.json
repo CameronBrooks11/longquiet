@@ -1,6 +1,6 @@
 {
   "audio": {
-    "release": "audio-2026.10.12.4",
+    "release": "audio-2026.10.15",
     "baseUrl": "https://github.com/CameronBrooks11/longquiet/releases/download"
   },
   "loudnessTarget": -26,
@@ -49,8 +49,8 @@
         "crossfade": 8
       },
       "build": {
-        "sha256": "385c79183b5b3cd005fe6a9cae7c568c69af4933df096ba96c9caefcc84ec775",
-        "bytes": 8697356
+        "sha256": "89886528a2e806b9b8312065c36d13abd209cff933dcae5993009cdbca29a90e",
+        "bytes": 8799572
       }
     },
     {
@@ -76,8 +76,8 @@
         "limit": -2.5
       },
       "build": {
-        "sha256": "4e9cfe3e536a916ebbbfe5457a160d43d62036aa69715cccbd9f8a820e49e85f",
-        "bytes": 18243780
+        "sha256": "0e892526faa3bd224f352aa400bd62985c49c1b0f921f6e16928e36386473371",
+        "bytes": 18453932
       }
     },
     {
@@ -100,11 +100,11 @@
       },
       "recipe": {
         "excerpt": null,
-        "crossfade": 0
+        "crossfade": 8
       },
       "build": {
-        "sha256": "9309168d0e704a5dd72dcf05e81bdc90a31f1caa0ece8f6e0fd41d84015d683f",
-        "bytes": 13562414
+        "sha256": "962afdfbfed71e7167b845dc2518a777248e67d1faba8545e6a4592ce325a1ec",
+        "bytes": 13561266
       }
     },
     {
@@ -130,8 +130,8 @@
         "crossfade": 8
       },
       "build": {
-        "sha256": "bc00ea25ef45e439a3ab1dfe0910b75264e78980b3204fa5659aa885dc887fa2",
-        "bytes": 8802092
+        "sha256": "da6ba4e941385f9e1ce70a7690f85512f5db281cc8526d1521ec742597bf4e8b",
+        "bytes": 8971676
       }
     },
     {
@@ -157,8 +157,8 @@
         "crossfade": 8
       },
       "build": {
-        "sha256": "36c731e073bdd0c020e659449b491b65e63d7332a180668c6d11866aa74c5dd9",
-        "bytes": 8413676
+        "sha256": "53c4721cef14b13143a5e7e3ca3311544518942281af6a9ea66642e35a9ac1ed",
+        "bytes": 8598380
       }
     },
     {
@@ -184,8 +184,8 @@
         "crossfade": 8
       },
       "build": {
-        "sha256": "7fac43e4a72139269b1096cca6fcfc62480db0dc8fe3e965a9a0285e806028a9",
-        "bytes": 14276136
+        "sha256": "33c18b00b2980a072c14daecffc875baa6ace2346a3c9f830003df1eb1586e0e",
+        "bytes": 14436393
       }
     },
     {
@@ -211,8 +211,8 @@
         "crossfade": 8
       },
       "build": {
-        "sha256": "da16e7f7308ade2b5fd53bbedd0bbe3535b3a86bfee2fb33ec36298644e4d67b",
-        "bytes": 8360684
+        "sha256": "2b5496ce36ca66809227870855fb98c65ada07992f2d660b1bb6bb9d4690ab23",
+        "bytes": 8548268
       }
     },
     {
@@ -238,8 +238,8 @@
         "crossfade": 8
       },
       "build": {
-        "sha256": "85935f894bf6f17099c8d7cda2471d54f60c0c3d17c0ebcb973ecd8ecb392747",
-        "bytes": 14007212
+        "sha256": "202cfb10f543a779f07931a3a373d541a0b1e590c26c2030adc44256449f007f",
+        "bytes": 14191580
       }
     },
     {
@@ -264,8 +264,8 @@
         "crossfade": 8
       },
       "build": {
-        "sha256": "ee9551e5fe1a306ffda19e42bebd8823c477e1e8f7bad6cd302d4459dac3b463",
-        "bytes": 7610828
+        "sha256": "d48b240baf5737ad848f39855f2e668cad00e3184dc8219cb6a314b40f1cfa66",
+        "bytes": 7782764
       }
     },
     {
@@ -291,8 +291,8 @@
         "crossfade": 8
       },
       "build": {
-        "sha256": "efb8a3ecade374edf975b3d53887b50cf75cc01b084234050af7c2b5ff27d1a7",
-        "bytes": 13283756
+        "sha256": "d76f3a476c6e28a137fbdb2e6150dc6277f9c68f6974c9137df7f93dd1a5ba56",
+        "bytes": 13458524
       }
     },
     {
@@ -318,8 +318,8 @@
         "crossfade": 8
       },
       "build": {
-        "sha256": "e5d3394445ec7681525001e85b78489d4766aaf5c0444a647e0c93cdc3c0de54",
-        "bytes": 12147500
+        "sha256": "9a955c0d8f9261377b022b845183b7f63807fa401c8d44d14abf8797c0cbe71f",
+        "bytes": 12357404
       }
     },
     {
@@ -345,8 +345,8 @@
         "crossfade": 8
       },
       "build": {
-        "sha256": "b35ad378ad7418e02c5cb0540a0d08a843b69a46a1762a93e178231a866b78e0",
-        "bytes": 12777356
+        "sha256": "506aeb0cba491ac9029784b2b9b54ac1b6c98f1fdf86a4ac8fa0312f5aa11af2",
+        "bytes": 12969812
       }
     },
     {

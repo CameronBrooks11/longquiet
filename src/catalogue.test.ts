@@ -73,6 +73,19 @@ describe("catalogue", () => {
     }
   });
 
+  // An element looping itself goes briefly silent at each restart on iOS
+  // Safari (#34), so every loop is played as overlapping copies instead, and
+  // its file is faded at both ends. A playlist piece is not.
+  it.each(soundscapes)("$id fades its ends only if it loops", (s) => {
+    if (s.loops) {
+      expect(s.overlap).toBeGreaterThan(0);
+      expect(s.overlap).toBe(s.tracks[0].recipe.crossfade);
+    } else {
+      expect(s.overlap).toBe(0);
+      for (const t of s.tracks) expect(t.recipe.crossfade).toBe(0);
+    }
+  });
+
   // A loop is cut and crossfaded, so it starts from a lossless original. A
   // playlist piece may come from a lossy one when no lossless copy exists;
   // the credits name the format either way.
@@ -128,8 +141,9 @@ describe("describeProcessing", () => {
         -26,
       ),
     ).toBe(
-      "From the original 16-bit FLAC; first 10:20 only; last 8 s crossfaded " +
-        "into the first 8 s to smooth the loop point; levelled to −26 LUFS; " +
+      "From the original 16-bit FLAC; first 10:20 only; faded in over the " +
+        "first 8 s and out over the last 8 s, for the player to overlap into " +
+        "a crossfade at the loop point; levelled to −26 LUFS; " +
         "rare peaks limited to −2.5 dBFS; encoded as MP3",
     );
   });
@@ -143,8 +157,9 @@ describe("describeProcessing", () => {
     expect(
       describeProcessing("24-bit WAV", { excerpt: 620, crossfade: 8 }, -26),
     ).toBe(
-      "From the original 24-bit WAV; first 10:20 only; last 8 s crossfaded " +
-        "into the first 8 s to smooth the loop point; levelled to −26 LUFS " +
+      "From the original 24-bit WAV; first 10:20 only; faded in over the " +
+        "first 8 s and out over the last 8 s, for the player to overlap into " +
+        "a crossfade at the loop point; levelled to −26 LUFS " +
         "and encoded as MP3",
     );
   });

@@ -49,6 +49,8 @@ export interface Soundscape {
   section: string;
   tracks: readonly Track[];
   loops: boolean;
+  // Seconds by which each copy of a loop overlaps the next: its faded ends.
+  overlap: number;
 }
 
 type RawTrack = Omit<Track, "file" | "modifications">;
@@ -78,7 +80,8 @@ export function describeProcessing(
   if (recipe.crossfade > 0) {
     const x = recipe.crossfade;
     steps.push(
-      `last ${x} s crossfaded into the first ${x} s to smooth the loop point`,
+      `faded in over the first ${x} s and out over the last ${x} s, ` +
+        "for the player to overlap into a crossfade at the loop point",
     );
   }
   if (recipe.limit != null) {
@@ -109,8 +112,22 @@ export const soundscapes: readonly Soundscape[] = (
 ).map((s) => {
   const { id, label, section } = s;
   return "tracks" in s
-    ? { id, label, section, tracks: s.tracks.map(toTrack), loops: false }
-    : { id, label, section, tracks: [toTrack(s)], loops: true };
+    ? {
+        id,
+        label,
+        section,
+        tracks: s.tracks.map(toTrack),
+        loops: false,
+        overlap: 0,
+      }
+    : {
+        id,
+        label,
+        section,
+        tracks: [toTrack(s)],
+        loops: true,
+        overlap: s.recipe.crossfade,
+      };
 });
 
 // Every built file, in catalogue order.

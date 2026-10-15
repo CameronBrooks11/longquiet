@@ -39,15 +39,18 @@ file is built (`scripts/build-sounds.sh` reads it).
    playlist piece may use a lossy one (`Ogg Vorbis`, `MP3`) when no
    lossless copy exists, since it is only levelled and re-encoded. In `recipe`, `excerpt` is the number of seconds to keep
    from the start (or `null` for all of it) and `crossfade` the seconds of
-   end blended into the start (8 is a good default; 0 for a recording
-   already made to loop). `limit`, optional, is a sample-peak ceiling in
+   fade at each end of a loop, which the player overlaps into a crossfade
+   (8 is a good default; a loop needs more than 0, and a playlist piece
+   uses 0). `limit`, optional, is a sample-peak ceiling in
    dBFS (between −24 and 0) for a peak limiter after the gain: use it only
    when rare transients, such as drops on a tent, would otherwise clip,
    and say so in review. The credits mention it.
 3. Add the recording to the table in the top-level README.
 4. `just sounds` renders `public/audio/<id>.mp3`, records each file's
    sha256 and size in `sounds.json`, and checks them. Listen to the
-   whole file, and to the loop point.
+   whole file, and to the loop point: a faded loop alone fades to silence
+   there, so `just audio-seam <id>` writes `sounds/.cache/<id>.seam.wav`,
+   its end overlapped with its start as the player plays them.
 5. `just publish-audio audio-YYYY.MM.DD` (add `.N` for a second release
    the same day) uploads every built file as a
    new GitHub release and names it in `sounds.json` (needs `gh`). Commit
@@ -63,11 +66,13 @@ file is built (`scripts/build-sounds.sh` reads it).
 is more than 1 LU off the loudness target, has a true peak above −1 dBTP,
 or has a loop point that stands out: the level step from its last second
 to its first must be no larger than the recording's own 95th-percentile
-step between adjacent seconds (at least 1.5 dB). That catches a seam on a
-steady recording such as rain. A busy one such as birdsong or waves varies
-by several dB from second to second, so a seam there can pass the check:
-listen to the loop point. The tests fail if an entry is missing its file,
-its attribution, or an allowed licence.
+step between adjacent seconds (at least 1.5 dB). For a faded loop the last
+second is the end mixed into the start, as the player overlaps them, so
+the check catches ends that were not faded, which overlap into a swell of
+about 3 dB. It does not catch a recording that ends at a different level
+from where it starts, since the crossfade spreads that step over its
+length: listen to the seam. The tests fail if an entry is missing its
+file, its attribution, or an allowed licence.
 
 Screen a candidate before building it. A recording whose peaks sit more
 than about 25 dB above its average loudness (a crackling fire, close
