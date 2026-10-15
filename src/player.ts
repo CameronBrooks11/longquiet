@@ -322,10 +322,19 @@ export class Player {
       this.spareFile = t.file;
     }
     b.currentTime = Math.max(0, overlap - left);
-    // An answer to a handover already dropped (by a pause, say) is ignored.
-    b.play().catch(() => {
-      if (this.handingOver) this.abandonHandover();
-    });
+    // A priming play still under way leaves the element playing and muted,
+    // and a play() on a playing element fires no new "playing": its promise
+    // settling is the word either way. An answer to a handover already
+    // dropped (by a pause, say) is ignored.
+    b.muted = false;
+    b.play().then(
+      () => {
+        if (this.handingOver && !b.paused) this.spareSounding = true;
+      },
+      () => {
+        if (this.handingOver) this.abandonHandover();
+      },
+    );
   }
 
   // A next copy still silent a moment after starting will not be ready in

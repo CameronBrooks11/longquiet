@@ -1150,6 +1150,27 @@ describe("Player loop handover", () => {
     expect(t.player.audio).toBe(t.spare);
   });
 
+  it("takes over with a copy whose priming play was still under way", async () => {
+    const { audio, spare, player } = setup();
+    await player.select(rain);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(spare.muted).toBe(true);
+    audio.duration = 600;
+    audio.tick(600 - overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(spare.muted).toBe(false);
+    spare.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+    audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(player.audio).toBe(spare);
+    expect(spare.paused).toBe(false);
+    expect(spare.muted).toBe(false);
+  });
+
   it("hands back again at the next copy's end", async () => {
     const s = await looping();
     const { audio, spare, player } = s;
