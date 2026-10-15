@@ -11,18 +11,8 @@
       "kind": "loop"
     },
     {
-      "id": "brainwaves",
-      "label": "Brainwaves",
-      "kind": "tones"
-    },
-    {
-      "id": "reflective",
-      "label": "Reflective",
-      "kind": "playlist"
-    },
-    {
-      "id": "acoustic",
-      "label": "Acoustic",
+      "id": "music",
+      "label": "Music",
       "kind": "playlist"
     }
   ],
@@ -351,8 +341,8 @@
     },
     {
       "id": "nocturnes",
-      "label": "Nocturnes",
-      "section": "reflective",
+      "label": "Piano",
+      "section": "music",
       "tracks": [
         {
           "id": "nocturne-op9-2",
@@ -623,7 +613,7 @@
     {
       "id": "guitar",
       "label": "Guitar",
-      "section": "acoustic",
+      "section": "music",
       "tracks": [
         {
           "id": "gymnopedie-1",

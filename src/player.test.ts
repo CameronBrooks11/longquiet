@@ -179,7 +179,7 @@ function trackOf(id: string): Track {
 const playlist: Soundscape = {
   id: "pieces",
   label: "Pieces",
-  section: "reflective",
+  section: "music",
   loops: false,
   overlap: 0,
   tracks: ["piece-1", "piece-2", "piece-3"].map(trackOf),
