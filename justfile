@@ -55,6 +55,10 @@ check-release:
 audio-check:
     scripts/build-sounds.sh check
 
+# Write sounds/.cache/<id>.seam.wav, a loop's seam as the player overlaps it
+audio-seam id:
+    scripts/build-sounds.sh seam {{id}}
+
 # Browser smoke tests of the built site (CI; needs fetch-audio, build, browsers)
 e2e:
     npm exec -- playwright test

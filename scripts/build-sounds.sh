@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build-sounds.sh build|record|verify|check
+# build-sounds.sh build|record|verify|check|seam <id>
 #
 #   build  verify each original in sounds/.cache against its sha256 in
 #          sounds/sounds.json, render public/audio/<id>.mp3, record, check
@@ -9,13 +9,18 @@
 #   check  measure the built public/audio/<id>.mp3 files and fail if any
 #          is off the loudness target by more than 1 LU, has a true peak
 #          above -1 dBTP, or has a loop point that stands out (below)
+#   seam   write sounds/.cache/<id>.seam.wav: a loop's last X + 10 s with its
+#          first X + 10 s overlapped, as the player plays them, to listen to
 #
-# The loop point is the level step from the last second to the first, as
-# heard. A crossfaded loop is continuous there by construction, so the step is
-# the recording's own second-to-second variation, and a fixed limit only says
-# how busy the recording is: birdsong or waves step 2-3 dB between ordinary
-# seconds. So the step must not exceed the recording's own 95th-percentile
-# step between adjacent seconds, with 1.5 dB as the floor for steady sounds.
+# The loop point is a level step from the last second to the first, which
+# must not exceed the recording's own 95th-percentile step between adjacent
+# seconds, with 1.5 dB as the floor for steady sounds: birdsong or waves step
+# 2-3 dB between ordinary seconds. For a faded loop, the last second is that
+# of the tail mixed into the head, as the player overlaps them, where the tail
+# has nearly faded out; the step is then mostly the head against itself. What
+# it catches is ends that were not faded, which overlap into a swell of about
+# 3 dB. A difference in level between the end and the start of the recording
+# passes, spread over the crossfade: listen to the seam.
 #
 # Render per sound: optional excerpt, optional fades for a crossfaded loop, a
 # static gain to the loudness target measured on the lossless intermediate, an
@@ -26,8 +31,7 @@
 # last X s (quarter-sine, equal power). The player starts the next copy when
 # the current one has X s left, so the fades overlap into the crossfade
 # in[end-X, end] -> in[0, X] and no element ever restarts: an element looping
-# itself goes briefly silent at each restart on iOS Safari (#34). The check
-# mixes the file's tail into its head to hear that crossfade.
+# itself goes briefly silent at each restart on iOS Safari (#34).
 #
 # Needs bash, jq, ffmpeg/ffprobe and awk.
 set -euo pipefail
@@ -212,8 +216,24 @@ check)
     done < <(sounds)
     exit "$status"
     ;;
+seam)
+    id=${2:?usage: $0 seam <id>}
+    x=$(jq -er --arg id "$id" '.sounds[] | select(.id == $id and (.tracks | not)) | .recipe.crossfade' "$manifest") ||
+        die "$id: not a loop in $manifest"
+    [ "$x" != 0 ] || die "$id: has no crossfade"
+    f="$out/$id.mp3"
+    [ -f "$f" ] || die "$id: missing $f"
+    lead=10
+    start=$(awk -v d="$(duration "$f")" -v x="$x" -v l="$lead" 'BEGIN { print d - x - l }')
+    ffmpeg -nostdin -hide_banner -loglevel error -y -i "$f" -i "$f" -filter_complex "
+      [0:a]atrim=start=$start,asetpts=PTS-STARTPTS[tail];
+      [1:a]atrim=0:$((x + lead)),asetpts=PTS-STARTPTS,adelay=${lead}s:all=1[head];
+      [tail][head]amix=inputs=2:normalize=0:duration=longest[out]" \
+        -map '[out]' "$cache/$id.seam.wav"
+    echo "wrote $cache/$id.seam.wav: the seam runs from ${lead} s to $((x + lead)) s"
+    ;;
 *)
-    echo "usage: $0 build|record|verify|check" >&2
+    echo "usage: $0 build|record|verify|check|seam <id>" >&2
     exit 64
     ;;
 esac
