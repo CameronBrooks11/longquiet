@@ -39,8 +39,9 @@ file is built (`scripts/build-sounds.sh` reads it).
    playlist piece may use a lossy one (`Ogg Vorbis`, `MP3`) when no
    lossless copy exists, since it is only levelled and re-encoded. In `recipe`, `excerpt` is the number of seconds to keep
    from the start (or `null` for all of it) and `crossfade` the seconds of
-   end blended into the start (8 is a good default; 0 for a recording
-   already made to loop). `limit`, optional, is a sample-peak ceiling in
+   fade at each end of a loop, which the player overlaps into a crossfade
+   (8 is a good default; a loop needs more than 0, and a playlist piece
+   uses 0). `limit`, optional, is a sample-peak ceiling in
    dBFS (between −24 and 0) for a peak limiter after the gain: use it only
    when rare transients, such as drops on a tent, would otherwise clip,
    and say so in review. The credits mention it.

@@ -20,7 +20,7 @@ layer and sleep timer, then an installable offline PWA.
 ```
 index.html            # page markup; Vite entry
 src/catalogue.ts      # typed view of sounds.json; generates credit text
-src/player.ts         # one looping <audio> element, fades, Media Session
+src/player.ts         # <audio> playback: loops hand over between two elements, fades, Media Session
 src/preferences.ts    # localStorage persistence, validated on load
 src/main.ts           # UI wiring; credits rendered from the catalogue
 src/*.test.ts         # Vitest

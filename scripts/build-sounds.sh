@@ -10,23 +10,24 @@
 #          is off the loudness target by more than 1 LU, has a true peak
 #          above -1 dBTP, or has a loop point that stands out (below)
 #
-# The loop point is the level step from the last second to the first. A
-# crossfaded file is continuous there by construction, so the step is the
-# recording's own second-to-second variation, and a fixed limit only says
+# The loop point is the level step from the last second to the first, as
+# heard. A crossfaded loop is continuous there by construction, so the step is
+# the recording's own second-to-second variation, and a fixed limit only says
 # how busy the recording is: birdsong or waves step 2-3 dB between ordinary
 # seconds. So the step must not exceed the recording's own 95th-percentile
 # step between adjacent seconds, with 1.5 dB as the floor for steady sounds.
 #
-# Render per sound: optional excerpt, optional crossfaded loop, a static gain
-# to the loudness target measured on the lossless intermediate, an optional
-# peak limiter (recipe.limit, dBFS) for recordings whose rare transients would
-# otherwise clip, then one encode with LAME VBR q2.
+# Render per sound: optional excerpt, optional fades for a crossfaded loop, a
+# static gain to the loudness target measured on the lossless intermediate, an
+# optional peak limiter (recipe.limit, dBFS) for recordings whose rare
+# transients would otherwise clip, then one encode with LAME VBR q2.
 #
-# The loop: out = in[X, end-X] + crossfade(in[end-X, end] -> in[0, X]). It
-# finishes at in[X], where it starts, so a plain <audio loop> has no seam.
-# Each segment is a separate input because acrossfade produced no output when
-# fed from asplit; the fade is 0.1 s shorter than X because the decoded tail
-# can come out slightly shorter than the container duration.
+# The loop: out = in[0, end], faded in over its first X s and out over its
+# last X s (quarter-sine, equal power). The player starts the next copy when
+# the current one has X s left, so the fades overlap into the crossfade
+# in[end-X, end] -> in[0, X] and no element ever restarts: an element looping
+# itself goes briefly silent at each restart on iOS Safari (#34). The check
+# mixes the file's tail into its head to hear that crossfade.
 #
 # Needs bash, jq, ffmpeg/ffprobe and awk.
 set -euo pipefail
@@ -76,7 +77,7 @@ duration() {
 # Prints one line of measurements and ok|FAIL; returns 1 on FAIL. A playlist
 # track ($3 = false) does not loop, so it has no seam to judge.
 measure() {
-    local id=$1 f=$2 loops=$3 lufs tp dur first last seam limit verdict
+    local id=$1 f=$2 loops=$3 x=$4 lufs tp dur end first last seam limit verdict
     read -r lufs tp < <(loudness "$f")
     if [ "$loops" = false ]; then
         verdict=$(awk -v l="$lufs" -v t="$target" -v p="$tp" -v ml="$max_lu_off" -v mp="$max_true_peak" '
@@ -87,10 +88,27 @@ measure() {
         return
     fi
     dur=$(duration "$f")
-    first=$(rms_at "$f" 0)
-    last=$(rms_at "$f" "$(awk -v d="$dur" 'BEGIN { print d - 1 }')")
+    if [ "$x" = 0 ]; then
+        first=$(rms_at "$f" 0)
+        last=$(rms_at "$f" "$(awk -v d="$dur" 'BEGIN { print d - 1 }')")
+        limit=$(typical_step "$f")
+    else
+        # As heard: the tail's fade-out under the head's fade-in, then the
+        # file from X on. The fades themselves are left out of the typical step.
+        end=$(awk -v d="$dur" -v x="$x" 'BEGIN { print d - x }')
+        ffmpeg -nostdin -hide_banner -loglevel error -i "$f" -i "$f" -filter_complex "
+          [0:a]atrim=start=$end,asetpts=PTS-STARTPTS[tail];
+          [1:a]atrim=0:$x,asetpts=PTS-STARTPTS[head];
+          [tail][head]amix=inputs=2:normalize=0:duration=shortest[out]" \
+            -map '[out]' -c:a pcm_f32le "$tmp/$id.seam.wav"
+        ffmpeg -nostdin -hide_banner -loglevel error -i "$f" -af "atrim=$x:$end" -c:a pcm_f32le "$tmp/$id.body.wav"
+        first=$(rms_at "$f" "$x")
+        last=$(rms_at "$tmp/$id.seam.wav" "$(awk -v d="$(duration "$tmp/$id.seam.wav")" 'BEGIN { print d - 1 }')")
+        limit=$(typical_step "$tmp/$id.body.wav")
+        rm -f -- "$tmp/$id.seam.wav" "$tmp/$id.body.wav"
+    fi
     seam=$(awk -v a="$first" -v b="$last" 'BEGIN { printf "%.1f", a - b }')
-    limit=$(awk -v t="$(typical_step "$f")" -v m="$min_seam_db" 'BEGIN { printf "%.1f", (t > m ? t : m) }')
+    limit=$(awk -v t="$limit" -v m="$min_seam_db" 'BEGIN { printf "%.1f", (t > m ? t : m) }')
     verdict=$(awk -v l="$lufs" -v t="$target" -v p="$tp" -v s="$seam" \
         -v ml="$max_lu_off" -v mp="$max_true_peak" -v ms="$limit" '
         function abs(x) { return x < 0 ? -x : x }
@@ -101,7 +119,7 @@ measure() {
 }
 
 render() {
-    local id=$1 file=$2 sha=$3 excerpt=$4 x=$5 limit=$6 in mix dur end fade graph lufs gain post
+    local id=$1 file=$2 sha=$3 excerpt=$4 x=$5 limit=$6 in mix dur end lufs gain post
     in="$cache/$file"
     [ -f "$in" ] || die "$id: missing original $in (download it from the source page)"
     echo "$sha  $in" | sha256sum --check --quiet - || die "$id: $file does not match its sha256"
@@ -109,19 +127,18 @@ render() {
     mix="$tmp/$id.wav"
     dur=$(duration "$in")
     [ "$excerpt" = null ] || dur=$excerpt
+    ffmpeg -nostdin -hide_banner -loglevel error -i "$in" -af "atrim=0:$dur" -c:a pcm_f32le "$tmp/$id.cut.wav"
     if [ "$x" = 0 ]; then
-        ffmpeg -nostdin -hide_banner -loglevel error -i "$in" -af "atrim=0:$dur" -c:a pcm_f32le "$mix"
+        mv -- "$tmp/$id.cut.wav" "$mix"
     else
+        # Fade on the cut's own length: a decoded original can come out
+        # slightly shorter than its container says.
+        dur=$(duration "$tmp/$id.cut.wav")
         end=$(awk -v d="$dur" -v x="$x" 'BEGIN { print d - x }')
-        fade=$(awk -v x="$x" 'BEGIN { print x - 0.1 }')
-        graph="
-          [0:a]atrim=$x:$end,asetpts=PTS-STARTPTS[body];
-          [1:a]atrim=$end:$dur,asetpts=PTS-STARTPTS[tail];
-          [2:a]atrim=0:$x,asetpts=PTS-STARTPTS[head];
-          [tail][head]acrossfade=d=$fade:c1=qsin:c2=qsin[seam];
-          [body][seam]concat=n=2:v=0:a=1[out]"
-        ffmpeg -nostdin -hide_banner -loglevel error -i "$in" -i "$in" -i "$in" \
-            -filter_complex "$graph" -map '[out]' -c:a pcm_f32le "$mix"
+        ffmpeg -nostdin -hide_banner -loglevel error -i "$tmp/$id.cut.wav" \
+            -af "afade=t=in:st=0:d=$x:curve=qsin,afade=t=out:st=$end:d=$x:curve=qsin" \
+            -c:a pcm_f32le "$mix"
+        rm -f -- "$tmp/$id.cut.wav"
     fi
     read -r lufs _ < <(loudness "$mix")
     gain=$(awk -v t="$target" -v l="$lufs" 'BEGIN { printf "%.2f", t - l }')
@@ -187,9 +204,11 @@ verify)
     ;;
 check)
     status=0
-    while IFS=$'\t' read -r id _ _ _ _ _ loops; do
+    tmp=$(mktemp -d)
+    trap 'rm -rf -- "$tmp"' EXIT
+    while IFS=$'\t' read -r id _ _ _ x _ loops; do
         [ -f "$out/$id.mp3" ] || die "$id: missing $out/$id.mp3"
-        measure "$id" "$out/$id.mp3" "$loops" || status=1
+        measure "$id" "$out/$id.mp3" "$loops" "$x" || status=1
     done < <(sounds)
     exit "$status"
     ;;

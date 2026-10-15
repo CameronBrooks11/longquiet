@@ -6,6 +6,7 @@ interface Item {
   label: string;
   section: string;
   tracks?: { id: string; title: string }[];
+  recipe?: { crossfade: number };
 }
 const manifest = JSON.parse(
   readFileSync(new URL("../sounds/sounds.json", import.meta.url), "utf8"),
@@ -97,6 +98,50 @@ test("shows every populated section, its sounds and every credit", async ({
   await expect(page.locator("#credits > li")).toHaveCount(files);
 });
 
+// A loop's copies take turns on two elements (#34): near the end of one, the
+// other starts from the top, and the first plays out and stops.
+test("hands a loop over to a second element at its end", async ({ page }) => {
+  await page.goto("./");
+  const loop = items.find((i) => !i.tracks)!;
+  await page.getByRole("radio", { name: loop.label, exact: true }).click();
+  await page.locator("#play").click();
+  await expectAdvancing(page);
+  await page.evaluate((overlap) => {
+    const w = window as unknown as {
+      audio: HTMLMediaElement;
+      first: HTMLMediaElement;
+    };
+    w.first = w.audio;
+    w.audio.currentTime = w.audio.duration - overlap - 1;
+  }, loop.recipe!.crossfade);
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const w = window as unknown as {
+            audio: HTMLMediaElement;
+            first: HTMLMediaElement;
+          };
+          return w.audio !== w.first && !w.audio.paused;
+        }),
+      { timeout: 20_000 },
+    )
+    .toBe(true);
+  expect(await audio(page)).toMatchObject({ file: `${loop.id}.mp3` });
+  expect((await audio(page))!.time).toBeLessThan(loop.recipe!.crossfade + 2);
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () => (window as unknown as { first: HTMLMediaElement }).first.ended,
+        ),
+      { timeout: 20_000 },
+    )
+    .toBe(true);
+  await expectAdvancing(page);
+  await expect(page.locator("body")).toHaveClass(/is-playing/);
+});
+
 test("plays a loop, switches sound while playing, and pauses", async ({
   page,
 }) => {
@@ -108,7 +153,7 @@ test("plays a loop, switches sound while playing, and pauses", async ({
   await expectAdvancing(page);
   expect(await audio(page)).toMatchObject({
     file: `${first.id}.mp3`,
-    loop: true,
+    loop: false,
   });
 
   await page.getByRole("radio", { name: second.label, exact: true }).click();

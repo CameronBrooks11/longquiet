@@ -55,8 +55,9 @@ soundscape, press play, and leave it running.
 The audio is built from the uploaded originals by
 [`scripts/build-sounds.sh`](scripts/build-sounds.sh) and published as
 versioned GitHub release assets, not kept in git: an excerpt where a
-recording is long, a crossfaded loop point, and a static gain to −26 LUFS
-so switching sounds doesn't jump in volume.
+recording is long, faded ends that the player overlaps into a crossfade at
+the loop point, and a static gain to −26 LUFS so switching sounds doesn't
+jump in volume.
 [`sounds/sounds.json`](sounds/sounds.json) is the authoritative list; it
 pins each original by checksum, holds the processing recipe, and drives the
 in-app credits, and records the sha256 of every built file.

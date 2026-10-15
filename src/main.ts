@@ -201,7 +201,7 @@ timerChoice.addEventListener("change", () => {
   renderTimer();
 });
 setInterval(checkTimer, 1000);
-player.audio.addEventListener("timeupdate", checkTimer);
+for (const el of player.elements) el.addEventListener("timeupdate", checkTimer);
 
 function reportPlaybackError(err: unknown) {
   now.textContent = "Couldn't start playback. Tap play to try again.";

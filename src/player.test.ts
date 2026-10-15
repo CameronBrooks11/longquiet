@@ -14,8 +14,11 @@ class FakeAudio {
   paused = true;
   ended = false;
   volume = 1;
+  muted = false;
   loop = false;
   preload = "";
+  currentTime = 0;
+  duration = NaN;
   private source = "";
   private pending: { resolve: () => void; reject: (e: Error) => void } | null =
     null;
@@ -132,6 +135,11 @@ class FakeAudio {
     this.fire("pause");
     this.fire("ended");
   }
+  // Playback reaches a position: the clock moves and "timeupdate" fires.
+  tick(t: number) {
+    this.currentTime = t;
+    this.fire("timeupdate");
+  }
   // Something outside the page pauses it: unplugged headphones, a call.
   interrupt() {
     this.pause();
@@ -155,15 +163,21 @@ const playlist: Soundscape = {
   label: "Pieces",
   section: "reflective",
   loops: false,
+  overlap: 0,
   tracks: ["piece-1", "piece-2", "piece-3"].map(trackOf),
 };
 
 function setup() {
   const audio = new FakeAudio();
-  const player = new Player("/", audio as unknown as HTMLAudioElement);
+  const spare = new FakeAudio();
+  const player = new Player(
+    "/",
+    audio as unknown as HTMLAudioElement,
+    spare as unknown as HTMLAudioElement,
+  );
   const changes = vi.fn();
   player.onchange = changes;
-  return { audio, player, changes };
+  return { audio, spare, player, changes };
 }
 
 async function playing(audio: FakeAudio, player: Player) {
@@ -644,10 +658,10 @@ describe("Player.select", () => {
 });
 
 describe("Player playlists", () => {
-  it("loops a single recording and plays a playlist through", async () => {
+  it("hands a recording between elements and plays a playlist through", async () => {
     const { audio, player } = setup();
     await player.select(rain);
-    expect(audio.loop).toBe(true);
+    expect(audio.loop).toBe(false);
     await player.select(playlist);
     expect(audio.loop).toBe(false);
     expect(audio.src).toBe("/audio/piece-1.mp3");
@@ -909,5 +923,132 @@ describe("Player next button", () => {
     expect(low).toBeCloseTo(0.7);
     expect(player.track?.id).toBe(rain.tracks[0].id);
     expect(audio.src).toBe("/audio/rain.mp3");
+  });
+});
+
+describe("Player loop handover", () => {
+  // Rain playing on the first element, with the second primed and waiting.
+  async function looping() {
+    const s = setup();
+    await s.player.select(rain);
+    const started = s.player.play();
+    s.audio.arrive();
+    s.spare.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+    s.audio.duration = 600;
+    return s;
+  }
+  const overlap = rain.overlap;
+
+  it("primes the second element on the first play, then leaves it paused", async () => {
+    const { player, spare } = setup();
+    await player.select(rain);
+    void player.play();
+    expect(spare.src).toBe("/audio/rain.mp3");
+    expect(spare.muted).toBe(true);
+    expect(spare.paused).toBe(false);
+    spare.arrive();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(spare.paused).toBe(true);
+    expect(spare.muted).toBe(false);
+  });
+
+  it("starts the other copy as this one fades out, then hands over at its end", async () => {
+    const { audio, spare, player } = await looping();
+    audio.tick(600 - overlap - 0.5);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(spare.paused).toBe(true);
+
+    spare.currentTime = 123;
+    audio.tick(600 - overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(spare.paused).toBe(false);
+    expect(spare.currentTime).toBe(0);
+    expect(spare.src).toBe(audio.src);
+
+    audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(player.audio).toBe(spare);
+    expect(player.playing).toBe(true);
+    expect(audio.paused).toBe(true);
+  });
+
+  it("hands back again at the next copy's end", async () => {
+    const { audio, spare, player } = await looping();
+    audio.tick(600 - overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    spare.duration = 600;
+    spare.tick(600 - overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(audio.paused).toBe(false);
+    expect(audio.currentTime).toBe(0);
+    spare.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(player.audio).toBe(audio);
+    expect(player.playing).toBe(true);
+  });
+
+  it("restarts the same copy when the other refuses to start", async () => {
+    const { audio, spare, player } = await looping();
+    const errors = vi.fn();
+    player.onerror = errors;
+    spare.refuseNextPlay = true;
+    audio.tick(600 - overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(spare.paused).toBe(true);
+    audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(player.audio).toBe(audio);
+    expect(audio.currentTime).toBe(0);
+    expect(audio.paused).toBe(false);
+    expect(player.playing).toBe(true);
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it("stops both copies on a pause mid-handover", async () => {
+    const { audio, spare, player } = await looping();
+    audio.tick(600 - overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    const paused = player.pause();
+    await vi.advanceTimersByTimeAsync(1000);
+    await paused;
+    expect(audio.paused).toBe(true);
+    expect(spare.paused).toBe(true);
+  });
+
+  it("stops both copies when the system pauses mid-handover", async () => {
+    const { audio, spare, player } = await looping();
+    audio.tick(600 - overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    audio.interrupt();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(player.playing).toBe(false);
+    expect(spare.paused).toBe(true);
+  });
+
+  it("fades both copies together", async () => {
+    const { audio, spare, player } = await looping();
+    audio.tick(600 - overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    player.setVolume(0.5);
+    expect(audio.volume).toBe(0.5);
+    expect(spare.volume).toBe(0.5);
+  });
+
+  it("does not hand over a playlist track", async () => {
+    const { audio, spare, player } = setup();
+    await player.select(playlist);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+    audio.duration = 300;
+    audio.tick(300);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(spare.paused).toBe(true);
+    expect(spare.src).toBe("");
   });
 });
