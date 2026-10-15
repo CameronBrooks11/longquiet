@@ -8,8 +8,9 @@ const FADE_STEP_MS = 20;
 // A loop's next copy that has made no sound this long after starting is
 // given up on, while the playing copy is still near full level.
 const SPARE_WAIT_S = 2;
-// HTMLMediaElement.HAVE_FUTURE_DATA: enough buffered to keep playing.
-const HAVE_FUTURE_DATA = 3;
+// The next copy counts as sounding while its clock has moved within this
+// much of the playing copy's clock.
+const SPARE_STILL_S = 1;
 
 // One <audio> element, looping a recording or playing through a playlist. A
 // plain media element, rather than Web Audio, is what phones keep playing
@@ -44,11 +45,17 @@ export class Player {
   private active = 0;
   // The waiting element has been started for the current copy's end.
   private handingOver = false;
-  // Where the playing copy was when the handover started.
+  // Where the playing copy was when the handover started; where the next
+  // copy's clock was when last looked at, and where the playing copy's clock
+  // was when the next one's last moved.
   private handoverAt = 0;
+  private spareAt = NaN;
+  private spareMovedAt = -Infinity;
   // The waiting element has played once on a tap, which iOS requires before
   // it may start later on its own with the screen locked.
   private primed = false;
+  // A priming play under way, which a second call would abort.
+  private priming = false;
   // The URL the waiting element was last given, and the file it holds,
   // which can differ from the playing one's: after a failure on either, or
   // primed for a loop while the old choice still plays.
@@ -217,7 +224,9 @@ export class Player {
     this.onchange();
     if (resume) await this.fadeTo(0);
     if (seq !== this.seq) return;
-    this.dropSpare();
+    // Only a handover of the old sound needs stopping; a priming play that
+    // this tap started must run on.
+    if (this.handingOver) this.dropSpare();
     this.loadTrack();
     if (resume && this.wanted) await this.play();
   }
@@ -316,6 +325,8 @@ export class Player {
       this.spareFile = t.file;
     }
     b.currentTime = Math.max(0, overlap - left);
+    this.spareAt = b.currentTime;
+    this.spareMovedAt = -Infinity;
     // A priming play still under way would leave it muted. A refusal of a
     // handover already dropped (by a pause, say) is ignored.
     b.muted = false;
@@ -324,19 +335,27 @@ export class Player {
     });
   }
 
-  // Making sound now, judged from the element's state rather than from the
-  // order its events arrive in, which differs between engines.
-  private sounding(el: HTMLAudioElement): boolean {
-    return !el.paused && !el.error && el.readyState >= HAVE_FUTURE_DATA;
+  // The next copy is making sound: unpaused, unfailed, and its clock moving.
+  // Not its events or readyState: after a seek, WebKit on Linux plays on at
+  // readyState 2 with no "playing" after its "waiting" (measured in CI).
+  private spareSounding(): boolean {
+    const b = this.spare;
+    const now = this.audio.currentTime;
+    if (b.currentTime !== this.spareAt) {
+      this.spareAt = b.currentTime;
+      this.spareMovedAt = now;
+    }
+    return !b.paused && !b.error && now - this.spareMovedAt <= SPARE_STILL_S;
   }
 
   // A next copy still silent a moment after starting will not be ready in
   // time: give up on it now rather than at the end of the fade-out.
   private watchHandover() {
-    if (!this.wanted || !this.handingOver) return;
-    if (this.loaded !== this.track) return;
+    if (!this.handingOver) return;
+    const sounding = this.spareSounding();
+    if (!this.wanted || this.loaded !== this.track) return;
     if (this.audio.currentTime - this.handoverAt <= SPARE_WAIT_S) return;
-    if (!this.sounding(this.spare)) this.abandonHandover();
+    if (!sounding) this.abandonHandover();
   }
 
   // The waiting element cannot take over: refused, failed, or silent. The
@@ -355,7 +374,7 @@ export class Player {
   // The playing copy has ended. The other one takes over if it is sounding;
   // otherwise this one starts again past its fade-in, unless paused.
   private loopOver() {
-    if (this.handingOver && this.sounding(this.spare)) {
+    if (this.handingOver && this.spareSounding()) {
       this.handingOver = false;
       this.active = 1 - this.active;
       this.setWaiting(false);
@@ -375,7 +394,8 @@ export class Player {
   // as the listener's tap; then it may start on its own later.
   private prime() {
     const t = this.track;
-    if (this.primed || !this.current?.loops || !t) return;
+    if (this.primed || this.priming || !this.current?.loops || !t) return;
+    this.priming = true;
     const b = this.spare;
     const url = this.srcFor(t);
     b.src = url;
@@ -386,11 +406,13 @@ export class Player {
     b.play().then(
       () => {
         this.primed = true;
+        this.priming = false;
         // A handover may have started the element meanwhile.
         if (!this.handingOver) b.pause();
         b.muted = false;
       },
       () => {
+        this.priming = false;
         b.muted = false;
       },
     );

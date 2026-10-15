@@ -143,10 +143,15 @@ class FakeAudio {
   }
   // A non-looping file plays to its end: it pauses, then reports ended.
   end() {
+    if (!Number.isNaN(this.duration)) this.time = this.duration;
     this.ended = true;
     this.paused = true;
     this.fire("pause");
     this.fire("ended");
+  }
+  // The clock moves on while playing; a test of a stall leaves it still.
+  advance(dt: number) {
+    if (!this.paused && !this.error) this.time += dt;
   }
   // Playback reaches a position: the clock moves and "timeupdate" fires.
   tick(t: number) {
@@ -959,6 +964,7 @@ describe("Player loop handover", () => {
     await vi.advanceTimersByTimeAsync(0);
     s.spare.arrive();
     await vi.advanceTimersByTimeAsync(0);
+    s.spare.advance(0.3);
   }
 
   it("primes the second element on the first play, then leaves it paused", async () => {
@@ -972,6 +978,20 @@ describe("Player loop handover", () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(spare.paused).toBe(true);
     expect(spare.muted).toBe(false);
+  });
+
+  it("does not prime again while a priming play is still under way", async () => {
+    const { audio, spare, player } = setup();
+    await player.select(playlist);
+    const started = player.play();
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+    void player.select(rain);
+    const loads = spare.loads;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(spare.loads).toBe(loads);
+    expect(spare.muted).toBe(true);
   });
 
   it("primes the second element at the tap that switches a playlist to a loop", async () => {
@@ -998,7 +1018,9 @@ describe("Player loop handover", () => {
     spare.currentTime = 123;
     await handingOver(s);
     expect(spare.paused).toBe(false);
-    expect(spare.currentTime).toBeCloseTo(0.2);
+    // From 0.2 s in (as far into its fade-in as this copy is into its
+    // fade-out), then 0.3 s of playing.
+    expect(spare.currentTime).toBeCloseTo(0.5);
     expect(spare.src).toBe(audio.src);
 
     audio.end();
@@ -1077,11 +1099,53 @@ describe("Player loop handover", () => {
     spare.arrive();
     await vi.advanceTimersByTimeAsync(0);
     expect(spare.paused).toBe(false);
+    spare.advance(0.3);
     audio.end();
     await vi.advanceTimersByTimeAsync(0);
     expect(player.audio).toBe(spare);
     expect(player.playing).toBe(true);
     expect(player.audio.paused).toBe(false);
+  });
+
+  it("takes a copy whose clock moves as sounding, whatever its events", async () => {
+    const s = await looping();
+    s.audio.tick(600 - overlap + 0.2);
+    await vi.advanceTimersByTimeAsync(0);
+    // WebKit after a seek: "playing", then "waiting" with no "playing" after,
+    // while the clock moves on.
+    s.spare.arrive();
+    s.spare.stall();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(s.spare.readyState).toBe(2);
+    s.spare.advance(2.5);
+    s.audio.tick(600 - overlap + 2.7);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(s.spare.paused).toBe(false);
+    s.spare.advance(5);
+    s.audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(s.player.audio).toBe(s.spare);
+  });
+
+  it("does not take over with a copy whose clock stopped", async () => {
+    const s = await looping();
+    await handingOver(s);
+    s.audio.tick(600 - overlap + 3);
+    await vi.advanceTimersByTimeAsync(0);
+    s.audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(s.player.audio).toBe(s.audio);
+    expect(s.audio.currentTime).toBe(overlap);
+  });
+
+  it("does not take a copy started in the last second for one making sound", async () => {
+    const { audio, spare, player } = await looping();
+    audio.tick(600 - 0.5);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(spare.paused).toBe(false);
+    audio.end();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(player.audio).toBe(audio);
   });
 
   it("does not switch to a copy the system paused", async () => {
@@ -1182,6 +1246,7 @@ describe("Player loop handover", () => {
     spare.arrive();
     await vi.advanceTimersByTimeAsync(1000);
     await started;
+    spare.advance(0.3);
     audio.end();
     await vi.advanceTimersByTimeAsync(0);
     expect(player.audio).toBe(spare);
@@ -1270,6 +1335,7 @@ describe("Player loop handover", () => {
     expect(audio.paused).toBe(false);
     audio.arrive();
     await vi.advanceTimersByTimeAsync(0);
+    audio.advance(0.3);
     spare.end();
     await vi.advanceTimersByTimeAsync(0);
     expect(player.audio).toBe(audio);
@@ -1348,6 +1414,8 @@ describe("Player loop handover", () => {
     await handingOver(s);
     s.spare.stall();
     await vi.advanceTimersByTimeAsync(0);
+    s.audio.tick(600 - overlap + 3);
+    await vi.advanceTimersByTimeAsync(0);
     s.audio.end();
     await vi.advanceTimersByTimeAsync(0);
     expect(s.player.audio).toBe(s.audio);
@@ -1392,6 +1460,7 @@ describe("Player loop handover", () => {
     s.spare.arrive();
     await vi.advanceTimersByTimeAsync(0);
     expect(s.spare.src).toBe("/audio/rain.mp3?retry=1");
+    s.spare.advance(0.3);
     s.audio.end();
     await vi.advanceTimersByTimeAsync(0);
     expect(s.player.audio).toBe(s.spare);
