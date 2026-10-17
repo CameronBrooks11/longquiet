@@ -218,6 +218,36 @@ test("tapping a sound plays it; arrow keys only select", async ({ page }) => {
   await expect(page.locator("body")).toHaveClass(/is-playing/);
 });
 
+// Space toggles playback from the page and from a sound just tapped; on
+// Play itself it is Play's own click, so it toggles once, not twice.
+test("Space plays and pauses after a sound is tapped", async ({ page }) => {
+  await page.goto("./");
+  const loop = items.find((i) => !i.tracks)!;
+  const radio = page.getByRole("radio", { name: loop.label, exact: true });
+  await radio.click();
+  await expectAdvancing(page);
+  await radio.focus();
+  await page.keyboard.press("Space");
+  await expect(page.locator("body")).not.toHaveClass(/is-playing/);
+  await expect(radio).toHaveAttribute("aria-checked", "true");
+  await page.keyboard.press("Space");
+  await expect(page.locator("body")).toHaveClass(/is-playing/);
+
+  await page.locator("#play").focus();
+  await page.keyboard.press("Space");
+  await expect(page.locator("body")).not.toHaveClass(/is-playing/);
+});
+
+test("each section's sounds are named for the section", async ({ page }) => {
+  await page.goto("./");
+  for (const section of sections) {
+    await page.getByRole("tab", { name: section.label, exact: true }).click();
+    await expect(
+      page.getByRole("radiogroup", { name: section.label, exact: true }),
+    ).toBeVisible();
+  }
+});
+
 test("the page names what is playing from either section", async ({ page }) => {
   const loop = items.find((i) => !i.tracks && i.section !== playlist.section)!;
   const loopTab = page.getByRole("tab", {

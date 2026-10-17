@@ -2,7 +2,7 @@
   "id": "./",
   "name": "longquiet",
   "short_name": "longquiet",
-  "description": "Real field recordings, openly licensed, for long hours of quiet.",
+  "description": "Field recordings and music, openly licensed, for long hours of quiet.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
