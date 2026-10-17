@@ -1,6 +1,6 @@
 # longquiet
 
-Real field recordings, openly licensed, for long hours of quiet. Pick a
+Field recordings and music, openly licensed, for long hours of quiet. Pick a
 soundscape, press play, and leave it running.
 
 **<https://cameronbrooks11.github.io/longquiet/>**

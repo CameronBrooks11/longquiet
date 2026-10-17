@@ -153,6 +153,7 @@ function render() {
     );
     t.setAttribute("aria-selected", String(selected));
     t.tabIndex = selected ? 0 : -1;
+    if (selected) scapes.setAttribute("aria-label", populatedSections[i].label);
     if (selected && tabs.length > 1) {
       panel.setAttribute("aria-labelledby", t.id);
     }
@@ -338,11 +339,21 @@ if (Player.volumeIsControllable()) {
   byId("volume-hint").hidden = false;
 }
 
+// Space plays and pauses from the page or a sound's button, which is
+// already selected once focused. Other controls keep Space for themselves.
+function spaceToggles(e: KeyboardEvent): boolean {
+  const t = e.target as Node;
+  return e.code === "Space" && (t === document.body || scapes.contains(t));
+}
 document.addEventListener("keydown", (e) => {
-  if (e.code === "Space" && e.target === document.body) {
-    e.preventDefault();
-    playButton.click();
-  }
+  if (!spaceToggles(e)) return;
+  e.preventDefault();
+  if (!e.repeat) playButton.click();
+});
+// A button clicks on Space's release; stopping that keeps the tap from
+// replaying the sound just paused.
+document.addEventListener("keyup", (e) => {
+  if (spaceToggles(e)) e.preventDefault();
 });
 
 const first = findSoundscape(prefs.soundscape);
