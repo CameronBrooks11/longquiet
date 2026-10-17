@@ -130,7 +130,15 @@ byId<HTMLUListElement>("credits").append(
         t.recorded ? `, recorded in ${t.recorded}` : "",
         ". ",
         el("a", { href: t.licence.url, textContent: t.licence.name }),
-        `. ${t.modifications}.`,
+        t.sharedUnder
+          ? `; this version is shared under ${t.sharedUnder}.`
+          : ".",
+        el(
+          "details",
+          {},
+          el("summary", { textContent: "Changes made" }),
+          `${t.modifications}.`,
+        ),
       ),
     ),
   ),
@@ -226,7 +234,12 @@ function renderPieces(current: Soundscape | null) {
       );
       const ol = el("ol", {}, ...items);
       ol.setAttribute("aria-label", `${list.label} pieces`);
-      pieces.append(el("p", { textContent: playlistSummary(list) }), ol);
+      pieces.append(
+        el("p", {
+          textContent: `${list.description} · ${playlistSummary(list)}`,
+        }),
+        ol,
+      );
     }
   }
   pieces.querySelectorAll("button").forEach((b, i) => {
