@@ -408,6 +408,9 @@ button {
 
 /* Sleep timer: a quiet line under the volume, the native picker on phones. */
 .timer {
+  /* The column's width, not the message's, so the select's place does not
+     depend on what the line below it says. */
+  align-self: stretch;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -418,8 +421,13 @@ button {
   font-size: 0.9rem;
 }
 
-.timer-left:empty {
-  display: none;
+/* A line of its own, kept when empty, so a message coming or going moves
+   neither the select nor the page below. */
+.timer-left {
+  flex-basis: 100%;
+  min-height: 1.4em;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .timer svg {
