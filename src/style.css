@@ -90,6 +90,71 @@ button {
   justify-content: center;
 }
 
+/* A playlist's pieces, below the controls so a long list does not push
+   them down: title on the left, length on the right. */
+.pieces {
+  align-self: stretch;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.pieces[hidden] {
+  display: none;
+}
+
+.pieces p {
+  margin: 0 0 0.4rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.pieces ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.pieces button {
+  width: 100%;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.55rem 0.25rem;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  text-align: left;
+}
+
+.pieces button span:first-child {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pieces .length {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.pieces button:hover,
+.pieces button[aria-current="true"] {
+  color: var(--fg);
+}
+
+.pieces button[aria-current="true"] span:first-child::before {
+  content: "";
+  display: inline-block;
+  width: 0.35em;
+  height: 0.35em;
+  margin-right: 0.5em;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
 .sections {
   display: flex;
   flex-wrap: wrap;
@@ -218,9 +283,8 @@ button {
   position: relative;
 }
 
-.next {
+.skip {
   position: absolute;
-  left: calc(100% + 1.25rem);
   top: 50%;
   transform: translateY(-50%);
   width: 2.75rem;
@@ -233,15 +297,23 @@ button {
   transition: border-color 0.3s;
 }
 
-.next[hidden] {
+.skip[hidden] {
   display: none;
 }
 
-.next:hover {
+.next {
+  left: calc(100% + 1.25rem);
+}
+
+.previous {
+  right: calc(100% + 1.25rem);
+}
+
+.skip:hover {
   border-color: var(--accent);
 }
 
-.next svg {
+.skip svg {
   width: 1.1rem;
   height: 1.1rem;
   fill: var(--muted);

@@ -165,14 +165,16 @@ sounds() {
 }
 
 record() {
-    local id sha bytes next
+    local id sha bytes seconds next
     while IFS=$'\t' read -r id _; do
         [ -f "$out/$id.mp3" ] || die "$id: missing $out/$id.mp3"
         sha=$(sha256sum "$out/$id.mp3" | cut -d' ' -f1)
         bytes=$(wc -c <"$out/$id.mp3")
+        # The length a listener sees beside a piece; tied to the file by its hash.
+        seconds=$(duration "$out/$id.mp3" | awk '{ printf "%.2f", $1 }')
         next=$(mktemp)
-        jq --arg id "$id" --arg sha "$sha" --argjson bytes "$bytes" \
-            'def files: .sounds[] | if .tracks then .tracks[] else . end; (files | select(.id == $id)).build = {sha256: $sha, bytes: $bytes}' \
+        jq --arg id "$id" --arg sha "$sha" --argjson bytes "$bytes" --argjson seconds "$seconds" \
+            'def files: .sounds[] | if .tracks then .tracks[] else . end; (files | select(.id == $id)).build = {sha256: $sha, bytes: $bytes, seconds: $seconds}' \
             "$manifest" >"$next"
         mv -- "$next" "$manifest"
     done < <(sounds)

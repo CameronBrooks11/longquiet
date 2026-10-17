@@ -6,7 +6,7 @@ interface Item {
   label: string;
   section: string;
   title?: string;
-  tracks?: { id: string; title: string }[];
+  tracks?: { id: string; title: string; build: { seconds: number } }[];
   recipe?: { crossfade: number };
 }
 const manifest = JSON.parse(
@@ -251,6 +251,56 @@ test("the page names what is playing from either section", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("a playlist lists its pieces; a tapped piece plays and is kept", async ({
+  page,
+}) => {
+  const pieces = playlist.tracks!;
+  const minutes = Math.round(
+    pieces.reduce((t, p) => t + p.build.seconds, 0) / 60,
+  );
+  await page.goto("./");
+  await page
+    .getByRole("tab", { name: playlistSection.label, exact: true })
+    .click();
+  await page.getByRole("radio", { name: playlist.label, exact: true }).click();
+  await expectAdvancing(page);
+  await expect(page.locator("#pieces")).toContainText(
+    `${pieces.length} pieces · ${minutes} min`,
+  );
+  const list = page.getByRole("list", { name: `${playlist.label} pieces` });
+  await expect(list.getByRole("listitem")).toHaveCount(pieces.length);
+  const piece = (i: number) => list.getByRole("button").nth(i);
+  await expect(piece(0)).toHaveAttribute("aria-current", "true");
+
+  await piece(3).click();
+  await expect
+    .poll(async () => (await audio(page))?.file)
+    .toBe(`${pieces[3].id}.mp3`);
+  await expectAdvancing(page);
+  await expect(piece(3)).toHaveAttribute("aria-current", "true");
+  await expect(piece(0)).not.toHaveAttribute("aria-current");
+  // The length shown is the length of the file that plays.
+  expect((await audio(page))!.duration).toBeCloseTo(pieces[3].build.seconds, 1);
+
+  // Well into a piece, Previous starts it again; at its start, goes back.
+  await page.evaluate(() => {
+    (window as unknown as { audio: HTMLMediaElement }).audio.currentTime = 30;
+  });
+  const previous = page.getByRole("button", { name: /^Previous piece/ });
+  await previous.click();
+  await expect.poll(async () => (await audio(page))!.time).toBeLessThan(3);
+  expect((await audio(page))!.file).toBe(`${pieces[3].id}.mp3`);
+  await previous.click();
+  await expect
+    .poll(async () => (await audio(page))?.file)
+    .toBe(`${pieces[2].id}.mp3`);
+  await expectAdvancing(page);
+
+  await page.reload();
+  await expect(page.locator("#now")).toContainText(pieces[2].title);
+  await expect(piece(2)).toHaveAttribute("aria-current", "true");
+});
+
 test("arrow keys move through sounds and sections", async ({ page }) => {
   await page.goto("./");
   const nature = items.filter((i) => i.section === sections[0].id);
@@ -299,6 +349,11 @@ test("fits a 320 px phone without sideways scrolling", async ({ page }) => {
     if (await next.isVisible()) {
       const box = (await next.boundingBox())!;
       expect(box.x + box.width, `${s.label} next`).toBeLessThanOrEqual(320);
+      const back = page.getByRole("button", { name: /^Previous piece/ });
+      expect(
+        (await back.boundingBox())!.x,
+        `${s.label} previous`,
+      ).toBeGreaterThanOrEqual(0);
     }
   }
 });
@@ -313,15 +368,12 @@ test("the now line keeps its height for every piece", async ({ page }) => {
     (await volume.boundingBox())!.y - (await now.boundingBox())!.y;
   for (const width of [320, 390]) {
     await page.setViewportSize({ width, height: 844 });
+    // Each pass from a first visit: the page remembers the last pass's
+    // sound and the piece each playlist reached.
     await page.goto("./");
-    // The page reopens where the last pass left it, on a playlist's tab.
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
     const loop = items.find((i) => !i.tracks)!;
-    await page
-      .getByRole("tab", {
-        name: sections.find((s) => s.id === loop.section)!.label,
-        exact: true,
-      })
-      .click();
     await page.getByRole("radio", { name: loop.label, exact: true }).click();
     await expect(now).toContainText(loop.label);
     const at = await below();

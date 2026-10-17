@@ -35,7 +35,7 @@ export interface Track {
   licence: Licence;
   recorded?: string;
   source: { file: string; format: string; sha256: string };
-  build: { sha256: string; bytes: number };
+  build: { sha256: string; bytes: number; seconds: number };
   recipe: Recipe;
   file: string;
   modifications: string;
@@ -58,10 +58,10 @@ type RawSound = { id: string; label: string; section: string } & (
   RawTrack | { tracks: RawTrack[] }
 );
 
-function clock(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = Math.round(seconds % 60);
-  return `${m}:${String(s).padStart(2, "0")}`;
+// A length as a listener reads it, "4:37".
+export function clock(seconds: number): string {
+  const s = Math.round(seconds);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
 // Typographic minus, as the credits are prose.
@@ -150,6 +150,12 @@ export function nowPlaying(s: Soundscape, t: Track) {
   return s.loops
     ? { title: s.label, artist: t.author, playlist: null }
     : { title: t.title, artist: t.author, playlist: s.label };
+}
+
+// "11 pieces · 54 min"
+export function playlistSummary(s: Soundscape): string {
+  const seconds = s.tracks.reduce((t, p) => t + p.build.seconds, 0);
+  return `${s.tracks.length} pieces · ${Math.round(seconds / 60)} min`;
 }
 
 export function findSoundscape(id: string | null | undefined): Soundscape {

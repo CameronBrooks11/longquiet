@@ -747,6 +747,91 @@ describe("Player playlists", () => {
   });
 });
 
+describe("Player pieces", () => {
+  async function listening(start = 0) {
+    const ctx = setup();
+    await ctx.player.select(playlist, start);
+    const started = ctx.player.play();
+    ctx.audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    await started;
+    return ctx;
+  }
+
+  it("starts a playlist at the piece it is given", async () => {
+    const { audio, player } = setup();
+    await player.select(playlist, 2);
+    expect(player.piece).toBe(2);
+    expect(audio.src).toBe("/audio/piece-3.mp3");
+  });
+
+  it("starts at the first piece given one it does not have", async () => {
+    const { player } = setup();
+    await player.select(playlist, 7);
+    expect(player.piece).toBe(0);
+  });
+
+  it("goes back a piece, and from the first to the last, while paused", async () => {
+    const { audio, player } = setup();
+    await player.select(playlist, 1);
+    await player.previous();
+    expect(player.track?.id).toBe("piece-1");
+    await player.previous();
+    expect(player.track?.id).toBe("piece-3");
+    expect(audio.src).toBe("/audio/piece-3.mp3");
+    expect(player.playing).toBe(false);
+  });
+
+  it("starts the piece again when more than three seconds in", async () => {
+    const { audio, player } = await listening(1);
+    audio.tick(42);
+    await player.previous();
+    expect(player.track?.id).toBe("piece-2");
+    expect(audio.src).toBe("/audio/piece-2.mp3");
+    expect(audio.currentTime).toBe(0);
+    expect(player.playing).toBe(true);
+  });
+
+  it("goes back a piece when less than three seconds in", async () => {
+    const { audio, player } = await listening(1);
+    audio.tick(2);
+    const back = player.previous();
+    await vi.advanceTimersByTimeAsync(1000);
+    await back;
+    expect(audio.src).toBe("/audio/piece-1.mp3");
+  });
+
+  it("plays a chosen piece, fading out the one playing", async () => {
+    const { audio, player } = await listening();
+    const jump = player.playPiece(2);
+    expect(player.track?.id).toBe("piece-3"); // shown at once
+    await vi.advanceTimersByTimeAsync(1000);
+    await jump;
+    expect(audio.src).toBe("/audio/piece-3.mp3");
+    audio.arrive();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(player.playing).toBe(true);
+  });
+
+  it("leaves the piece playing when it is chosen again", async () => {
+    const { audio, player } = await listening(1);
+    audio.tick(42);
+    await player.playPiece(1);
+    expect(audio.src).toBe("/audio/piece-2.mp3");
+    expect(audio.currentTime).toBe(42);
+  });
+
+  it("offers previous track on the lock screen for a playlist only", async () => {
+    const { handlers } = lockScreen();
+    const { player } = setup();
+    await player.select(rain);
+    expect(handlers.get("previoustrack")).toBeNull();
+    await player.select(playlist, 1);
+    handlers.get("previoustrack")!();
+    expect(player.track?.id).toBe("piece-1");
+  });
+});
+
 // A lock screen: records the handlers the player registers.
 function lockScreen() {
   const handlers = new Map<string, (() => void) | null>();

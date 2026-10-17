@@ -196,6 +196,11 @@ export class Player {
     return this.current;
   }
 
+  // Which of a playlist's pieces is current, counting from 0.
+  get piece(): number {
+    return this.trackIndex;
+  }
+
   // iOS ignores element volume (it is always 1, the hardware buttons rule).
   static volumeIsControllable(): boolean {
     const probe = new Audio();
@@ -212,12 +217,12 @@ export class Player {
 
   // The choice takes effect at once (UI, Media Session); the element follows
   // after the fade-out, and only if no newer choice has come in meanwhile.
-  async select(s: Soundscape) {
+  async select(s: Soundscape, piece = 0) {
     if (this.current?.id === s.id) return;
     const seq = ++this.seq;
     const resume = this.wanted;
     this.current = s;
-    this.trackIndex = 0;
+    this.trackIndex = piece < s.tracks.length ? piece : 0;
     // Before the fade's await, while a tap that chose a loop still counts.
     if (resume) this.prime();
     this.updateMediaSession();
@@ -234,12 +239,34 @@ export class Player {
   // The next track of a playlist, wrapping round: the page's next button
   // and the lock screen's "next track". It fades in like any start; while
   // paused it only moves on.
-  async next() {
+  next() {
+    return this.skipTo(this.trackIndex + 1);
+  }
+
+  // More than a few seconds into a piece, back to its start; otherwise the
+  // piece before, wrapping round, as music players do.
+  async previous() {
+    if (!this.current || this.current.loops) return;
+    if (this.audio.currentTime > 3 && this.loaded === this.track) {
+      this.audio.currentTime = 0;
+      return;
+    }
+    await this.skipTo(this.trackIndex - 1);
+  }
+
+  // A piece chosen from the list; the one already current carries on.
+  async playPiece(i: number) {
+    if (!this.current || this.current.loops) return;
+    if (i !== this.trackIndex) await this.skipTo(i);
+  }
+
+  private async skipTo(i: number) {
     if (!this.current || this.current.loops) return;
     // A new source aborts any play() still waiting on the old one; bumping
     // seq marks that one as overtaken rather than a failure to report.
     const seq = ++this.seq;
-    this.trackIndex = (this.trackIndex + 1) % this.current.tracks.length;
+    const n = this.current.tracks.length;
+    this.trackIndex = ((i % n) + n) % n;
     this.updateMediaSession();
     this.onchange();
     // Skipping mid-piece fades out first, as a change of sound does; at a
@@ -508,6 +535,10 @@ export class Player {
     navigator.mediaSession.setActionHandler(
       "nexttrack",
       this.current.loops ? null : () => void this.next(),
+    );
+    navigator.mediaSession.setActionHandler(
+      "previoustrack",
+      this.current.loops ? null : () => void this.previous(),
     );
   }
 }
