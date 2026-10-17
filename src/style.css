@@ -44,6 +44,8 @@ body {
   /* A column no wider than the screen, whatever the content's width, so a
      long line is cut rather than scrolled sideways. */
   grid-template-columns: minmax(0, 1fr);
+  /* Spare height goes above the footer, which keeps to the bottom. */
+  grid-template-rows: 1fr auto;
   place-items: start center;
   padding: max(clamp(2rem, 12vh, 7rem), env(safe-area-inset-top)) 1.5rem
     max(2rem, env(safe-area-inset-bottom));
@@ -504,6 +506,15 @@ button {
 
 .credits li details[open] {
   display: block;
+}
+
+/* Quiet links at the foot of the page, out of the way of the controls. */
+.links {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  color: var(--muted);
+  font-size: 0.8rem;
 }
 
 .credits ul {
