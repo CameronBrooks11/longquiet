@@ -408,6 +408,9 @@ button {
 
 /* Sleep timer: a quiet line under the volume, the native picker on phones. */
 .timer {
+  /* The column's width, not the message's, so the select's place does not
+     depend on what the line below it says. */
+  align-self: stretch;
   display: flex;
   align-items: center;
   justify-content: center;
