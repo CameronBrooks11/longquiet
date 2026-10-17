@@ -250,7 +250,7 @@ function renderPieces(current: Soundscape | null) {
 
 // Sleep timer. Not saved between visits: tonight's timer is not tomorrow's.
 const SLEEP_FADE_MS = 30_000;
-const SLEEP_NOTICE_MS = 5_000;
+const SLEEP_NOTICE_MS = 60_000;
 const sleep = new SleepTimer();
 let wasPlaying = false;
 let cancelledAt = -Infinity;
