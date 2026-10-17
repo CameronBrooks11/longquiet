@@ -368,15 +368,12 @@ test("the now line keeps its height for every piece", async ({ page }) => {
     (await volume.boundingBox())!.y - (await now.boundingBox())!.y;
   for (const width of [320, 390]) {
     await page.setViewportSize({ width, height: 844 });
+    // Each pass from a first visit: the page remembers the last pass's
+    // sound and the piece each playlist reached.
     await page.goto("./");
-    // The page reopens where the last pass left it, on a playlist's tab.
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
     const loop = items.find((i) => !i.tracks)!;
-    await page
-      .getByRole("tab", {
-        name: sections.find((s) => s.id === loop.section)!.label,
-        exact: true,
-      })
-      .click();
     await page.getByRole("radio", { name: loop.label, exact: true }).click();
     await expect(now).toContainText(loop.label);
     const at = await below();
