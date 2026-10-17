@@ -350,11 +350,6 @@ document.addEventListener("keydown", (e) => {
   e.preventDefault();
   if (!e.repeat) playButton.click();
 });
-// A button clicks on Space's release; stopping that keeps the tap from
-// replaying the sound just paused.
-document.addEventListener("keyup", (e) => {
-  if (spaceToggles(e)) e.preventDefault();
-});
 
 const first = findSoundscape(prefs.soundscape);
 void player.select(first, prefs.pieces[first.id]);
