@@ -1,7 +1,9 @@
 import "./style.css";
 import {
+  clock,
   findSoundscape,
   nowPlaying,
+  playlistSummary,
   populatedSections,
   soundscapes,
   type Soundscape,
@@ -34,6 +36,8 @@ const sectionList = byId<HTMLDivElement>("sections");
 const panel = byId<HTMLDivElement>("section-panel");
 const playButton = byId<HTMLButtonElement>("play");
 const nextButton = byId<HTMLButtonElement>("next");
+const previousButton = byId<HTMLButtonElement>("previous");
+const pieces = byId<HTMLDivElement>("pieces");
 const now = byId<HTMLParagraphElement>("now");
 const volume = byId<HTMLInputElement>("volume");
 const timerChoice = byId<HTMLSelectElement>("timer");
@@ -158,11 +162,18 @@ function render() {
     "aria-label",
     player.loading ? "Pause (loading)" : player.playing ? "Pause" : "Play",
   );
-  nextButton.hidden = !current || current.loops;
+  nextButton.hidden = previousButton.hidden = !current || current.loops;
   if (current && !current.loops) {
     nextButton.title = `Next piece in ${current.label}`;
     nextButton.setAttribute("aria-label", nextButton.title);
+    previousButton.title = `Previous piece in ${current.label}`;
+    previousButton.setAttribute("aria-label", previousButton.title);
+    if (prefs.pieces[current.id] !== player.piece) {
+      prefs.pieces[current.id] = player.piece;
+      savePreferences(localStorage, prefs);
+    }
   }
+  renderPieces(current);
   const track = player.track;
   if (current && track) {
     const { title, artist, playlist } = nowPlaying(current, track);
@@ -179,6 +190,49 @@ function render() {
   }
   followPlayback();
   renderTimer();
+}
+
+// The current playlist's pieces, below the controls: built when the playlist
+// changes, marked as the piece moves on.
+let listed: Soundscape | null = null;
+function renderPieces(current: Soundscape | null) {
+  const list = current && !current.loops ? current : null;
+  pieces.hidden = !list || list.section !== shown;
+  if (list !== listed) {
+    listed = list;
+    pieces.replaceChildren();
+    if (list) {
+      const items = list.tracks.map((t, i) =>
+        el(
+          "li",
+          {},
+          el(
+            "button",
+            {
+              type: "button",
+              onclick: () => {
+                const playing = player.playing;
+                player.playPiece(i).catch(reportPlaybackError);
+                if (!playing) player.play().catch(reportPlaybackError);
+              },
+            },
+            el("span", { textContent: t.title }),
+            el("span", {
+              className: "length",
+              textContent: clock(t.build.seconds),
+            }),
+          ),
+        ),
+      );
+      const ol = el("ol", {}, ...items);
+      ol.setAttribute("aria-label", `${list.label} pieces`);
+      pieces.append(el("p", { textContent: playlistSummary(list) }), ol);
+    }
+  }
+  pieces.querySelectorAll("button").forEach((b, i) => {
+    if (list && i === player.piece) b.setAttribute("aria-current", "true");
+    else b.removeAttribute("aria-current");
+  });
 }
 
 // Sleep timer. Not saved between visits: tonight's timer is not tomorrow's.
@@ -237,7 +291,7 @@ function choose(s: Soundscape, start = false) {
   const playing = player.playing;
   // While paused, select() loads the new source before its first await, so
   // play() still runs inside the tap, as iOS requires.
-  player.select(s).catch(reportPlaybackError);
+  player.select(s, prefs.pieces[s.id]).catch(reportPlaybackError);
   if (start && !playing) player.play().catch(reportPlaybackError);
 }
 
@@ -248,6 +302,7 @@ playButton.addEventListener("click", () => {
   player.toggle().catch(reportPlaybackError);
 });
 nextButton.addEventListener("click", () => void player.next());
+previousButton.addEventListener("click", () => void player.previous());
 
 if (Player.volumeIsControllable()) {
   volume.value = String(prefs.volume);
@@ -268,5 +323,6 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-void player.select(findSoundscape(prefs.soundscape));
+const first = findSoundscape(prefs.soundscape);
+void player.select(first, prefs.pieces[first.id]);
 render();

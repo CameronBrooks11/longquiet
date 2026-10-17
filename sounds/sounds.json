@@ -40,7 +40,8 @@
       },
       "build": {
         "sha256": "89886528a2e806b9b8312065c36d13abd209cff933dcae5993009cdbca29a90e",
-        "bytes": 8799572
+        "bytes": 8799572,
+        "seconds": 597.17
       }
     },
     {
@@ -67,7 +68,8 @@
       },
       "build": {
         "sha256": "0e892526faa3bd224f352aa400bd62985c49c1b0f921f6e16928e36386473371",
-        "bytes": 18453932
+        "bytes": 18453932,
+        "seconds": 620.04
       }
     },
     {
@@ -94,7 +96,8 @@
       },
       "build": {
         "sha256": "962afdfbfed71e7167b845dc2518a777248e67d1faba8545e6a4592ce325a1ec",
-        "bytes": 13561266
+        "bytes": 13561266,
+        "seconds": 617.04
       }
     },
     {
@@ -121,7 +124,8 @@
       },
       "build": {
         "sha256": "da6ba4e941385f9e1ce70a7690f85512f5db281cc8526d1521ec742597bf4e8b",
-        "bytes": 8971676
+        "bytes": 8971676,
+        "seconds": 400.06
       }
     },
     {
@@ -148,7 +152,8 @@
       },
       "build": {
         "sha256": "53c4721cef14b13143a5e7e3ca3311544518942281af6a9ea66642e35a9ac1ed",
-        "bytes": 8598380
+        "bytes": 8598380,
+        "seconds": 360.02
       }
     },
     {
@@ -175,7 +180,8 @@
       },
       "build": {
         "sha256": "33c18b00b2980a072c14daecffc875baa6ace2346a3c9f830003df1eb1586e0e",
-        "bytes": 14436393
+        "bytes": 14436393,
+        "seconds": 589.14
       }
     },
     {
@@ -202,7 +208,8 @@
       },
       "build": {
         "sha256": "2b5496ce36ca66809227870855fb98c65ada07992f2d660b1bb6bb9d4690ab23",
-        "bytes": 8548268
+        "bytes": 8548268,
+        "seconds": 359.57
       }
     },
     {
@@ -229,7 +236,8 @@
       },
       "build": {
         "sha256": "202cfb10f543a779f07931a3a373d541a0b1e590c26c2030adc44256449f007f",
-        "bytes": 14191580
+        "bytes": 14191580,
+        "seconds": 620.04
       }
     },
     {
@@ -255,7 +263,8 @@
       },
       "build": {
         "sha256": "d48b240baf5737ad848f39855f2e668cad00e3184dc8219cb6a314b40f1cfa66",
-        "bytes": 7782764
+        "bytes": 7782764,
+        "seconds": 350.33
       }
     },
     {
@@ -282,7 +291,8 @@
       },
       "build": {
         "sha256": "d76f3a476c6e28a137fbdb2e6150dc6277f9c68f6974c9137df7f93dd1a5ba56",
-        "bytes": 13458524
+        "bytes": 13458524,
+        "seconds": 600.02
       }
     },
     {
@@ -309,7 +319,8 @@
       },
       "build": {
         "sha256": "9a955c0d8f9261377b022b845183b7f63807fa401c8d44d14abf8797c0cbe71f",
-        "bytes": 12357404
+        "bytes": 12357404,
+        "seconds": 435.89
       }
     },
     {
@@ -336,7 +347,8 @@
       },
       "build": {
         "sha256": "506aeb0cba491ac9029784b2b9b54ac1b6c98f1fdf86a4ac8fa0312f5aa11af2",
-        "bytes": 12969812
+        "bytes": 12969812,
+        "seconds": 528.86
       }
     },
     {
@@ -365,7 +377,8 @@
           },
           "build": {
             "sha256": "e095f6e566c8be7bc8dfda4468034a07a4e71ce276c266fc3b828e4e0de5678a",
-            "bytes": 4666532
+            "bytes": 4666532,
+            "seconds": 271.51
           }
         },
         {
@@ -389,7 +402,8 @@
           },
           "build": {
             "sha256": "e925bc520eed09017fd85cb1f1760b93f7602a2864dbfece26da843722cca80d",
-            "bytes": 6414932
+            "bytes": 6414932,
+            "seconds": 377.81
           }
         },
         {
@@ -413,7 +427,8 @@
           },
           "build": {
             "sha256": "bb315cdaa3938977065bfbe87745ab32c65c0938ef352509486571c7e9e298f9",
-            "bytes": 4879707
+            "bytes": 4879707,
+            "seconds": 244.01
           }
         },
         {
@@ -437,7 +452,8 @@
           },
           "build": {
             "sha256": "2d113b3f33bb372109ed13d3c05d7ebecbad1ca7373d80df40256c8ed87d6424",
-            "bytes": 5408967
+            "bytes": 5408967,
+            "seconds": 316.4
           }
         },
         {
@@ -461,7 +477,8 @@
           },
           "build": {
             "sha256": "7caeb7e512f8408084a716f1f66d0289d66062c49d52937af256107386370015",
-            "bytes": 5249331
+            "bytes": 5249331,
+            "seconds": 310.0
           }
         },
         {
@@ -485,7 +502,8 @@
           },
           "build": {
             "sha256": "17d8af93ddcaa7bc32a019123a48e3c5acc4f9a3ee933c1af1b7a0dcb9f1eb41",
-            "bytes": 5559491
+            "bytes": 5559491,
+            "seconds": 339.57
           }
         },
         {
@@ -509,7 +527,8 @@
           },
           "build": {
             "sha256": "25a443d08040d803ebd4c35054fd05673b5436ccfad0b46c6a442503193f6d98",
-            "bytes": 4421987
+            "bytes": 4421987,
+            "seconds": 272.69
           }
         },
         {
@@ -533,7 +552,8 @@
           },
           "build": {
             "sha256": "f3b529add487961b7ba35e53bc6011b40ade2460e8064da8512f74abf3179e19",
-            "bytes": 4104163
+            "bytes": 4104163,
+            "seconds": 256.03
           }
         },
         {
@@ -557,7 +577,8 @@
           },
           "build": {
             "sha256": "1cb61a1d5ed06a18dbe676a86b0bc7d8561059533ccdb40a05db59bbf66c588d",
-            "bytes": 5075252
+            "bytes": 5075252,
+            "seconds": 301.08
           }
         },
         {
@@ -581,7 +602,8 @@
           },
           "build": {
             "sha256": "1309b12aad4d8e27a2dffb1155c113cb2a68a45e4dc3382961eb4a9ac9420919",
-            "bytes": 6710204
+            "bytes": 6710204,
+            "seconds": 337.08
           }
         },
         {
@@ -605,7 +627,8 @@
           },
           "build": {
             "sha256": "6830a690a29668235e2d3a29a59bfd6f6c82bd83b93d96de903d08c09ae2cafb",
-            "bytes": 3832580
+            "bytes": 3832580,
+            "seconds": 225.05
           }
         }
       ]
@@ -636,7 +659,8 @@
           },
           "build": {
             "sha256": "e0c1db4253fa6a89dc367111282a22c4a5326ee5ce1ae4611263e1fcc6ea05cb",
-            "bytes": 3295632
+            "bytes": 3295632,
+            "seconds": 171.94
           }
         },
         {
@@ -661,7 +685,8 @@
           },
           "build": {
             "sha256": "3af7271b88075b660192c0f3b52b62d40f6e73efa9b12d94d30cb0591de3827c",
-            "bytes": 5203820
+            "bytes": 5203820,
+            "seconds": 278.62
           }
         },
         {
@@ -685,7 +710,8 @@
           },
           "build": {
             "sha256": "4b43df616d0ce9377df3a406acafb7509267da0b65ed6fd8c5977e5e7c9cef45",
-            "bytes": 2711136
+            "bytes": 2711136,
+            "seconds": 147.25
           }
         },
         {
@@ -709,7 +735,8 @@
           },
           "build": {
             "sha256": "b167da69c48ec692bce726c17cd401bbaf9b176d18af713ac015b3d735ba06db",
-            "bytes": 1497615
+            "bytes": 1497615,
+            "seconds": 132.7
           }
         },
         {
@@ -733,7 +760,8 @@
           },
           "build": {
             "sha256": "ad162668edb4ed82c364b5237e28694e8965b783beb19da888960c0f6d84df8f",
-            "bytes": 3650382
+            "bytes": 3650382,
+            "seconds": 223.24
           }
         },
         {
@@ -757,7 +785,8 @@
           },
           "build": {
             "sha256": "e0c7124c706a463b5198d6385b4de6d1c29f80e738cad01159a0c24fbc93bf66",
-            "bytes": 2232077
+            "bytes": 2232077,
+            "seconds": 123.14
           }
         },
         {
@@ -783,7 +812,8 @@
           },
           "build": {
             "sha256": "fa0b5712c3218a6e207ee0b33d8befec81c12b431031c50c0fe958e8ae4109d5",
-            "bytes": 2169332
+            "bytes": 2169332,
+            "seconds": 187.56
           }
         },
         {
@@ -808,7 +838,8 @@
           },
           "build": {
             "sha256": "f4196d65d04d9d72ea487c8055b521c0c1224b60d6b5b72db420c794c9cb9e05",
-            "bytes": 1446932
+            "bytes": 1446932,
+            "seconds": 135.58
           }
         },
         {
@@ -833,7 +864,8 @@
           },
           "build": {
             "sha256": "8581b497c212e2e57a762197bdd01798eb3a531936e6ba0ec61e3fb24267c6de",
-            "bytes": 4973348
+            "bytes": 4973348,
+            "seconds": 291.58
           }
         },
         {
@@ -857,7 +889,8 @@
           },
           "build": {
             "sha256": "952e5183b2bf84f63666d4cdc8388779a8eab9cde38a50ac7b41a4840520e33e",
-            "bytes": 4548697
+            "bytes": 4548697,
+            "seconds": 239.93
           }
         },
         {
@@ -882,7 +915,8 @@
           },
           "build": {
             "sha256": "817f1449f23cd39ef4f541d86727bd7b541dd196cea3d1f4ff04fd3fbd890b94",
-            "bytes": 9232196
+            "bytes": 9232196,
+            "seconds": 641.11
           }
         },
         {
@@ -906,7 +940,8 @@
           },
           "build": {
             "sha256": "5e74b6ff39318a855245921218252c76814c9ad977e6839453ef752b92727b6c",
-            "bytes": 2012023
+            "bytes": 2012023,
+            "seconds": 100.52
           }
         },
         {
@@ -930,7 +965,8 @@
           },
           "build": {
             "sha256": "45c05932425470ab1de8690188fc4055e85a591c6302947e739fedcd5e05efdc",
-            "bytes": 5411283
+            "bytes": 5411283,
+            "seconds": 290.14
           }
         },
         {
@@ -955,7 +991,8 @@
           },
           "build": {
             "sha256": "4a6b1ecef6f3c5612757724d95b34e9927a419eedd859ac2a3f5326200ae403f",
-            "bytes": 21016292
+            "bytes": 21016292,
+            "seconds": 1027.9
           }
         },
         {
@@ -979,7 +1016,8 @@
           },
           "build": {
             "sha256": "3ad2112583391419405b344abb8b10cf4c6898dc72f33f95666ad18087ef0a98",
-            "bytes": 9833204
+            "bytes": 9833204,
+            "seconds": 412.89
           }
         }
       ]

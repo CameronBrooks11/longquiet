@@ -55,6 +55,17 @@
       </div>
 
       <div class="controls">
+        <button
+          class="skip previous"
+          id="previous"
+          type="button"
+          aria-label="Previous piece"
+          hidden
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6.5v11l-8-5.5zM8.5 6.5H6v11h2.5z" />
+          </svg>
+        </button>
         <button class="play" id="play" type="button" aria-label="Play">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path class="icon-play" d="M8 5.5v13l11-6.5z" />
@@ -62,7 +73,7 @@
           </svg>
         </button>
         <button
-          class="next"
+          class="skip next"
           id="next"
           type="button"
           aria-label="Next piece"
@@ -101,6 +112,8 @@
         </select>
         <span class="timer-left" id="timer-left"></span>
       </div>
+
+      <div class="pieces" id="pieces" hidden></div>
 
       <details class="credits">
         <summary>Credits &amp; licences</summary>

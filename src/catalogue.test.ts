@@ -1,8 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  clock,
   describeProcessing,
   findSoundscape,
+  playlistSummary,
   populatedSections,
   sections,
   soundsIn,
@@ -43,6 +45,21 @@ describe("catalogue", () => {
   it.each(tracks)("$id records its built file", (s) => {
     expect(s.build.sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(s.build.bytes).toBeGreaterThan(0);
+    expect(s.build.seconds).toBeGreaterThan(0);
+  });
+
+  it("writes a piece's length as minutes and seconds", () => {
+    expect(clock(277.4)).toBe("4:37");
+    expect(clock(59.6)).toBe("1:00");
+    expect(clock(1028)).toBe("17:08");
+  });
+
+  it("sums up a playlist in pieces and minutes", () => {
+    const list = soundscapes.find((s) => !s.loops)!;
+    const seconds = list.tracks.reduce((t, p) => t + p.build.seconds, 0);
+    expect(playlistSummary(list)).toBe(
+      `${list.tracks.length} pieces · ${Math.round(seconds / 60)} min`,
+    );
   });
 
   it("names an audio release to fetch from", () => {

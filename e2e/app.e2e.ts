@@ -349,6 +349,11 @@ test("fits a 320 px phone without sideways scrolling", async ({ page }) => {
     if (await next.isVisible()) {
       const box = (await next.boundingBox())!;
       expect(box.x + box.width, `${s.label} next`).toBeLessThanOrEqual(320);
+      const back = page.getByRole("button", { name: /^Previous piece/ });
+      expect(
+        (await back.boundingBox())!.x,
+        `${s.label} previous`,
+      ).toBeGreaterThanOrEqual(0);
     }
   }
 });

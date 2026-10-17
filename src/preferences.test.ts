@@ -13,11 +13,27 @@ function memoryStore(initial?: string) {
 describe("preferences", () => {
   it("round-trips", () => {
     const store = memoryStore();
-    savePreferences(store, { soundscape: "night", volume: 0.25 });
+    savePreferences(store, {
+      soundscape: "night",
+      volume: 0.25,
+      pieces: { nocturnes: 3 },
+    });
     expect(loadPreferences(store)).toEqual({
       soundscape: "night",
       volume: 0.25,
+      pieces: { nocturnes: 3 },
     });
+  });
+
+  it("keeps only whole, non-negative piece numbers", () => {
+    const store = memoryStore(
+      JSON.stringify({
+        pieces: { a: 2, b: -1, c: 1.5, d: "4", e: null, f: 0 },
+      }),
+    );
+    expect(loadPreferences(store).pieces).toEqual({ a: 2, f: 0 });
+    const list = memoryStore(JSON.stringify({ pieces: [1, 2] }));
+    expect(loadPreferences(list).pieces).toEqual({});
   });
 
   it.each([
@@ -38,6 +54,7 @@ describe("preferences", () => {
     expect(loadPreferences(half)).toEqual({
       soundscape: "forest",
       volume: defaults.volume,
+      pieces: {},
     });
   });
 
