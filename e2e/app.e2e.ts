@@ -304,20 +304,20 @@ test("fits a 320 px phone without sideways scrolling", async ({ page }) => {
 });
 
 // Every piece's title and performer, at phone widths: a long one must not
-// push the volume and timer down when the piece changes.
-test("the controls under the now line stay put for every piece", async ({
-  page,
-}) => {
+// push the volume and timer down when the piece changes. Measured from the
+// line itself, since the grid above it differs between sections.
+test("the now line keeps its height for every piece", async ({ page }) => {
   const now = page.locator("#now");
   const volume = page.locator("#volume-row");
+  const below = async () =>
+    (await volume.boundingBox())!.y - (await now.boundingBox())!.y;
   for (const width of [320, 390]) {
     await page.setViewportSize({ width, height: 844 });
     await page.goto("./");
-    const at = (await volume.boundingBox())!.y;
     const loop = items.find((i) => !i.tracks)!;
     await page.getByRole("radio", { name: loop.label, exact: true }).click();
     await expect(now).toContainText(loop.label);
-    expect((await volume.boundingBox())!.y, `${width} px, ${loop.id}`).toBe(at);
+    const at = await below();
     for (const list of items.filter((i) => i.tracks)) {
       await page
         .getByRole("tab", {
@@ -330,8 +330,12 @@ test("the controls under the now line stay put for every piece", async ({
         if (n > 0)
           await page.getByRole("button", { name: "Next piece" }).click();
         await expect(now).toContainText(t.title);
-        expect((await volume.boundingBox())!.y, `${width} px, ${t.id}`).toBe(
-          at,
+        expect(await below(), `${width} px, ${t.id}`).toBe(at);
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth - window.innerWidth,
+        );
+        expect(overflow, `${width} px, ${t.id} sideways`).toBeLessThanOrEqual(
+          0,
         );
       }
     }
