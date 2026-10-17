@@ -293,6 +293,19 @@ button {
   min-height: 2.8em;
   color: var(--muted);
   font-size: 0.9rem;
+  /* The column's full width, so a line too long is cut, not widened. */
+  align-self: stretch;
+}
+
+.now span {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.now span + span {
+  font-size: 0.85em;
 }
 
 .volume {
