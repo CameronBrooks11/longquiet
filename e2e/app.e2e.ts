@@ -6,6 +6,7 @@ interface Item {
   label: string;
   section: string;
   title?: string;
+  description?: string;
   tracks?: { id: string; title: string; build: { seconds: number } }[];
   recipe?: { crossfade: number };
 }
@@ -299,6 +300,54 @@ test("a playlist lists its pieces; a tapped piece plays and is kept", async ({
   await page.reload();
   await expect(page.locator("#now")).toContainText(pieces[2].title);
   await expect(piece(2)).toHaveAttribute("aria-current", "true");
+});
+
+// What each sound is, in plain words, without opening Credits; whole on
+// the smallest phone.
+test("every sound says what it is, uncut at 320 px", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.goto("./");
+  const line = page.locator("#now span").nth(1);
+  for (const item of items) {
+    expect(item.description, item.id).toBeTruthy();
+    await page
+      .getByRole("tab", {
+        name: sections.find((s) => s.id === item.section)!.label,
+        exact: true,
+      })
+      .click();
+    await page.getByRole("radio", { name: item.label, exact: true }).click();
+    if (item.tracks) {
+      await expect(page.locator("#pieces")).toContainText(item.description!);
+      continue;
+    }
+    await expect(line).toHaveText(item.description!);
+    const cut = await line.evaluate((e) => e.scrollWidth > e.clientWidth);
+    expect(cut, item.id).toBe(false);
+  }
+});
+
+test("credits show they open, and keep each file's changes a level down", async ({
+  page,
+}) => {
+  await page.goto("./");
+  const summary = page.locator(".credits summary");
+  const cue = await summary.evaluate(
+    (e) => getComputedStyle(e, "::before").content,
+  );
+  expect(cue).not.toMatch(/^(none|normal|"")$/);
+  await summary.click();
+  const first = page.locator("#credits > li").first();
+  await expect(first).toBeVisible();
+  // The licence shows; the encoding notes wait behind their own toggle.
+  await expect(first.getByRole("link").last()).toBeVisible();
+  expect(await first.evaluate((e) => (e as HTMLElement).innerText)).not.toMatch(
+    /LUFS/,
+  );
+  await first.getByText("Changes made").click();
+  expect(await first.evaluate((e) => (e as HTMLElement).innerText)).toMatch(
+    /LUFS/,
+  );
 });
 
 test("arrow keys move through sounds and sections", async ({ page }) => {
