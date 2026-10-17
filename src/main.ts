@@ -135,7 +135,7 @@ byId<HTMLUListElement>("credits").append(
           : ".",
         el(
           "details",
-          {},
+          { open: true },
           el("summary", { textContent: "Changes made" }),
           `${t.modifications}.`,
         ),
