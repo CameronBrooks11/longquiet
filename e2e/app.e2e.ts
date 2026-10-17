@@ -5,6 +5,7 @@ interface Item {
   id: string;
   label: string;
   section: string;
+  title?: string;
   tracks?: { id: string; title: string }[];
   recipe?: { crossfade: number };
 }
@@ -214,6 +215,40 @@ test("tapping a sound plays it; arrow keys only select", async ({ page }) => {
   await page.getByRole("radio", { name: third.label, exact: true }).click();
   await expectAdvancing(page);
   await expect(page.locator("body")).toHaveClass(/is-playing/);
+});
+
+test("the page names what is playing from either section", async ({ page }) => {
+  const loop = items.find((i) => !i.tracks && i.section !== playlist.section)!;
+  const loopTab = page.getByRole("tab", {
+    name: sections.find((s) => s.id === loop.section)!.label,
+    exact: true,
+  });
+  const listTab = page.getByRole("tab", {
+    name: playlistSection.label,
+    exact: true,
+  });
+  const now = page.locator("#now");
+  await page.goto("./");
+  await page.getByRole("radio", { name: loop.label, exact: true }).click();
+  await expectAdvancing(page);
+  // The sound's name, not the upload's title, which is in the credits.
+  await expect(now).toContainText(loop.label);
+  await expect(now).not.toContainText(loop.title!);
+
+  await listTab.click();
+  await expect(now).toContainText(loop.label);
+  await expect(loopTab).toHaveAttribute("data-playing", "true");
+  await expect(listTab).not.toHaveAttribute("data-playing", "true");
+
+  await page.getByRole("radio", { name: playlist.label, exact: true }).click();
+  await expectAdvancing(page);
+  await expect(now).toContainText(playlist.label);
+  await expect(now).toContainText(playlist.tracks![0].title);
+  await expect(listTab).toHaveAttribute("data-playing", "true");
+  await expect(loopTab).not.toHaveAttribute("data-playing", "true");
+  await expect(
+    page.getByRole("button", { name: `Next piece in ${playlist.label}` }),
+  ).toBeVisible();
 });
 
 test("arrow keys move through sounds and sections", async ({ page }) => {
