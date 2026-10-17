@@ -303,6 +303,41 @@ test("fits a 320 px phone without sideways scrolling", async ({ page }) => {
   }
 });
 
+// Every piece's title and performer, at phone widths: a long one must not
+// push the volume and timer down when the piece changes.
+test("the controls under the now line stay put for every piece", async ({
+  page,
+}) => {
+  const now = page.locator("#now");
+  const volume = page.locator("#volume-row");
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("./");
+    const at = (await volume.boundingBox())!.y;
+    const loop = items.find((i) => !i.tracks)!;
+    await page.getByRole("radio", { name: loop.label, exact: true }).click();
+    await expect(now).toContainText(loop.label);
+    expect((await volume.boundingBox())!.y, `${width} px, ${loop.id}`).toBe(at);
+    for (const list of items.filter((i) => i.tracks)) {
+      await page
+        .getByRole("tab", {
+          name: sections.find((s) => s.id === list.section)!.label,
+          exact: true,
+        })
+        .click();
+      await page.getByRole("radio", { name: list.label, exact: true }).click();
+      for (const [n, t] of list.tracks!.entries()) {
+        if (n > 0)
+          await page.getByRole("button", { name: "Next piece" }).click();
+        await expect(now).toContainText(t.title);
+        expect((await volume.boundingBox())!.y, `${width} px, ${t.id}`).toBe(
+          at,
+        );
+      }
+    }
+  }
+});
+
 test("the tabs stay put when switching sections", async ({ page }) => {
   for (const size of [
     { width: 1280, height: 720 },
