@@ -1,6 +1,7 @@
 import "./style.css";
 import {
   findSoundscape,
+  nowPlaying,
   populatedSections,
   soundscapes,
   type Soundscape,
@@ -135,6 +136,9 @@ function render() {
   const current = player.soundscape;
   tabs.forEach((t, i) => {
     const selected = populatedSections[i].id === shown;
+    t.dataset.playing = String(
+      player.playing && current?.section === populatedSections[i].id,
+    );
     t.setAttribute("aria-selected", String(selected));
     t.tabIndex = selected ? 0 : -1;
     if (selected && tabs.length > 1) {
@@ -155,8 +159,17 @@ function render() {
     player.loading ? "Pause (loading)" : player.playing ? "Pause" : "Play",
   );
   nextButton.hidden = !current || current.loops;
+  if (current && !current.loops) {
+    nextButton.title = `Next piece in ${current.label}`;
+    nextButton.setAttribute("aria-label", nextButton.title);
+  }
   const track = player.track;
-  now.textContent = track ? `${track.title} — ${track.author}` : "";
+  if (current && track) {
+    const { title, artist, playlist } = nowPlaying(current, track);
+    now.textContent = `${playlist ? `${playlist} · ` : ""}${title} — ${artist}`;
+  } else {
+    now.textContent = "";
+  }
   followPlayback();
   renderTimer();
 }

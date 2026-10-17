@@ -1,4 +1,4 @@
-import type { Soundscape, Track } from "./catalogue";
+import { nowPlaying, type Soundscape, type Track } from "./catalogue";
 
 const FADE_MS = 600;
 // Fades step on timers, not animation frames: frames stall in a visible but
@@ -497,12 +497,11 @@ export class Player {
   private updateMediaSession() {
     const t = this.track;
     if (!("mediaSession" in navigator) || !this.current || !t) return;
+    const { title, artist, playlist } = nowPlaying(this.current, t);
     navigator.mediaSession.metadata = new MediaMetadata({
-      title: this.current.loops ? this.current.label : t.title,
-      artist: this.current.loops ? `${t.title} — ${t.author}` : t.author,
-      album: this.current.loops
-        ? "longquiet"
-        : `longquiet · ${this.current.label}`,
+      title,
+      artist,
+      album: playlist ? `longquiet · ${playlist}` : "longquiet",
     });
     navigator.mediaSession.setActionHandler("play", () => void this.play());
     navigator.mediaSession.setActionHandler("pause", () => void this.pause());
