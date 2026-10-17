@@ -166,7 +166,14 @@ function render() {
   const track = player.track;
   if (current && track) {
     const { title, artist, playlist } = nowPlaying(current, track);
-    now.textContent = `${playlist ? `${playlist} · ` : ""}${title} — ${artist}`;
+    // One line each, cut short at the edge so the page below never moves;
+    // the full text is in the title, the lock screen and the credits.
+    const lines = [`${playlist ? `${playlist} · ` : ""}${title}`, artist];
+    if (now.textContent !== lines.join("")) {
+      now.replaceChildren(
+        ...lines.map((text) => el("span", { textContent: text, title: text })),
+      );
+    }
   } else {
     now.textContent = "";
   }

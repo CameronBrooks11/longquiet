@@ -303,6 +303,53 @@ test("fits a 320 px phone without sideways scrolling", async ({ page }) => {
   }
 });
 
+// Every piece's title and performer, at phone widths: a long one must not
+// push the volume and timer down when the piece changes. Measured from the
+// line itself, since the grid above it differs between sections.
+test("the now line keeps its height for every piece", async ({ page }) => {
+  const now = page.locator("#now");
+  const volume = page.locator("#volume-row");
+  const below = async () =>
+    (await volume.boundingBox())!.y - (await now.boundingBox())!.y;
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("./");
+    // The page reopens where the last pass left it, on a playlist's tab.
+    const loop = items.find((i) => !i.tracks)!;
+    await page
+      .getByRole("tab", {
+        name: sections.find((s) => s.id === loop.section)!.label,
+        exact: true,
+      })
+      .click();
+    await page.getByRole("radio", { name: loop.label, exact: true }).click();
+    await expect(now).toContainText(loop.label);
+    const at = await below();
+    for (const list of items.filter((i) => i.tracks)) {
+      await page
+        .getByRole("tab", {
+          name: sections.find((s) => s.id === list.section)!.label,
+          exact: true,
+        })
+        .click();
+      await page.getByRole("radio", { name: list.label, exact: true }).click();
+      for (const [n, t] of list.tracks!.entries()) {
+        if (n > 0)
+          await page.getByRole("button", { name: "Next piece" }).click();
+        await expect(now).toContainText(t.title);
+        // Within half a pixel: a wrapped line adds a whole line, about 20 px.
+        expect(await below(), `${width} px, ${t.id}`).toBeCloseTo(at, 0);
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth - window.innerWidth,
+        );
+        expect(overflow, `${width} px, ${t.id} sideways`).toBeLessThanOrEqual(
+          0,
+        );
+      }
+    }
+  }
+});
+
 test("the tabs stay put when switching sections", async ({ page }) => {
   for (const size of [
     { width: 1280, height: 720 },

@@ -41,6 +41,9 @@ body {
 body {
   min-height: 100dvh;
   display: grid;
+  /* A column no wider than the screen, whatever the content's width, so a
+     long line is cut rather than scrolled sideways. */
+  grid-template-columns: minmax(0, 1fr);
   place-items: start center;
   padding: max(clamp(2rem, 12vh, 7rem), env(safe-area-inset-top)) 1.5rem
     max(2rem, env(safe-area-inset-bottom));
@@ -293,6 +296,19 @@ button {
   min-height: 2.8em;
   color: var(--muted);
   font-size: 0.9rem;
+  /* The column's full width, so a line too long is cut, not widened. */
+  align-self: stretch;
+}
+
+.now span {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.now span + span {
+  font-size: 0.85em;
 }
 
 .volume {
