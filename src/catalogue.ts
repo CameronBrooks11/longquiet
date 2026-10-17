@@ -144,6 +144,14 @@ export const populatedSections: readonly Section[] = sections.filter(
   (s) => soundsIn(s.id).length > 0,
 );
 
+// What is playing, named the same on the page and the lock screen: a loop
+// by its name and recorder, a piece with its playlist and performer.
+export function nowPlaying(s: Soundscape, t: Track) {
+  return s.loops
+    ? { title: s.label, artist: t.author, playlist: null }
+    : { title: t.title, artist: t.author, playlist: s.label };
+}
+
 export function findSoundscape(id: string | null | undefined): Soundscape {
   return soundscapes.find((s) => s.id === id) ?? soundscapes[0];
 }

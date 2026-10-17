@@ -786,6 +786,25 @@ describe("Player lock screen and playlist edges", () => {
     );
   });
 
+  // The page's now line names the same things, from the same metadata.
+  it("names a loop by its label and a piece with its playlist", async () => {
+    const { session } = lockScreen();
+    const { player } = setup();
+    const shown = () => (session.metadata as { init: unknown }).init;
+    await player.select(rain);
+    expect(shown()).toEqual({
+      title: "Rain",
+      artist: rain.tracks[0].author,
+      album: "longquiet",
+    });
+    await player.select(playlist);
+    expect(shown()).toEqual({
+      title: "piece-1",
+      artist: playlist.tracks[0].author,
+      album: "longquiet · Pieces",
+    });
+  });
+
   it("moves on and redraws when next track is pressed", async () => {
     const { handlers } = lockScreen();
     const { player, changes } = setup();

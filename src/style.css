@@ -101,6 +101,7 @@ button {
 }
 
 .sections button {
+  position: relative;
   border: none;
   background: none;
   padding: 0.35rem 0.1rem;
@@ -118,6 +119,20 @@ button {
 .sections button[aria-selected="true"] {
   color: var(--fg);
   border-bottom-color: var(--accent);
+}
+
+/* A dot on the tab holding what is playing, set outside the label so the
+   tabs do not move when it appears. */
+.sections button[data-playing="true"]::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -0.6em;
+  width: 0.35em;
+  height: 0.35em;
+  margin-top: -0.175em;
+  border-radius: 50%;
+  background: var(--accent);
 }
 
 /* Three columns; two when space or enlarged text leaves no room for
