@@ -35,6 +35,10 @@ describe("catalogue", () => {
     expect(new Set(tracks.map((t) => t.file)).size).toBe(tracks.length);
   });
 
+  it.each(soundscapes)("$id says what it sounds like", (s) => {
+    expect(s.description.trim()).not.toBe("");
+  });
+
   it.each(soundscapes)("$id has something to play", (s) => {
     expect(s.tracks.length).toBeGreaterThan(0);
     // A looped recording is exactly one track; a playlist plays through.

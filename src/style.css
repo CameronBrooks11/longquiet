@@ -470,6 +470,34 @@ button {
   display: none;
 }
 
+/* The browser's own marker is hidden for centring; this one shows the
+   summary opens, and turns when it has. */
+.credits > summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 0.4em;
+  transition: transform 0.2s;
+}
+
+.credits[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+/* Each file's encoding notes, one level down. */
+.credits li details {
+  display: inline;
+}
+
+.credits li summary {
+  display: inline;
+  margin-left: 0.3em;
+  text-decoration: underline dotted;
+}
+
+.credits li details[open] {
+  display: block;
+}
+
 .credits ul {
   padding-left: 1rem;
   line-height: 1.5;

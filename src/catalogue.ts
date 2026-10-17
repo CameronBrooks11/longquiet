@@ -38,7 +38,10 @@ export interface Track {
   build: { sha256: string; bytes: number; seconds: number };
   recipe: Recipe;
   file: string;
+  // What was done to the original, step by step.
   modifications: string;
+  // For a share-alike original, the licence this copy carries too.
+  sharedUnder: string | null;
 }
 
 // What the listener picks: one looped track, or a playlist played in order
@@ -46,6 +49,8 @@ export interface Track {
 export interface Soundscape {
   id: string;
   label: string;
+  // What it sounds like, in a few plain words.
+  description: string;
   section: string;
   tracks: readonly Track[];
   loops: boolean;
@@ -53,10 +58,13 @@ export interface Soundscape {
   overlap: number;
 }
 
-type RawTrack = Omit<Track, "file" | "modifications">;
-type RawSound = { id: string; label: string; section: string } & (
-  RawTrack | { tracks: RawTrack[] }
-);
+type RawTrack = Omit<Track, "file" | "modifications" | "sharedUnder">;
+type RawSound = {
+  id: string;
+  label: string;
+  description: string;
+  section: string;
+} & (RawTrack | { tracks: RawTrack[] });
 
 // A length as a listener reads it, "4:37".
 export function clock(seconds: number): string {
@@ -101,20 +109,19 @@ function toTrack(t: RawTrack): Track {
     data.loudnessTarget,
   );
   // Share-alike: the processed copy here carries the same licence.
-  const shared = t.licence.url.includes("/by-sa/")
-    ? `; this version is shared under ${t.licence.name}`
-    : "";
-  return { ...t, file: `${t.id}.mp3`, modifications: steps + shared };
+  const sharedUnder = t.licence.url.includes("/by-sa/") ? t.licence.name : null;
+  return { ...t, file: `${t.id}.mp3`, modifications: steps, sharedUnder };
 }
 
 export const soundscapes: readonly Soundscape[] = (
   data.sounds as RawSound[]
 ).map((s) => {
-  const { id, label, section } = s;
+  const { id, label, description, section } = s;
   return "tracks" in s
     ? {
         id,
         label,
+        description,
         section,
         tracks: s.tracks.map(toTrack),
         loops: false,
@@ -123,6 +130,7 @@ export const soundscapes: readonly Soundscape[] = (
     : {
         id,
         label,
+        description,
         section,
         tracks: [toTrack(s)],
         loops: true,
@@ -145,10 +153,11 @@ export const populatedSections: readonly Section[] = sections.filter(
 );
 
 // What is playing, named the same on the page and the lock screen: a loop
-// by its name and recorder, a piece with its playlist and performer.
+// by its name and what it sounds like, a piece with its playlist and
+// performer. A loop's recorder is credited in Credits.
 export function nowPlaying(s: Soundscape, t: Track) {
   return s.loops
-    ? { title: s.label, artist: t.author, playlist: null }
+    ? { title: s.label, artist: s.description, playlist: null }
     : { title: t.title, artist: t.author, playlist: s.label };
 }
 

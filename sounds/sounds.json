@@ -20,6 +20,7 @@
     {
       "id": "rain",
       "label": "Rain",
+      "description": "a rainstorm",
       "section": "nature",
       "title": "Rainstorm 10 min",
       "author": "Valerie-Vivegnis",
@@ -47,6 +48,7 @@
     {
       "id": "tent",
       "label": "Tent",
+      "description": "heavy rain on a small tent",
       "section": "nature",
       "title": "heavy rain on a small tent",
       "author": "Petrosilia",
@@ -75,6 +77,7 @@
     {
       "id": "forest",
       "label": "Forest",
+      "description": "October woods, Indiana",
       "section": "nature",
       "title": "Afternoon Woods in October - Midwest US (loop)",
       "author": "NickTayloe",
@@ -103,6 +106,7 @@
     {
       "id": "wind",
       "label": "Wind",
+      "description": "young trees creaking in wind, Leipzig",
       "section": "nature",
       "title": "young trees creaking in the wind",
       "author": "Garuda1982",
@@ -131,6 +135,7 @@
     {
       "id": "meadow",
       "label": "Meadow",
+      "description": "a summer meadow, Brittany",
       "section": "nature",
       "title": "La vilaine summer meadow pm1",
       "author": "bruno.auzet",
@@ -159,6 +164,7 @@
     {
       "id": "dawn",
       "label": "Dawn",
+      "description": "dawn chorus in conifers, Washington",
       "section": "nature",
       "title": "Bird ambience. Coniferous forest dawn chorus.",
       "author": "SamsterBirdies",
@@ -187,6 +193,7 @@
     {
       "id": "birdsong-rain",
       "label": "Rainbirds",
+      "description": "birds singing in rain, New Jersey",
       "section": "nature",
       "title": "Birds In Rain",
       "author": "hargissssound",
@@ -215,6 +222,7 @@
     {
       "id": "stream",
       "label": "Stream",
+      "description": "a stream over stones, Guangxi",
       "section": "nature",
       "title": "Stream flow over the stones in the fields and insect chirping",
       "author": "lastraindrop",
@@ -243,6 +251,7 @@
     {
       "id": "waterfall",
       "label": "Waterfall",
+      "description": "a distant waterfall",
       "section": "nature",
       "title": "distant waterfall",
       "author": "pippone59",
@@ -270,6 +279,7 @@
     {
       "id": "ocean",
       "label": "Ocean",
+      "description": "the Baltic Sea at Zingst",
       "section": "nature",
       "title": "Baltic Sea II - Zingst/Germany",
       "author": "pulswelle",
@@ -298,6 +308,7 @@
     {
       "id": "shore",
       "label": "Shore",
+      "description": "a calm early-morning shore, Southampton",
       "section": "nature",
       "title": "Weston Shore Very Calm Early Morning",
       "author": "richwise",
@@ -326,6 +337,7 @@
     {
       "id": "night",
       "label": "Night",
+      "description": "frogs and crickets at night, Brazil",
       "section": "nature",
       "title": "Serrinha do Alambari night frogs chorus with close crickets",
       "author": "MeliaRoger",
@@ -354,6 +366,7 @@
     {
       "id": "nocturnes",
       "label": "Piano",
+      "description": "Chopin's nocturnes for solo piano",
       "section": "music",
       "tracks": [
         {
@@ -636,6 +649,7 @@
     {
       "id": "guitar",
       "label": "Guitar",
+      "description": "guitar pieces, Renaissance to modern",
       "section": "music",
       "tracks": [
         {

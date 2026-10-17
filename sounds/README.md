@@ -34,6 +34,10 @@ file is built (`scripts/build-sounds.sh` reads it).
 2. Add an entry to `sounds.json`, with `section` set to one of the ids
    in `sections`. Every section holds at least two sounds, so a new section
    is added with its sounds, never empty or with one.
+   `description` says what it sounds like in a few plain words, using only
+   what the source page says ("heavy rain on a small tent", with the
+   place from `recorded` where known). The page shows it whole on a
+   320 px screen, so keep it to about 40 characters.
    `source.sha256` is the output of
    `sha256sum sounds/.cache/<file>`; `source.format` reads like
    `24-bit WAV`. A loop needs a lossless original (WAV, FLAC, AIFF); a
@@ -49,7 +53,7 @@ file is built (`scripts/build-sounds.sh` reads it).
    The credits mention it.
 3. Add the recording to the table in the top-level README.
 4. `just sounds` renders `public/audio/<id>.mp3`, records each file's
-   sha256 and size in `sounds.json`, and checks them. Listen to the
+   sha256, size and length in `sounds.json`, and checks them. Listen to the
    whole file, and to the loop point: a faded loop alone fades to silence
    there, so `just audio-seam <id>` writes `sounds/.cache/<id>.seam.wav`,
    its end overlapped with its start as the player plays them.

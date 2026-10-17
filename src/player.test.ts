@@ -179,6 +179,7 @@ function trackOf(id: string): Track {
 const playlist: Soundscape = {
   id: "pieces",
   label: "Pieces",
+  description: "some pieces",
   section: "music",
   loops: false,
   overlap: 0,
@@ -879,7 +880,7 @@ describe("Player lock screen and playlist edges", () => {
     await player.select(rain);
     expect(shown()).toEqual({
       title: "Rain",
-      artist: rain.tracks[0].author,
+      artist: rain.description,
       album: "longquiet",
     });
     await player.select(playlist);
