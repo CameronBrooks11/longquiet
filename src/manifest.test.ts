@@ -8,6 +8,7 @@ const manifest = JSON.parse(
   id: string;
   name: string;
   short_name: string;
+  description: string;
   start_url: string;
   scope: string;
   display: string;
@@ -36,6 +37,17 @@ describe("web app manifest", () => {
     expect(manifest.name).toBe("longquiet");
     expect(manifest.short_name).toBe("longquiet");
     expect(manifest.id).toBe("./");
+  });
+
+  it("describes recordings and music, as the page does", () => {
+    const html = readFileSync(
+      new URL("../index.html", import.meta.url),
+      "utf8",
+    );
+    const meta = /<meta\s+name="description"\s+content="([^"]*)"/.exec(html);
+    expect(meta?.[1]).toBe(manifest.description);
+    expect(manifest.description).toMatch(/recordings/i);
+    expect(manifest.description).toMatch(/music/i);
   });
 
   it("stays inside the site's subpath and opens standalone", () => {
