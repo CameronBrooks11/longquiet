@@ -250,8 +250,10 @@ function renderPieces(current: Soundscape | null) {
 
 // Sleep timer. Not saved between visits: tonight's timer is not tomorrow's.
 const SLEEP_FADE_MS = 30_000;
+const SLEEP_NOTICE_MS = 5_000;
 const sleep = new SleepTimer();
 let wasPlaying = false;
+let cancelledAt = -Infinity;
 
 // Starting playback starts a waiting timer; pausing, by hand or by the
 // system, cancels it.
@@ -260,6 +262,7 @@ function followPlayback() {
   if (!player.playing && wasPlaying && sleep.on) {
     sleep.cancel();
     timerChoice.value = "0";
+    cancelledAt = Date.now();
   }
   wasPlaying = player.playing;
 }
@@ -268,7 +271,13 @@ function followPlayback() {
 // leaves the select alone so an open list is not reset under the pointer.
 function renderTimer() {
   const left = sleep.remaining();
-  const label = left === null ? "" : remainingLabel(left);
+  const label = sleep.waiting
+    ? "Starts when you press play"
+    : left !== null
+      ? remainingLabel(left)
+      : Date.now() - cancelledAt < SLEEP_NOTICE_MS
+        ? "Timer cancelled"
+        : "";
   if (timerLeft.textContent !== label) timerLeft.textContent = label;
 }
 

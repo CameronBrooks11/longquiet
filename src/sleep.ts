@@ -11,6 +11,11 @@ export class SleepTimer {
     return this.minutes > 0;
   }
 
+  // Set, but not counting until playback starts.
+  get waiting(): boolean {
+    return this.on && this.deadline === null;
+  }
+
   // 0 turns it off.
   set(minutes: number, playing: boolean) {
     this.minutes = minutes;

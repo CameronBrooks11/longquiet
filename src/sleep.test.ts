@@ -10,6 +10,7 @@ describe("SleepTimer", () => {
   it("is off until set", () => {
     const t = new SleepTimer(clock().now);
     expect(t.on).toBe(false);
+    expect(t.waiting).toBe(false);
     expect(t.remaining()).toBeNull();
     expect(t.expire()).toBe(false);
   });
@@ -48,10 +49,12 @@ describe("SleepTimer", () => {
     const c = clock();
     const t = new SleepTimer(c.now);
     t.set(30, false);
+    expect(t.waiting).toBe(true);
     c.t += 20 * 60_000;
     expect(t.remaining()).toBe(30 * 60_000);
     expect(t.expire()).toBe(false);
     t.started();
+    expect(t.waiting).toBe(false);
     c.t += 30 * 60_000;
     expect(t.expire()).toBe(true);
   });
