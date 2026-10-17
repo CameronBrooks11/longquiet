@@ -477,9 +477,12 @@ test("a sleep timer fades the sound out and pauses on time", async ({
   await page.goto("./");
   const loop = items.find((i) => !i.tracks)!;
   await page.getByLabel("Sleep timer").selectOption("15");
-  await expect(page.locator("#timer-left")).toHaveText("15 min left");
+  await expect(page.locator("#timer-left")).toHaveText(
+    "Starts when you press play",
+  );
   await page.getByRole("radio", { name: loop.label, exact: true }).click();
   await expectAdvancing(page);
+  await expect(page.locator("#timer-left")).toHaveText("15 min left");
 
   await page.clock.fastForward("10:00");
   await expect(page.locator("#timer-left")).toHaveText("5 min left");
@@ -494,16 +497,51 @@ test("a sleep timer fades the sound out and pauses on time", async ({
   await expect.poll(async () => (await audio(page))?.paused).toBe(true);
 });
 
-test("pausing by hand cancels the sleep timer", async ({ page }) => {
+test("pausing by hand cancels the sleep timer, and says so", async ({
+  page,
+}) => {
+  await page.clock.install();
   await page.goto("./");
   await page.getByLabel("Sleep timer").selectOption("30");
-  await expect(page.locator("#timer-left")).toHaveText("30 min left");
   await page.locator("#play").click();
   await expect(page.locator("body")).toHaveClass(/is-playing/);
+  await expect(page.locator("#timer-left")).toHaveText("30 min left");
   await page.locator("#play").click();
   await expect(page.locator("body")).not.toHaveClass(/is-playing/);
   await expect(page.getByLabel("Sleep timer")).toHaveValue("0");
+  await expect(page.locator("#timer-left")).toHaveText("Timer cancelled");
+  await page.clock.fastForward("00:06");
   await expect(page.locator("#timer-left")).toHaveText("");
+});
+
+// Every message the timer shows, at the narrowest width: the select and
+// everything below it stay where they were.
+test("the timer row holds still whatever it says", async ({ page }) => {
+  await page.clock.install();
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.goto("./");
+  const select = page.getByLabel("Sleep timer");
+  const below = page.locator(".credits > summary");
+  const where = async () => [
+    await select.boundingBox(),
+    await below.boundingBox(),
+  ];
+  const at = await where();
+  const left = page.locator("#timer-left");
+  const steps: [string, () => Promise<unknown>][] = [
+    ["Starts when you press play", () => select.selectOption("90")],
+    ["90 min left", () => page.locator("#play").click()],
+    ["Timer cancelled", () => page.locator("#play").click()],
+    ["", () => page.clock.fastForward("00:06")],
+  ];
+  for (const [text, step] of steps) {
+    await step();
+    await expect(left).toHaveText(text);
+    expect(await where(), text || "cleared").toEqual(at);
+    expect(await left.evaluate((e) => e.scrollWidth <= e.clientWidth)).toBe(
+      true,
+    );
+  }
 });
 
 test("a timer set while paused survives a change of sound and starts on play", async ({
@@ -512,6 +550,9 @@ test("a timer set while paused survives a change of sound and starts on play", a
   await page.goto("./");
   const [first, second] = items.filter((i) => !i.tracks);
   await page.getByLabel("Sleep timer").selectOption("30");
+  await expect(page.locator("#timer-left")).toHaveText(
+    "Starts when you press play",
+  );
   await page.getByRole("radio", { name: first.label, exact: true }).focus();
   await page.keyboard.press("ArrowRight");
   await expect(
