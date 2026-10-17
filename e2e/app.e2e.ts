@@ -331,7 +331,7 @@ test("credits show they open, and keep each file's changes a level down", async 
   page,
 }) => {
   await page.goto("./");
-  const summary = page.locator(".credits summary");
+  const summary = page.locator(".credits > summary");
   const cue = await summary.evaluate(
     (e) => getComputedStyle(e, "::before").content,
   );
