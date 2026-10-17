@@ -330,7 +330,8 @@ test("the now line keeps its height for every piece", async ({ page }) => {
         if (n > 0)
           await page.getByRole("button", { name: "Next piece" }).click();
         await expect(now).toContainText(t.title);
-        expect(await below(), `${width} px, ${t.id}`).toBe(at);
+        // Within half a pixel: a wrapped line adds a whole line, about 20 px.
+        expect(await below(), `${width} px, ${t.id}`).toBeCloseTo(at, 0);
         const overflow = await page.evaluate(
           () => document.documentElement.scrollWidth - window.innerWidth,
         );
