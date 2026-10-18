@@ -36,13 +36,13 @@
         "sha256": "95b7ccd65476e26fadc8d69b8c3a4b8a129650e87a7fb4544795ed44d7c2eaa2"
       },
       "recipe": {
-        "excerpt": null,
+        "excerpt": 579,
         "crossfade": 8
       },
       "build": {
-        "sha256": "89886528a2e806b9b8312065c36d13abd209cff933dcae5993009cdbca29a90e",
-        "bytes": 8799572,
-        "seconds": 597.17
+        "sha256": "3c31140e9dc1fc87a05430af7998dd37f97f3b0641abc0c1c605ecfb304fee07",
+        "bytes": 8536268,
+        "seconds": 579.02
       }
     },
     {
@@ -64,14 +64,14 @@
         "sha256": "b827c4f81af859d6dea43e1632d079178e83df9aa5e844dbd227cf7da388669c"
       },
       "recipe": {
-        "excerpt": 620,
+        "excerpt": 641,
         "crossfade": 8,
         "limit": -2.5
       },
       "build": {
-        "sha256": "0e892526faa3bd224f352aa400bd62985c49c1b0f921f6e16928e36386473371",
-        "bytes": 18453932,
-        "seconds": 620.04
+        "sha256": "a7fb9d947384c14a06ec2e8f1b90b79e684411d0e1e37697111ffaec638537db",
+        "bytes": 19034752,
+        "seconds": 641.04
       }
     },
     {
@@ -123,13 +123,13 @@
         "sha256": "6771da0fa71d839ea731d4db632ae445e488fb301949996659451f01ff28c8c8"
       },
       "recipe": {
-        "excerpt": null,
+        "excerpt": 390,
         "crossfade": 8
       },
       "build": {
-        "sha256": "da6ba4e941385f9e1ce70a7690f85512f5db281cc8526d1521ec742597bf4e8b",
-        "bytes": 8971676,
-        "seconds": 400.06
+        "sha256": "c56b663668071865d633be46ccd56dfcfca1b614166b19c5db1fad31392f916a",
+        "bytes": 8747444,
+        "seconds": 390.02
       }
     },
     {
@@ -152,13 +152,13 @@
         "sha256": "1a2db1580e6cf2c2fcb8aa41879ae8e6cb0097b53d64581e8d123bf293e72d6c"
       },
       "recipe": {
-        "excerpt": 360,
+        "excerpt": 347,
         "crossfade": 8
       },
       "build": {
-        "sha256": "53c4721cef14b13143a5e7e3ca3311544518942281af6a9ea66642e35a9ac1ed",
-        "bytes": 8598380,
-        "seconds": 360.02
+        "sha256": "ff1867d72470615a4be1454fb2fc28727de6f823080c2b4317c901b4c370bac7",
+        "bytes": 8297612,
+        "seconds": 347.04
       }
     },
     {
@@ -181,13 +181,13 @@
         "sha256": "5ec42462f144175767fc2d1a27dcef07ee89818a1caa5e70b6218e5c5b21e390"
       },
       "recipe": {
-        "excerpt": null,
+        "excerpt": 588,
         "crossfade": 8
       },
       "build": {
-        "sha256": "33c18b00b2980a072c14daecffc875baa6ace2346a3c9f830003df1eb1586e0e",
-        "bytes": 14436393,
-        "seconds": 589.14
+        "sha256": "ce24087796b21209348dcac61dec40f3da194c1dbd45895a98bd1320c917f9dd",
+        "bytes": 14411165,
+        "seconds": 588.04
       }
     },
     {
@@ -210,13 +210,13 @@
         "sha256": "7bdc03c78911adc4e851e1e7461e93340e753aeeec688ba282acd8724da41ddf"
       },
       "recipe": {
-        "excerpt": null,
+        "excerpt": 356,
         "crossfade": 8
       },
       "build": {
-        "sha256": "2b5496ce36ca66809227870855fb98c65ada07992f2d660b1bb6bb9d4690ab23",
-        "bytes": 8548268,
-        "seconds": 359.57
+        "sha256": "22b764d80241e9faf1705ba9c1a3a15bb6f63f4c20afa5eaed954c3d1cc11fe3",
+        "bytes": 8465804,
+        "seconds": 356.04
       }
     },
     {
@@ -239,13 +239,13 @@
         "sha256": "f46b7827cc293fc39cc29b4fae9a2ea3979e179395674d9775cc318acbc0656c"
       },
       "recipe": {
-        "excerpt": 620,
+        "excerpt": 587,
         "crossfade": 8
       },
       "build": {
-        "sha256": "202cfb10f543a779f07931a3a373d541a0b1e590c26c2030adc44256449f007f",
-        "bytes": 14191580,
-        "seconds": 620.04
+        "sha256": "e09fae8e4f974c3ca00eaa2e2e96108fce471b9cd18c38886ec449920eb44527",
+        "bytes": 13446140,
+        "seconds": 587.04
       }
     },
     {
