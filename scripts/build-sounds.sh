@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# build-sounds.sh build|record|verify|check|seam <id>
+# build-sounds.sh build [id...]|record|verify|check|seam <id>
 #
 #   build  verify each original in sounds/.cache against its sha256 in
-#          sounds/sounds.json, render public/audio/<id>.mp3, record, check
+#          sounds/sounds.json, render public/audio/<id>.mp3, record, check;
+#          given ids, render only those, keeping the other built files
 #   record write each built file's sha256 and size into sounds/sounds.json
 #   verify fail unless every built file matches its recorded sha256; run
 #          before publishing the files as an audio release
@@ -214,7 +215,9 @@ build)
     mkdir -p "$out"
     tmp=$(mktemp -d)
     trap 'rm -rf -- "$tmp"' EXIT
+    shift
     while IFS=$'\t' read -r id file sha excerpt x limit _; do
+        if [ $# -gt 0 ] && [[ " $* " != *" $id "* ]]; then continue; fi
         render "$id" "$file" "$sha" "$excerpt" "$x" "$limit"
     done < <(sounds)
     rm -rf -- "$tmp"
@@ -263,7 +266,7 @@ seam)
     echo "wrote $cache/$id.seam.wav: the seam runs from ${lead} s to $((x + lead)) s"
     ;;
 *)
-    echo "usage: $0 build|record|verify|check|seam <id>" >&2
+    echo "usage: $0 build [id...]|record|verify|check|seam <id>" >&2
     exit 64
     ;;
 esac

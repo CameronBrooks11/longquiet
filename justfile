@@ -35,8 +35,8 @@ test:
     npm exec -- vitest run
 
 # Render public/audio/ from the originals in sounds/.cache, record, check
-sounds:
-    scripts/build-sounds.sh build
+sounds *ids:
+    scripts/build-sounds.sh build {{ids}}
     npm exec -- prettier --write sounds/sounds.json
 
 # Download the audio release named in sounds/sounds.json into public/audio/
