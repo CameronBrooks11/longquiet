@@ -30,17 +30,32 @@ export async function isSaved(base: string, s: Soundscape): Promise<boolean> {
   return hits.every(Boolean);
 }
 
+// Tell the worker which files are saved, and wait until it knows; no
+// worker, or none answering within a second, is no reason to fail.
+function notifyWorker(): Promise<void> {
+  const worker = navigator.serviceWorker.controller;
+  if (!worker) return Promise.resolve();
+  return new Promise((resolve) => {
+    const channel = new MessageChannel();
+    channel.port1.onmessage = () => resolve();
+    setTimeout(resolve, 1000);
+    worker.postMessage("saved-changed", [channel.port2]);
+  });
+}
+
 export async function save(base: string, s: Soundscape) {
   // Asked once a listener saves something, so the browser keeps it under
   // storage pressure where it can; refused is fine.
   void navigator.storage?.persist?.();
   const c = await caches.open(AUDIO_CACHE);
   await c.addAll(urls(base, s));
+  await notifyWorker();
 }
 
 export async function remove(base: string, s: Soundscape) {
   const c = await caches.open(AUDIO_CACHE);
   await Promise.all(urls(base, s).map((u) => c.delete(u)));
+  await notifyWorker();
 }
 
 export function megabytes(n: number): string {

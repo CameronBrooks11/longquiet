@@ -13,6 +13,27 @@ const SHELL_CACHE = `shell-${hash(SHELL.join("\n"))}`;
 // as <file>?retry=<n> after a failure, so lookups ignore the query.
 const AUDIO_CACHE = "audio";
 
+// The saved files' paths, read when the worker starts and again when the
+// page saves or removes a sound. Audio not among them is left alone, so
+// the browser fetches it as if there were no worker.
+let saved: Set<string> | null = null;
+function readSaved(): Promise<void> {
+  return caches
+    .open(AUDIO_CACHE)
+    .then((c) => c.keys())
+    .then((keys) => {
+      saved = new Set(keys.map((k) => new URL(k.url).pathname));
+    });
+}
+void readSaved();
+
+// The page waits for the reply, so a sound played straight after saving
+// is already known here.
+self.addEventListener("message", (e) => {
+  if (e.data !== "saved-changed") return;
+  e.waitUntil(readSaved().then(() => e.ports[0]?.postMessage("ok")));
+});
+
 function hash(s: string): string {
   let h = 0;
   for (let i = 0; i < s.length; i++)
@@ -53,12 +74,16 @@ self.addEventListener("fetch", (e) => {
   // A saved sound comes from the cache; any other goes to the network as
   // if there were no worker.
   if (url.pathname.includes("/audio/")) {
+    if (saved && !saved.has(url.pathname)) return;
+    // Saved, or not yet known while the worker starts.
     e.respondWith(
       caches
         .open(AUDIO_CACHE)
         .then((c) => c.match(req, { ignoreSearch: true }))
         .then((hit) =>
-          hit ? ranged(hit, req.headers.get("Range")) : fetch(req),
+          hit
+            ? ranged(hit, req.headers.get("Range"))
+            : fetch(req).catch(() => Response.error()),
         ),
     );
     return;
@@ -69,7 +94,10 @@ self.addEventListener("fetch", (e) => {
   if (req.mode === "navigate") {
     e.respondWith(
       fetch(req).catch(async () => {
-        const hit = await caches.match("./", { cacheName: SHELL_CACHE });
+        const hit = await caches.match("./", {
+          cacheName: SHELL_CACHE,
+          ignoreVary: true,
+        });
         return hit ?? Response.error();
       }),
     );
@@ -78,7 +106,9 @@ self.addEventListener("fetch", (e) => {
 
   e.respondWith(
     caches
-      .match(req, { cacheName: SHELL_CACHE })
+      // The page asks for its script and styles with an Origin header
+      // the install's requests lacked; a Vary: Origin reply would miss.
+      .match(req, { cacheName: SHELL_CACHE, ignoreVary: true })
       .then((hit) => hit ?? fetch(req)),
   );
 });
