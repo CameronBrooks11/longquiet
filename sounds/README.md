@@ -51,7 +51,10 @@ file is built (`scripts/build-sounds.sh` reads it).
    the gain, in dBFS from −24 to 0: use it only when rare transients,
    such as drops on a tent, would otherwise clip, and say so in review.
    The credits mention it.
-3. Add the recording to the table in the top-level README.
+3. Run `just credits`, which regenerates `sounds/CREDITS.md` from
+   `sounds.json`; a test fails until it matches. If it adds a loop or a
+   playlist, update the counts in the top-level README, which a test also
+   checks.
 4. `just sounds` renders `public/audio/<id>.mp3`, records each file's
    sha256, size and length in `sounds.json`, and checks them. Listen to the
    whole file, and to the loop point: a faded loop alone fades to silence
