@@ -381,14 +381,23 @@ test("credits show they open, and keep each file's changes a level down", async 
 });
 
 // Opened beside the app, so whatever is playing keeps playing.
-test("the foot of the page links to About and Source", async ({ page }) => {
+test("the foot of the page links to About, Source and feedback", async ({
+  page,
+}) => {
   await page.goto("./");
   const repo = "https://github.com/CameronBrooks11/longquiet";
   const links = page.getByRole("contentinfo").getByRole("link");
-  await expect(links).toHaveText(["About", "Source"]);
-  await expect(links.nth(0)).toHaveAttribute("href", `${repo}#readme`);
-  await expect(links.nth(1)).toHaveAttribute("href", repo);
-  for (const link of await links.all()) {
+  const expected = [
+    ["About", `${repo}#readme`],
+    ["Source", repo],
+    ["Report a bug", `${repo}/issues/new?template=bug.yml`],
+    ["Suggest a feature", `${repo}/issues/new?template=feature.yml`],
+    ["Request a sound", `${repo}/issues/new?template=sound.yml`],
+  ];
+  await expect(links).toHaveText(expected.map(([text]) => text));
+  for (const [i, [, href]] of expected.entries()) {
+    const link = links.nth(i);
+    await expect(link).toHaveAttribute("href", href);
     await expect(link).toBeVisible();
     await expect(link).toHaveAttribute("target", "_blank");
     await expect(link).toHaveAttribute("rel", "noopener");
@@ -396,10 +405,18 @@ test("the foot of the page links to About and Source", async ({ page }) => {
 
   // Reached by Tab, straight after the closed credits.
   await page.locator(".credits > summary").focus();
-  await page.keyboard.press("Tab");
-  await expect(links.nth(0)).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(links.nth(1)).toBeFocused();
+  for (const i of expected.keys()) {
+    await page.keyboard.press("Tab");
+    await expect(links.nth(i)).toBeFocused();
+  }
+
+  // Every link within a 320 px screen.
+  await page.setViewportSize({ width: 320, height: 640 });
+  for (const link of await links.all()) {
+    const box = (await link.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(320);
+  }
 });
 
 test("arrow keys move through sounds and sections", async ({ page }) => {

@@ -511,7 +511,9 @@ button {
 /* Quiet links at the foot of the page, out of the way of the controls. */
 .links {
   display: flex;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 0.5rem;
   margin-top: 2rem;
   color: var(--muted);
   font-size: 0.8rem;

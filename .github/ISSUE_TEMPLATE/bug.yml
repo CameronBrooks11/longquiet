@@ -1,0 +1,29 @@
+name: Report a bug
+description: Something in longquiet didn't work as it should.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, and what you saw or heard.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: e.g. iPhone 15, Safari; or Windows laptop, Chrome
+    validations:
+      required: true
+  - type: input
+    id: sound
+    attributes:
+      label: Which sound
+      description: The sound or piece playing at the time, if any.
