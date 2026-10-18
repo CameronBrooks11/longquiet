@@ -14,7 +14,7 @@ Field recordings and music, openly licensed, for long hours of quiet.
 
 ## What's in it
 
-- **Nature:** 12 recordings, each a loop of 6 to 10 minutes that plays on with no gap: a rainstorm, heavy rain on a small tent, October woods, trees creaking in wind, a summer meadow, a dawn chorus, birds singing in rain, a stream over stones, a distant waterfall, the Baltic Sea, a calm early-morning shore, and frogs and crickets at night.
+- **Nature:** 12 recordings, each a loop of 6 to 11 minutes that plays on with no gap: a rainstorm, heavy rain on a small tent, October woods, trees creaking in wind, a summer meadow, a dawn chorus, birds singing in rain, a stream over stones, a distant waterfall, the Baltic Sea, a calm early-morning shore, and frogs and crickets at night.
 - **Music:** two playlists of solo pieces. Piano: 11 pieces, 54 min of Chopin's nocturnes. Guitar: 15 pieces, 73 min, Renaissance to modern.
 
 Every recording is CC0, CC BY or CC BY-SA, and credited in the app.
