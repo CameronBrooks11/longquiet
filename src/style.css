@@ -463,33 +463,38 @@ button {
   font-size: 0.85rem;
 }
 
-.credits {
+.credits,
+.offline {
   width: 100%;
   color: var(--muted);
   font-size: 0.85rem;
   text-align: left;
 }
 
-.credits summary {
+.credits summary,
+.offline summary {
   text-align: center;
   cursor: pointer;
   list-style: none;
 }
 
-.credits summary::-webkit-details-marker {
+.credits summary::-webkit-details-marker,
+.offline summary::-webkit-details-marker {
   display: none;
 }
 
 /* The browser's own marker is hidden for centring; this one shows the
    summary opens, and turns when it has. */
-.credits > summary::before {
+.credits > summary::before,
+.offline > summary::before {
   content: "▸";
   display: inline-block;
   margin-right: 0.4em;
   transition: transform 0.2s;
 }
 
-.credits[open] > summary::before {
+.credits[open] > summary::before,
+.offline[open] > summary::before {
   transform: rotate(90deg);
 }
 
@@ -517,6 +522,51 @@ button {
   margin-top: 2rem;
   color: var(--muted);
   font-size: 0.8rem;
+}
+
+.offline[hidden] {
+  display: none;
+}
+
+.offline p {
+  text-align: center;
+}
+
+/* A row per sound: its name, its size, and Save or Remove. */
+.offline ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.offline li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.35rem 0.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.offline li span:first-child {
+  flex: 1;
+  color: var(--fg);
+}
+
+.offline .size {
+  font-variant-numeric: tabular-nums;
+}
+
+.offline button {
+  min-width: 5.5rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+}
+
+.offline button:hover {
+  border-color: var(--accent);
 }
 
 .credits ul {
