@@ -459,6 +459,32 @@ test("fits a 320 px phone without sideways scrolling", async ({ page }) => {
   }
 });
 
+// The fullest section on an iPhone: the whole 390x844 screen, and the
+// roughly 390x660 Safari leaves the page with its toolbars showing. Play
+// and the now line must be in view without scrolling.
+test("Play and the now line are on screen on a phone", async ({ page }) => {
+  const fullest = sections.reduce((a, b) =>
+    items.filter((i) => i.section === b.id).length >
+    items.filter((i) => i.section === a.id).length
+      ? b
+      : a,
+  );
+  for (const height of [844, 660]) {
+    await page.setViewportSize({ width: 390, height });
+    await page.goto("./");
+    await page.getByRole("tab", { name: fullest.label, exact: true }).click();
+    await page.getByRole("radio").last().click();
+    for (const id of ["#play", "#now"]) {
+      const box = (await page.locator(id).boundingBox())!;
+      expect(
+        box.y + box.height,
+        `${id} bottom at 390x${height}, ${fullest.label}`,
+      ).toBeLessThanOrEqual(height);
+    }
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  }
+});
+
 // Every piece's title and performer, at phone widths: a long one must not
 // push the volume and timer down when the piece changes. Measured from the
 // line itself, since the grid above it differs between sections.
