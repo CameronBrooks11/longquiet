@@ -57,6 +57,12 @@ jobs:
       - run: just fetch-audio
       - run: just build
       - run: just e2e
+      # The README's screenshots (e2e/readme.e2e.ts), for committing to docs/.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: screenshots
+          path: screenshots/
+          retention-days: 7
       - if: failure()
         uses: actions/upload-artifact@v7
         with:

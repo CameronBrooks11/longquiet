@@ -60,6 +60,10 @@ audio-check:
 audio-seam id:
     scripts/build-sounds.sh seam {{id}}
 
+# Write sounds/CREDITS.md, the full attribution list, from sounds/sounds.json
+credits:
+    npm exec -- vitest run src/credits.test.ts -u
+
 # Browser smoke tests of the built site (CI; needs fetch-audio, build, browsers)
 e2e:
     npm exec -- playwright test
