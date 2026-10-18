@@ -1,0 +1,32 @@
+name: Request a sound
+description: A sound or piece of music you'd like to hear in longquiet.
+labels: ["sound request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Everything in longquiet is openly licensed: public domain, CC0,
+        CC BY or CC BY-SA. A link to such a recording helps most, but a
+        request without one is welcome too.
+  - type: textarea
+    id: sound
+    attributes:
+      label: The sound or piece
+      placeholder: e.g. rain on a tin roof; Debussy's Rêverie on piano
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Link to an openly licensed recording
+      description: Optional. Freesound, Wikimedia Commons and Musopen are good places to look.
+  - type: dropdown
+    id: section
+    attributes:
+      label: Section
+      options:
+        - Nature
+        - Music
+        - Not sure
+    validations:
+      required: true
