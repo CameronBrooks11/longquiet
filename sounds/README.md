@@ -51,7 +51,10 @@ file is built (`scripts/build-sounds.sh` reads it).
    the gain, in dBFS from −24 to 0: use it only when rare transients,
    such as drops on a tent, would otherwise clip, and say so in review.
    The credits mention it.
-3. Add the recording to the table in the top-level README.
+3. Run `just credits`, which regenerates `sounds/CREDITS.md` from
+   `sounds.json`; a test fails until it matches. If it adds a loop or a
+   playlist, update the counts in the top-level README, which a test also
+   checks.
 4. `just sounds` renders `public/audio/<id>.mp3`, records each file's
    sha256, size and length in `sounds.json`, and checks them. Listen to the
    whole file, and to the loop point: a faded loop alone fades to silence
@@ -75,9 +78,13 @@ to its first must be no larger than the recording's own 95th-percentile
 step between adjacent seconds (at least 1.5 dB). For a faded loop the last
 second is the end mixed into the start, as the player overlaps them, so
 the check catches ends that were not faded, which overlap into a swell of
-about 3 dB. It does not catch a recording that ends at a different level
-from where it starts, since the crossfade spreads that step over its
-length: listen to the seam. The tests fail if an entry is missing its
+about 3 dB. It also fails a loop that ends at a different level from
+where it starts: the first unfaded second less the last, which the
+listener hears crossfade length + 1 s apart, must be no larger than the
+recording's own 95th-percentile level change between seconds that far
+apart. Otherwise the crossfade swells or sinks more than the recording
+ever does by itself. Fix it with a different `excerpt` end, then listen
+to the seam. The tests fail if an entry is missing its
 file, its attribution, or an allowed licence.
 
 Screen a candidate before building it. A recording whose peaks sit more

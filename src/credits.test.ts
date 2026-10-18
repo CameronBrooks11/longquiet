@@ -18,7 +18,10 @@ it("sounds/CREDITS.md is generated from sounds.json", async () => {
 it("the README's counts match the catalogue", () => {
   const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
   const loops = soundscapes.filter((s) => s.loops);
-  expect(readme).toContain(`**Nature:** ${loops.length} recordings`);
+  const minutes = loops.map((s) => Math.round(s.tracks[0].build.seconds / 60));
+  expect(readme).toContain(
+    `**Nature:** ${loops.length} recordings, each a loop of ${Math.min(...minutes)} to ${Math.max(...minutes)} minutes`,
+  );
   for (const s of soundscapes.filter((x) => !x.loops)) {
     const [pieces, minutes] = playlistSummary(s).split(" · ");
     expect(readme).toContain(`${s.label}: ${pieces}, ${minutes}`);

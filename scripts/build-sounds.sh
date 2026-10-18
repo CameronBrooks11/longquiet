@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# build-sounds.sh build|record|verify|check|seam <id>
+# build-sounds.sh build [id...]|record|verify|check|seam <id>
 #
 #   build  verify each original in sounds/.cache against its sha256 in
-#          sounds/sounds.json, render public/audio/<id>.mp3, record, check
+#          sounds/sounds.json, render public/audio/<id>.mp3, record, check;
+#          given ids, render only those, keeping the other built files
 #   record write each built file's sha256 and size into sounds/sounds.json
 #   verify fail unless every built file matches its recorded sha256; run
 #          before publishing the files as an audio release
@@ -21,6 +22,14 @@
 # it catches is ends that were not faded, which overlap into a swell of about
 # 3 dB. A difference in level between the end and the start of the recording
 # passes, spread over the crossfade: listen to the seam.
+#
+# That difference is the second measure, the loop's level step: the first
+# unfaded second (at X) less the last unfaded second (ending at end - X). The
+# listener hears one, then X s of crossfade, then the other, so they lie X + 1
+# s apart. The step must not exceed the recording's own drift: the 95th
+# percentile of the level change between seconds X + 1 s apart in its unfaded
+# body. A larger step swells or sinks across the crossfade more than the
+# recording ever does by itself.
 #
 # Render per sound: optional excerpt, optional fades for a crossfaded loop, a
 # static gain to the loudness target measured on the lossless intermediate, an
@@ -74,6 +83,19 @@ typical_step() {
         awk '{ s[m++] = $1 } END { printf "%.1f", (m ? s[int(0.95 * (m - 1))] : 0) }'
 }
 
+# 95th percentile of |level change| between whole seconds $2 apart.
+typical_drift() {
+    local sr
+    sr=$(ffprobe -v error -select_streams a:0 -show_entries stream=sample_rate -of default=nw=1:nk=1 "$1")
+    ffmpeg -nostdin -hide_banner -nostats -i "$1" \
+        -af "asetnsamples=n=$sr:p=1,astats=metadata=1:reset=1,ametadata=mode=print:key=lavfi.astats.Overall.RMS_level:file=-" \
+        -f null - 2>/dev/null |
+        awk -F= -v lag="$2" '/RMS_level=/ { v[n++] = $2 }
+            END { for (i = 0; i + lag < n - 1; i++) { d = v[i + lag] - v[i]; print (d < 0 ? -d : d) } }' |
+        sort -g |
+        awk '{ s[m++] = $1 } END { printf "%.1f", (m ? s[int(0.95 * (m - 1))] : 0) }'
+}
+
 duration() {
     ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$1"
 }
@@ -81,7 +103,7 @@ duration() {
 # Prints one line of measurements and ok|FAIL; returns 1 on FAIL. A playlist
 # track ($3 = false) does not loop, so it has no seam to judge.
 measure() {
-    local id=$1 f=$2 loops=$3 x=$4 lufs tp dur end first last seam limit verdict
+    local id=$1 f=$2 loops=$3 x=$4 lufs tp dur end first last seam limit step drift verdict
     read -r lufs tp < <(loudness "$f")
     if [ "$loops" = false ]; then
         verdict=$(awk -v l="$lufs" -v t="$target" -v p="$tp" -v ml="$max_lu_off" -v mp="$max_true_peak" '
@@ -109,16 +131,23 @@ measure() {
         first=$(rms_at "$f" "$x")
         last=$(rms_at "$tmp/$id.seam.wav" "$(awk -v d="$(duration "$tmp/$id.seam.wav")" 'BEGIN { print d - 1 }')")
         limit=$(typical_step "$tmp/$id.body.wav")
+        step=$(awk -v a="$first" -v b="$(rms_at "$f" "$(awk -v e="$end" 'BEGIN { print e - 1 }')")" 'BEGIN { printf "%.1f", a - b }')
+        drift=$(typical_drift "$tmp/$id.body.wav" "$(awk -v x="$x" 'BEGIN { print int(x) + 1 }')")
         rm -f -- "$tmp/$id.seam.wav" "$tmp/$id.body.wav"
     fi
     seam=$(awk -v a="$first" -v b="$last" 'BEGIN { printf "%.1f", a - b }')
     limit=$(awk -v t="$limit" -v m="$min_seam_db" 'BEGIN { printf "%.1f", (t > m ? t : m) }')
     verdict=$(awk -v l="$lufs" -v t="$target" -v p="$tp" -v s="$seam" \
-        -v ml="$max_lu_off" -v mp="$max_true_peak" -v ms="$limit" '
+        -v ml="$max_lu_off" -v mp="$max_true_peak" -v ms="$limit" -v st="${step:-0}" -v dr="${drift:-0}" '
         function abs(x) { return x < 0 ? -x : x }
-        BEGIN { print (abs(l - t) <= ml && p <= mp && abs(s) <= ms) ? "ok" : "FAIL" }')
-    printf '%-8s %7s LUFS %6s dBTP  seam %5s dB (limit %s)  %s\n' \
-        "$id" "$lufs" "$tp" "$seam" "$limit" "$verdict"
+        BEGIN { print (abs(l - t) <= ml && p <= mp && abs(s) <= ms && abs(st) <= dr) ? "ok" : "FAIL" }')
+    if [ "$x" = 0 ]; then
+        printf '%-8s %7s LUFS %6s dBTP  seam %5s dB (limit %s)  %s\n' \
+            "$id" "$lufs" "$tp" "$seam" "$limit" "$verdict"
+    else
+        printf '%-13s %7s LUFS %6s dBTP  seam %5s dB (limit %s)  step %5s dB (drift %s)  %s\n' \
+            "$id" "$lufs" "$tp" "$seam" "$limit" "$step" "$drift" "$verdict"
+    fi
     [ "$verdict" = ok ]
 }
 
@@ -186,7 +215,9 @@ build)
     mkdir -p "$out"
     tmp=$(mktemp -d)
     trap 'rm -rf -- "$tmp"' EXIT
+    shift
     while IFS=$'\t' read -r id file sha excerpt x limit _; do
+        if [ $# -gt 0 ] && [[ " $* " != *" $id "* ]]; then continue; fi
         render "$id" "$file" "$sha" "$excerpt" "$x" "$limit"
     done < <(sounds)
     rm -rf -- "$tmp"
@@ -235,7 +266,7 @@ seam)
     echo "wrote $cache/$id.seam.wav: the seam runs from ${lead} s to $((x + lead)) s"
     ;;
 *)
-    echo "usage: $0 build|record|verify|check|seam <id>" >&2
+    echo "usage: $0 build [id...]|record|verify|check|seam <id>" >&2
     exit 64
     ;;
 esac
