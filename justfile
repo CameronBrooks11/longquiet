@@ -25,6 +25,7 @@ lint:
 # Type-check without emitting
 typecheck:
     npm exec -- tsc --noEmit
+    npm exec -- tsc --noEmit -p src/sw
 
 # Format + lint + type-check (non-mutating — safe for CI)
 check: fmt-check lint typecheck

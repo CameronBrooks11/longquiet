@@ -9,6 +9,7 @@ interface Item {
   description?: string;
   tracks?: { id: string; title: string; build: { seconds: number } }[];
   recipe?: { crossfade: number };
+  build?: { bytes: number };
 }
 const manifest = JSON.parse(
   readFileSync(new URL("../sounds/sounds.json", import.meta.url), "utf8"),
@@ -683,4 +684,47 @@ test("the next button skips through a playlist and is hidden for loops", async (
   const loop = items.find((i) => !i.tracks)!;
   await page.getByRole("radio", { name: loop.label, exact: true }).click();
   await expect(next).toBeHidden();
+});
+
+// The smallest loop is saved, the network goes, and the page still opens and
+// plays it; removing it empties its cache entry.
+test("a saved sound plays offline, and removing it frees it", async ({
+  page,
+  context,
+}) => {
+  const loop = items
+    .filter((i) => !i.tracks)
+    .reduce((a, b) => (b.build!.bytes < a.build!.bytes ? b : a));
+  await page.goto("./");
+  await expect
+    .poll(() => page.evaluate(() => !!navigator.serviceWorker.controller))
+    .toBe(true);
+
+  const offline = page.locator("details.offline");
+  await offline.locator("summary").click();
+  await offline
+    .getByRole("button", { name: `Save ${loop.label} for offline` })
+    .click();
+  await expect(
+    offline.getByRole("button", { name: `Remove ${loop.label}` }),
+  ).toBeVisible({ timeout: 30_000 });
+
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await page.getByRole("radio", { name: loop.label, exact: true }).click();
+  await expectAdvancing(page);
+  await page.locator("#play").click();
+  await context.setOffline(false);
+
+  await offline.locator("summary").click();
+  await offline.getByRole("button", { name: `Remove ${loop.label}` }).click();
+  await expect(
+    offline.getByRole("button", { name: `Save ${loop.label} for offline` }),
+  ).toBeVisible();
+  const cached = await page.evaluate(async (file) => {
+    const hit = await caches.match(`audio/${file}`, { ignoreSearch: true });
+    return !!hit;
+  }, `${loop.id}.mp3`);
+  expect(cached).toBe(false);
 });

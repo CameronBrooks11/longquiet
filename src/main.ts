@@ -9,6 +9,15 @@ import {
   type Soundscape,
 } from "./catalogue";
 import { moveIndex, tabStop } from "./keys";
+import {
+  bytes,
+  isSaved,
+  megabytes,
+  offlineSupported,
+  registerWorker,
+  remove,
+  save,
+} from "./offline";
 import { Player } from "./player";
 import { loadPreferences, savePreferences } from "./preferences";
 import { remainingLabel, SleepTimer } from "./sleep";
@@ -350,6 +359,78 @@ document.addEventListener("keydown", (e) => {
   e.preventDefault();
   if (!e.repeat) playButton.click();
 });
+
+// Offline listening: a sound saved whole plays with no connection. The
+// list says which are saved and the space they take.
+const base = import.meta.env.BASE_URL;
+registerWorker(base);
+const offline = byId<HTMLDetailsElement>("offline");
+const offlineUse = byId<HTMLParagraphElement>("offline-use");
+const saved = new Set<string>();
+const offlineRows = soundscapes.map((s) => {
+  const button = el("button", { type: "button" });
+  button.addEventListener("click", () => void toggleSaved(s, button));
+  const li = el(
+    "li",
+    {},
+    el("span", { textContent: s.label }),
+    el("span", { className: "size", textContent: megabytes(bytes(s)) }),
+    button,
+  );
+  return { s, button, li };
+});
+byId<HTMLUListElement>("offline-list").append(...offlineRows.map((r) => r.li));
+
+function renderOffline() {
+  for (const { s, button } of offlineRows) {
+    const on = saved.has(s.id);
+    button.textContent = on ? "Remove" : "Save";
+    button.setAttribute(
+      "aria-label",
+      on ? `Remove ${s.label}` : `Save ${s.label} for offline`,
+    );
+  }
+  const used = soundscapes
+    .filter((s) => saved.has(s.id))
+    .reduce((n, s) => n + bytes(s), 0);
+  offlineUse.textContent = saved.size
+    ? `Saved sounds play with no connection. ${megabytes(used)} in use.`
+    : "Save a sound to play it with no connection.";
+}
+
+async function toggleSaved(s: Soundscape, button: HTMLButtonElement) {
+  const removing = saved.has(s.id);
+  button.disabled = true;
+  button.textContent = removing ? "Removing…" : "Saving…";
+  try {
+    if (removing) {
+      await remove(base, s);
+      saved.delete(s.id);
+    } else {
+      await save(base, s);
+      saved.add(s.id);
+    }
+    renderOffline();
+  } catch (err) {
+    console.warn(err);
+    renderOffline();
+    offlineUse.textContent = removing
+      ? `Couldn't remove ${s.label}.`
+      : `Couldn't save ${s.label}. There may not be enough space.`;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+if (offlineSupported) {
+  offline.hidden = false;
+  renderOffline();
+  void Promise.all(
+    soundscapes.map(async (s) => {
+      if (await isSaved(base, s)) saved.add(s.id);
+    }),
+  ).then(renderOffline);
+}
 
 const first = findSoundscape(prefs.soundscape);
 void player.select(first, prefs.pieces[first.id]);
