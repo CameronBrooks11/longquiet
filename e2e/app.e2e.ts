@@ -380,6 +380,28 @@ test("credits show they open, and keep each file's changes a level down", async 
   );
 });
 
+// Opened beside the app, so whatever is playing keeps playing.
+test("the foot of the page links to About and Source", async ({ page }) => {
+  await page.goto("./");
+  const repo = "https://github.com/CameronBrooks11/longquiet";
+  const links = page.getByRole("contentinfo").getByRole("link");
+  await expect(links).toHaveText(["About", "Source"]);
+  await expect(links.nth(0)).toHaveAttribute("href", `${repo}#readme`);
+  await expect(links.nth(1)).toHaveAttribute("href", repo);
+  for (const link of await links.all()) {
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", "noopener");
+  }
+
+  // Reached by Tab, straight after the closed credits.
+  await page.locator(".credits > summary").focus();
+  await page.keyboard.press("Tab");
+  await expect(links.nth(0)).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(links.nth(1)).toBeFocused();
+});
+
 test("arrow keys move through sounds and sections", async ({ page }) => {
   await page.goto("./");
   const nature = items.filter((i) => i.section === sections[0].id);
