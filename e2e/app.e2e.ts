@@ -419,6 +419,29 @@ test("the foot of the page links to About, Source and feedback", async ({
   }
 });
 
+// A wrapped footer must not leave a separator alone at the end or start
+// of a line: each one sits on the same line as the links either side.
+test("the footer wraps without a stray separator", async ({ page }) => {
+  await page.goto("./");
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    const stray = await page.locator("footer").evaluate((f) => {
+      const top = (e: Element) => Math.round(e.getBoundingClientRect().top);
+      return [...f.children]
+        .filter((c) => c.tagName !== "A")
+        .filter((c) => {
+          const before = c.previousElementSibling;
+          const after = c.nextElementSibling;
+          return (
+            !before || !after || top(before) !== top(c) || top(after) !== top(c)
+          );
+        })
+        .map((c) => c.textContent);
+    });
+    expect(stray, `${width} px`).toEqual([]);
+  }
+});
+
 test("arrow keys move through sounds and sections", async ({ page }) => {
   await page.goto("./");
   const nature = items.filter((i) => i.section === sections[0].id);

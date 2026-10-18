@@ -508,12 +508,13 @@ button {
   display: block;
 }
 
-/* Quiet links at the foot of the page, out of the way of the controls. */
+/* Quiet links at the foot of the page, out of the way of the controls.
+   Spaced, not separated by dots, so a wrap leaves nothing stranded. */
 .links {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.25rem 0.5rem;
+  gap: 0.35rem 1.1rem;
   margin-top: 2rem;
   color: var(--muted);
   font-size: 0.8rem;
