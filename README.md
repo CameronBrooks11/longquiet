@@ -24,12 +24,13 @@ Every recording is CC0, CC BY or CC BY-SA, and credited in the app.
 - Tap a sound and it plays. Tap another to switch; Play pauses and resumes.
 - A playlist lists its pieces under the controls: tap one to play it. It remembers where you were.
 - Set the sleep timer and the sound fades out and stops when it runs out.
+- Under Offline listening, save a sound and it plays with no connection; Remove frees the space.
 - On a phone, the lock screen shows what is playing, with play and pause, and next and previous for a playlist.
 - To keep it on your home screen: in Safari, Share → Add to Home Screen; in Chrome, the menu's Add to Home screen.
 
 ## Privacy
 
-No accounts, no ads, no tracking, no backend. The page and the audio are static files served by GitHub Pages, which sees requests as any web host does. Your choice of sound, your volume and your place in each playlist are kept in your browser's local storage and sent nowhere.
+No accounts, no ads, no tracking, no backend. The page and the audio are static files served by GitHub Pages, which sees requests as any web host does. Your choice of sound, your volume and your place in each playlist are kept in your browser's local storage, and sounds you save for offline in its cache; nothing is sent anywhere.
 
 ## Credits
 
