@@ -1,72 +1,45 @@
 # longquiet
 
-Field recordings and music, openly licensed, for long hours of quiet. Pick a
-soundscape, press play, and leave it running.
+Field recordings and music, openly licensed, for long hours of quiet.
 
 **<https://cameronbrooks11.github.io/longquiet/>**
 
-- Real recordings only, each credited in the app with its source and licence
-- Continuous looping, gentle fades, lock-screen controls where the browser supports them
-- No accounts, ads, tracking, or backend
+[![Deploy](https://github.com/CameronBrooks11/longquiet/actions/workflows/deploy.yml/badge.svg)](https://github.com/CameronBrooks11/longquiet/actions/workflows/deploy.yml)
+[![Licence: MIT](https://img.shields.io/github/license/CameronBrooks11/longquiet)](LICENSE)
 
-## Sounds
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/phone-dark.png" />
+  <img src="docs/phone-light.png" alt="longquiet on a phone: the Nature sounds as buttons, a large play button, and the name of the chosen sound beneath it" width="300" />
+</picture>
 
-| Section | Soundscape | Recording                                                                                                                                     | By                                                                        | Licence                                                         |
-| ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Nature  | Rain       | [Rainstorm 10 min](https://freesound.org/people/Valerie-Vivegnis/sounds/759545/)                                                              | Valerie-Vivegnis                                                          | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Nature  | Tent       | [heavy rain on a small tent](https://freesound.org/people/Petrosilia/sounds/592997/)                                                          | Petrosilia                                                                | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Nature  | Forest     | [Afternoon Woods in October - Midwest US (loop)](https://freesound.org/people/NickTayloe/sounds/830253/)                                      | NickTayloe                                                                | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Nature  | Wind       | [young trees creaking in the wind](https://freesound.org/people/Garuda1982/sounds/624737/)                                                    | Garuda1982                                                                | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Nature  | Meadow     | [La vilaine summer meadow pm1](https://freesound.org/people/bruno.auzet/sounds/810415/)                                                       | bruno.auzet                                                               | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Nature  | Dawn       | [Bird ambience. Coniferous forest dawn chorus.](https://freesound.org/people/SamsterBirdies/sounds/745273/)                                   | SamsterBirdies                                                            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Nature  | Rainbirds  | [Birds In Rain](https://freesound.org/people/hargissssound/sounds/390399/)                                                                    | hargissssound                                                             | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Nature  | Stream     | [Stream flow over the stones in the fields and insect chirping](https://freesound.org/people/lastraindrop/sounds/732848/)                     | lastraindrop                                                              | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Nature  | Waterfall  | [distant waterfall](https://freesound.org/people/pippone59/sounds/788715/)                                                                    | pippone59                                                                 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Nature  | Ocean      | [Baltic Sea II - Zingst/Germany](https://freesound.org/people/pulswelle/sounds/667010/)                                                       | pulswelle                                                                 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Nature  | Shore      | [Weston Shore Very Calm Early Morning](https://freesound.org/people/richwise/sounds/482292/)                                                  | richwise                                                                  | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Nature  | Night      | [Serrinha do Alambari night frogs chorus with close crickets](https://freesound.org/people/MeliaRoger/sounds/645706/)                         | MeliaRoger                                                                | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Music   | Piano 1    | [Nocturne in E-flat major, Op. 9 No. 2](https://archive.org/details/musopen-chopin-complete-works-flac)                                       | Frédéric Chopin, played by Frank Levy                                     | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Music   | Piano 2    | [Nocturne in D-flat major, Op. 27 No. 2](https://archive.org/details/musopen-chopin-complete-works-flac)                                      | Frédéric Chopin, played by Frank Levy                                     | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Music   | Piano 3    | [Nocturne in F-sharp major, Op. 15 No. 2](https://archive.org/details/musopen-chopin-complete-works-flac)                                     | Frédéric Chopin, played by Luke Faulkner                                  | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Music   | Piano 4    | [Prelude in D-flat major, Op. 28 No. 15 (“Raindrop”)](https://archive.org/details/musopen-chopin-complete-works-flac)                         | Frédéric Chopin, played by Jeannette Fang                                 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Music   | Piano 5    | [Nocturne in E-flat major, Op. 55 No. 2](https://archive.org/details/musopen-chopin-complete-works-flac)                                      | Frédéric Chopin, played by Xuan He                                        | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Music   | Piano 6    | [Nocturne in E major, Op. 62 No. 2](https://archive.org/details/musopen-chopin-complete-works-flac)                                           | Frédéric Chopin, played by Luke Faulkner                                  | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Music   | Piano 7    | [Nocturne in E minor, Op. posth. 72](https://archive.org/details/musopen-chopin-complete-works-flac)                                          | Frédéric Chopin, played by Luke Faulkner                                  | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Music   | Piano 8    | [Berceuse in D-flat major, Op. 57](https://archive.org/details/musopen-chopin-complete-works-flac)                                            | Frédéric Chopin, played by Olga Gurevich                                  | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Music   | Piano 9    | [Nocturne in B major, Op. 32 No. 1](https://archive.org/details/musopen-chopin-complete-works-flac)                                           | Frédéric Chopin, played by Frank Levy                                     | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Music   | Piano 10   | [Nocturne in B-flat minor, Op. 9 No. 1](https://archive.org/details/musopen-chopin-complete-works-flac)                                       | Frédéric Chopin, played by Olga Gurevich                                  | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Music   | Piano 11   | [Nocturne in C-sharp minor, B. 49 (“Lento con gran espressione”)](https://archive.org/details/musopen-chopin-complete-works-flac)             | Frédéric Chopin, played by Frank Levy                                     | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Music   | Guitar 1   | [Gymnopédie No. 1](https://commons.wikimedia.org/wiki/File:Satie_Gymnopedie_No_1_performed_by_Michael_Laucke.flac)                            | Erik Satie, played by Michael Laucke on classical guitar                  | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
-| Music   | Guitar 2   | [Flow My Tears](<https://imslp.org/wiki/Flow_My_Tears_(Dowland,_John)>)                                                                       | John Dowland, arranged and played by Bert Alink                           | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)       |
-| Music   | Guitar 3   | [Gymnopédie No. 2](https://commons.wikimedia.org/wiki/File:Satie_Gymnopedie_No_2_performed_by_Michael_Laucke.flac)                            | Erik Satie, played by Michael Laucke on classical guitar                  | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
-| Music   | Guitar 4   | [El Noi de la Mare](<https://commons.wikimedia.org/wiki/File:El_Noi_de_la_Mare_(guitar).ogg>)                                                 | Catalan traditional, played by Jujutacular                                | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
-| Music   | Guitar 5   | [Les Soirées d'Auteuil, Op. 23: No. 1, Serenata](<https://imslp.org/wiki/Les_soir%C3%A9es_d'Auteuil,_Op.23_(Coste,_Napol%C3%A9on)>)           | Napoléon Coste, played by Edson Lopes                                     | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)       |
-| Music   | Guitar 6   | [Gymnopédie No. 3](https://commons.wikimedia.org/wiki/File:Satie_Gymnopedie_No_3_performed_by_Michael_Laucke.flac)                            | Erik Satie, played by Michael Laucke on classical guitar                  | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
-| Music   | Guitar 7   | [Minuet, Op. 11 No. 2](https://commons.wikimedia.org/wiki/File:Sor_Op_11_No_2.ogg)                                                            | Fernando Sor, played by Jujutacular                                       | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
-| Music   | Guitar 8   | [Lágrima](<https://imslp.org/wiki/L%C3%A1grima_(T%C3%A1rrega,_Francisco)>)                                                                    | Francisco Tárrega, played by Ramón León Egea on 10-string guitar          | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
-| Music   | Guitar 9   | [Funeral March on the Death of Michael Haydn](<https://imslp.org/wiki/Trauer_Marsch_auf_den_Todt_des_Herrn_Michael_Haydn_(Diabelli,_Anton)>)  | Anton Diabelli, played by Marcos Pablo Dalmacio                           | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
-| Music   | Guitar 10  | [Recuerdos de la Alhambra](https://commons.wikimedia.org/wiki/File:Recuerdos_de_la_Alhambra.ogg)                                              | Francisco Tárrega, played by Carlo Alberto Boni                           | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
-| Music   | Guitar 11  | [Sonatina in G major, Op. 71 No. 2](<https://imslp.org/wiki/3_Guitar_Sonatinas,_Op.71_(Giuliani,_Mauro)>)                                     | Mauro Giuliani, played by Marcos Pablo Dalmacio                           | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
-| Music   | Guitar 12  | [Conde Claros](<https://imslp.org/wiki/Conde_claros_(Mudarra,_Alonso)>)                                                                       | Alonso Mudarra, arranged and played by Stefan Nesyba                      | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)   |
-| Music   | Guitar 13  | [Relaxing music on nylon guitars](https://commons.wikimedia.org/wiki/File:Relaxing_music_on_Nylon_Guitars_in_Stereo_44khz_16bit_wavefile.wav) | ROCKSTARMONO ALIENBABA (composed and played)                              | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
-| Music   | Guitar 14  | [Fantaisie élégiaque, Op. 59](<https://imslp.org/wiki/Fantaisie_%C3%A9l%C3%A9giaque,_Op.59_(Sor,_Fernando)>)                                  | Fernando Sor, played by Marcos Pablo Dalmacio on a romantic guitar        | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
-| Music   | Guitar 15  | [Leyenda (Asturias)](<https://commons.wikimedia.org/wiki/File:Legend_(Leyenda)_performed_by_Michael_Laucke.flac>)                             | Isaac Albéniz, played by Michael Laucke (guitar, with bass and castanets) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
+## What's in it
 
-The audio is built from the uploaded originals by
-[`scripts/build-sounds.sh`](scripts/build-sounds.sh) and published as
-versioned GitHub release assets, not kept in git: an excerpt where a
-recording is long, faded ends that the player overlaps into a crossfade at
-the loop point, and a static gain to −26 LUFS so switching sounds doesn't
-jump in volume.
-[`sounds/sounds.json`](sounds/sounds.json) is the authoritative list; it
-pins each original by checksum, holds the processing recipe, and drives the
-in-app credits, and records the sha256 of every built file.
-[`sounds/README.md`](sounds/README.md) explains how sounds are chosen,
-built and published.
+- **Nature:** 12 recordings, each a loop of 6 to 10 minutes that plays on with no gap: a rainstorm, heavy rain on a small tent, October woods, trees creaking in wind, a summer meadow, a dawn chorus, birds singing in rain, a stream over stones, a distant waterfall, the Baltic Sea, a calm early-morning shore, and frogs and crickets at night.
+- **Music:** two playlists of solo pieces. Piano: 11 pieces, 54 min of Chopin's nocturnes. Guitar: 15 pieces, 73 min, Renaissance to modern.
+
+Every recording is CC0, CC BY or CC BY-SA, and credited in the app.
+
+## How to use it
+
+- Tap a sound and it plays. Tap another to switch; Play pauses and resumes.
+- A playlist lists its pieces under the controls: tap one to play it. It remembers where you were.
+- Set the sleep timer and the sound fades out and stops when it runs out.
+- On a phone, the lock screen shows what is playing, with play and pause, and next and previous for a playlist.
+- To keep it on your home screen: in Safari, Share → Add to Home Screen; in Chrome, the menu's Add to Home screen.
+
+## Privacy
+
+No accounts, no ads, no tracking, no backend. The page and the audio are static files served by GitHub Pages, which sees requests as any web host does. Your choice of sound, your volume and your place in each playlist are kept in your browser's local storage and sent nowhere.
+
+## Credits
+
+Most recordings are CC0. The rest are CC BY or CC BY-SA, which ask for credit and, for CC BY-SA, that the processed copy carries the same licence. Every file's source, author, licence and the changes made to it are in the app under Credits & licences, and in [sounds/CREDITS.md](sounds/CREDITS.md), which is generated from [sounds/sounds.json](sounds/sounds.json).
+
+Found a problem, or know a recording that belongs here? [Report a bug](https://github.com/CameronBrooks11/longquiet/issues/new?template=bug.yml), [suggest a feature](https://github.com/CameronBrooks11/longquiet/issues/new?template=feature.yml) or [request a sound](https://github.com/CameronBrooks11/longquiet/issues/new?template=sound.yml).
 
 ## Development
 
-Needs Node (version in `.nvmrc`) and [just](https://github.com/casey/just).
+Needs Node (version in `.nvmrc`) and [just](https://github.com/casey/just). `just --list` shows every recipe; the everyday ones:
 
 ```sh
 just setup        # install dependencies
@@ -74,13 +47,11 @@ just fetch-audio  # download the audio release into public/audio/ (once)
 just run          # dev server at http://localhost:5173/longquiet/
 just check        # format check, lint, typecheck
 just test         # unit tests
-just e2e          # browser smoke tests of dist/ (CI runs them; locally
-                  # needs `npm exec -- playwright install` first)
 just build        # static site in dist/
 ```
 
-Pushing to `main` deploys to GitHub Pages via `.github/workflows/deploy.yml`.
+Pushing to `main` deploys to GitHub Pages. [AGENTS.md](AGENTS.md) has the project's conventions, and [sounds/README.md](sounds/README.md) how sounds are chosen, built from their originals and published.
 
 ## Licence
 
-Code: [MIT](LICENSE). Recordings: the licence listed for each above.
+Code: [MIT](LICENSE). Recordings: the licence listed for each in [sounds/CREDITS.md](sounds/CREDITS.md).

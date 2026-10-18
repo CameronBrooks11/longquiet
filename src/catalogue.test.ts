@@ -119,14 +119,6 @@ describe("catalogue", () => {
     },
   );
 
-  it("is listed in the README by source URL", () => {
-    const readme = readFileSync(
-      new URL("../README.md", import.meta.url),
-      "utf8",
-    );
-    for (const s of tracks) expect(readme).toContain(s.sourceUrl);
-  });
-
   it("resolves the default and falls back for unknown ids", () => {
     expect(findSoundscape(defaults.soundscape).id).toBe(defaults.soundscape);
     expect(findSoundscape("no-such-sound")).toBe(soundscapes[0]);
