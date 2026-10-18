@@ -18,7 +18,7 @@ export async function ranged(
     start = Math.max(0, size - Number(m[2]));
     end = size - 1;
   }
-  if (!(start <= end) || start >= size) {
+  if (!(start <= end)) {
     return new Response(null, {
       status: 416,
       headers: { "Content-Range": `bytes */${size}` },
